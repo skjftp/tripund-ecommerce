@@ -86,7 +86,7 @@ export default function ProductForm({ isOpen, onClose, product, onSubmit }: Prod
   const removeAttribute = (index: number) => {
     setFormData(prev => ({
       ...prev,
-      attributes: prev.attributes.filter((_, i) => i !== index)
+      attributes: prev.attributes.filter((_: ProductAttribute, i: number) => i !== index)
     }));
   };
 
@@ -120,7 +120,7 @@ export default function ProductForm({ isOpen, onClose, product, onSubmit }: Prod
   const removeTag = (tagToRemove: string) => {
     setFormData(prev => ({
       ...prev,
-      tags: prev.tags.filter(tag => tag !== tagToRemove)
+      tags: prev.tags.filter((tag: string) => tag !== tagToRemove)
     }));
   };
 
@@ -159,7 +159,7 @@ export default function ProductForm({ isOpen, onClose, product, onSubmit }: Prod
     }
 
     // Validate image URLs
-    const imageUrls = formData.images.filter(url => url.trim());
+    const imageUrls = formData.images.filter((url: string) => url.trim());
     for (const url of imageUrls) {
       try {
         new URL(url);
@@ -189,8 +189,8 @@ export default function ProductForm({ isOpen, onClose, product, onSubmit }: Prod
         ...formData.weight,
         value: parseFloat(formData.weight.value.toString()) || 0
       },
-      attributes: formData.attributes.filter(attr => attr.name.trim() && attr.value.trim()),
-      tags: formData.tags.filter(tag => tag.trim())
+      attributes: formData.attributes.filter((attr: ProductAttribute) => attr.name.trim() && attr.value.trim()),
+      tags: formData.tags.filter((tag: string) => tag.trim())
     };
 
     onSubmit(submitData);
@@ -374,7 +374,7 @@ export default function ProductForm({ isOpen, onClose, product, onSubmit }: Prod
                     onChange={(e) => {
                       const newCategories = e.target.checked
                         ? [...formData.categories, category.value]
-                        : formData.categories.filter(c => c !== category.value);
+                        : formData.categories.filter((c: string) => c !== category.value);
                       handleInputChange('categories', newCategories);
                     }}
                     className="mr-2"
@@ -438,7 +438,7 @@ export default function ProductForm({ isOpen, onClose, product, onSubmit }: Prod
               Tags
             </label>
             <div className="flex flex-wrap gap-2 mb-2">
-              {formData.tags.map((tag, index) => (
+              {formData.tags.map((tag: string, index: number) => (
                 <span
                   key={index}
                   className="inline-flex items-center px-2 py-1 bg-gray-100 text-gray-700 text-sm rounded-full"
@@ -478,7 +478,7 @@ export default function ProductForm({ isOpen, onClose, product, onSubmit }: Prod
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Product Attributes
             </label>
-            {formData.attributes.map((attr, index) => (
+            {formData.attributes.map((attr: ProductAttribute, index: number) => (
               <div key={index} className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-2">
                 <input
                   type="text"
