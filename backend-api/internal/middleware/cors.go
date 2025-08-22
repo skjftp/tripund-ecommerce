@@ -7,7 +7,14 @@ import (
 
 func CORSMiddleware(origin string) gin.HandlerFunc {
 	config := cors.Config{
-		AllowOrigins:     []string{origin, "http://localhost:3000", "http://localhost:5173"},
+		AllowOrigins:     []string{
+			origin, 
+			"http://localhost:3000", 
+			"http://localhost:5173",
+			"http://localhost:5174",
+			"https://tripundlifestyle.netlify.app",
+			"https://tripundlifestyle-admin.netlify.app",
+		},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},

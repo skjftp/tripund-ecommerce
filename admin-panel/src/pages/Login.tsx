@@ -49,6 +49,7 @@ export default function Login() {
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   className="admin-input pl-10"
                   placeholder="admin@tripund.com"
+                  autoComplete="email"
                   required
                 />
                 <Mail className="absolute left-3 top-2.5 text-gray-400" size={20} />
@@ -64,6 +65,7 @@ export default function Login() {
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   className="admin-input pl-10"
                   placeholder="••••••••"
+                  autoComplete="current-password"
                   required
                 />
                 <Lock className="absolute left-3 top-2.5 text-gray-400" size={20} />
