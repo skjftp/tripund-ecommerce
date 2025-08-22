@@ -7,8 +7,21 @@ interface CartState {
   itemCount: number;
 }
 
+const getInitialCart = (): CartItem[] => {
+  try {
+    const stored = localStorage.getItem('cart');
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      return Array.isArray(parsed) ? parsed : [];
+    }
+  } catch (error) {
+    console.error('Error parsing cart from localStorage:', error);
+  }
+  return [];
+};
+
 const initialState: CartState = {
-  items: JSON.parse(localStorage.getItem('cart') || '[]'),
+  items: getInitialCart(),
   total: 0,
   itemCount: 0,
 };

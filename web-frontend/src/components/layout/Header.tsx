@@ -14,7 +14,9 @@ export default function Header() {
   
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
   const { itemCount } = useSelector((state: RootState) => state.cart);
-  const wishlistCount = useSelector((state: RootState) => state.wishlist.items.length);
+  const wishlistCount = useSelector((state: RootState) => 
+    Array.isArray(state.wishlist.items) ? state.wishlist.items.length : 0
+  );
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();

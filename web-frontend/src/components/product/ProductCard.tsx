@@ -14,7 +14,7 @@ interface ProductCardProps {
 export default function ProductCard({ product }: ProductCardProps) {
   const dispatch = useDispatch();
   const wishlistItems = useSelector((state: RootState) => state.wishlist.items);
-  const isInWishlist = wishlistItems.some((item) => item.id === product.id);
+  const isInWishlist = Array.isArray(wishlistItems) ? wishlistItems.some((item) => item.id === product.id) : false;
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();

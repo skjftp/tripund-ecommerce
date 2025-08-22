@@ -27,7 +27,7 @@ export default function WishlistPage() {
     }
   };
 
-  if (wishlistItems.length === 0) {
+  if (!Array.isArray(wishlistItems) || wishlistItems.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50 py-16">
         <div className="max-w-4xl mx-auto px-4 text-center">
@@ -65,7 +65,7 @@ export default function WishlistPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {wishlistItems.map((product) => (
+          {Array.isArray(wishlistItems) && wishlistItems.map((product) => (
             <div key={product.id} className="bg-white rounded-lg shadow-md overflow-hidden">
               <Link to={`/products/${product.id}`} className="block relative aspect-square">
                 <img

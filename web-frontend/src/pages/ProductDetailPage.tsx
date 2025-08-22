@@ -17,7 +17,7 @@ export default function ProductDetailPage() {
 
   const { currentProduct: product, loading } = useSelector((state: RootState) => state.products);
   const wishlistItems = useSelector((state: RootState) => state.wishlist.items);
-  const isInWishlist = wishlistItems.some((item) => item.id === product?.id);
+  const isInWishlist = Array.isArray(wishlistItems) ? wishlistItems.some((item) => item.id === product?.id) : false;
 
   useEffect(() => {
     if (id) {
