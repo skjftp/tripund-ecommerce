@@ -36,7 +36,7 @@ gcloud run deploy ${SERVICE_NAME} \
   --memory 512Mi \
   --max-instances 10 \
   --set-env-vars "GIN_MODE=release" \
-  --set-env-vars "FIREBASE_PROJECT_ID=${PROJECT_ID}" \
+  --set-env-vars "FIREBASE_PROJECT_ID=tripund-ecommerce-1755860933" \
   --set-env-vars "JWT_SECRET=change-this-secret-key-in-production" \
   --set-env-vars "CORS_ORIGIN=https://tripundlifestyle.com" \
   --set-env-vars "STORAGE_BUCKET=${PROJECT_ID}.appspot.com" \
