@@ -17,6 +17,10 @@ import Products from './pages/Products';
 import Orders from './pages/Orders';
 import Customers from './pages/Customers';
 import Categories from './pages/Categories';
+import Promotions from './pages/Promotions';
+import Payments from './pages/Payments';
+import Analytics from './pages/Analytics';
+import Notifications from './pages/Notifications';
 import Settings from './pages/Settings';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
@@ -93,6 +97,46 @@ function App() {
               <PrivateRoute>
                 <AdminLayout>
                   <Categories />
+                </AdminLayout>
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/promotions"
+            element={
+              <PrivateRoute>
+                <AdminLayout>
+                  <Promotions />
+                </AdminLayout>
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/payments"
+            element={
+              <PrivateRoute>
+                <AdminLayout>
+                  <Payments />
+                </AdminLayout>
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/analytics"
+            element={
+              <PrivateRoute>
+                <AdminLayout>
+                  <Analytics />
+                </AdminLayout>
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/notifications"
+            element={
+              <PrivateRoute>
+                <AdminLayout>
+                  <Notifications />
                 </AdminLayout>
               </PrivateRoute>
             }

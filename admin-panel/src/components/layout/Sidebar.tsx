@@ -9,7 +9,6 @@ import {
   Settings,
   LogOut,
   Tag,
-  Palette,
   CreditCard,
   Bell,
 } from 'lucide-react';
@@ -30,7 +29,6 @@ export default function Sidebar({ isOpen = true, onClose }: SidebarProps) {
     { icon: ShoppingCart, label: 'Orders', path: '/orders' },
     { icon: Users, label: 'Customers', path: '/customers' },
     { icon: FolderTree, label: 'Categories', path: '/categories' },
-    { icon: Palette, label: 'Artisans', path: '/artisans' },
     { icon: Tag, label: 'Promotions', path: '/promotions' },
     { icon: CreditCard, label: 'Payments', path: '/payments' },
     { icon: BarChart3, label: 'Analytics', path: '/analytics' },
