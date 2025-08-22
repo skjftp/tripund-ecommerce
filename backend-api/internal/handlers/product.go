@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -20,7 +21,7 @@ func NewProductHandler(db *database.Firebase) *ProductHandler {
 }
 
 func (h *ProductHandler) GetProducts(c *gin.Context) {
-	var products []models.Product
+	products := make([]models.Product, 0)
 	query := h.db.Client.Collection("products").Query
 
 	if category := c.Query("category"); category != "" {
@@ -50,11 +51,14 @@ func (h *ProductHandler) GetProducts(c *gin.Context) {
 		return
 	}
 
+	// Debug: log number of documents found
+	fmt.Printf("Found %d documents in Firestore\n", len(docs))
+
 	for _, doc := range docs {
 		var product models.Product
 		if err := doc.DataTo(&product); err != nil {
-			// Log the error but continue processing other products
-			// This helps identify parsing issues
+			// Log the error to understand what's failing
+			fmt.Printf("Error parsing product %s: %v\n", doc.Ref.ID, err)
 			continue
 		}
 		product.ID = doc.Ref.ID
