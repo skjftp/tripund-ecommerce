@@ -15,7 +15,7 @@ const categories = [
     name: 'Festivals',
     slug: 'festivals',
     description: 'Festive decorations and items',
-    image: 'https://storage.googleapis.com/tripund-product-images/categories/festivals.png',
+    image: 'https://images.tripundlifestyle.com/categories/festivals.png',
     order: 1,
     children: [
       { name: 'Torans', product_count: 0 },
@@ -32,7 +32,7 @@ const categories = [
     name: 'Wall Décor',
     slug: 'wall-decor',
     description: 'Wall decorations and hangings',
-    image: 'https://storage.googleapis.com/tripund-product-images/categories/wall-decor.png',
+    image: 'https://images.tripundlifestyle.com/categories/wall-decor.png',
     order: 2,
     children: [
       { name: 'Wall Hangings', product_count: 0 },
@@ -49,7 +49,7 @@ const categories = [
     name: 'Lighting',
     slug: 'lighting',
     description: 'Decorative lighting solutions',
-    image: 'https://storage.googleapis.com/tripund-product-images/categories/lighting.png',
+    image: 'https://images.tripundlifestyle.com/categories/lighting.png',
     order: 3,
     children: [
       { name: 'Candles', product_count: 0 },
@@ -65,7 +65,7 @@ const categories = [
     name: 'Home Accent',
     slug: 'home-accent',
     description: 'Home decoration accents',
-    image: 'https://storage.googleapis.com/tripund-product-images/categories/home-accent.png',
+    image: 'https://images.tripundlifestyle.com/categories/home-accent.png',
     order: 4,
     children: [
       { name: 'Cushion Covers', product_count: 0 },
@@ -81,7 +81,7 @@ const categories = [
     name: 'Divine Collections',
     slug: 'divine-collections',
     description: 'Religious and spiritual items',
-    image: 'https://storage.googleapis.com/tripund-product-images/categories/divine-collections.png',
+    image: 'https://images.tripundlifestyle.com/categories/divine-collections.png',
     order: 5,
     children: [
       { name: 'Idols', product_count: 0 },
@@ -96,7 +96,7 @@ const categories = [
     name: 'Storage & Bags',
     slug: 'storage-bags',
     description: 'Storage solutions and bags',
-    image: 'https://storage.googleapis.com/tripund-product-images/categories/storage-bags.png',
+    image: 'https://images.tripundlifestyle.com/categories/storage-bags.png',
     order: 6,
     children: [
       { name: 'Storage Boxes', product_count: 0 },
@@ -111,7 +111,7 @@ const categories = [
     name: 'Gifting',
     slug: 'gifting',
     description: 'Gift items and hampers',
-    image: 'https://storage.googleapis.com/tripund-product-images/categories/gifting.png',
+    image: 'https://images.tripundlifestyle.com/categories/gifting.png',
     order: 7,
     children: [
       { name: 'Gift Sets', product_count: 0 },

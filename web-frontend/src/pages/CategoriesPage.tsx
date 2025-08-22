@@ -64,16 +64,23 @@ export default function CategoriesPage() {
                   alt={category.name}
                   className="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-300"
                   onError={(e) => {
-                    (e.target as HTMLImageElement).src = 'https://via.placeholder.com/400x300?text=' + encodeURIComponent(category.name);
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                    const fallbackDiv = target.nextElementSibling as HTMLElement;
+                    if (fallbackDiv) {
+                      fallbackDiv.style.display = 'flex';
+                    }
                   }}
                 />
-              ) : (
-                <div className="w-full h-64 bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center">
-                  <span className="text-4xl font-bold text-primary-600 opacity-50">
-                    {category.name.charAt(0)}
-                  </span>
-                </div>
-              )}
+              ) : null}
+              <div 
+                className="w-full h-64 bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center"
+                style={{ display: category.image ? 'none' : 'flex' }}
+              >
+                <span className="text-4xl font-bold text-primary-600 opacity-50">
+                  {category.name.charAt(0)}
+                </span>
+              </div>
             </div>
             
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent flex flex-col justify-end p-4">

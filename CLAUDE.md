@@ -347,6 +347,32 @@ git pull origin main
 - **Issues**: Report at GitHub Issues
 - **Cloud Project**: tripund-ecommerce-1755860933
 
+## Image CDN Configuration
+
+### Cloud CDN Setup
+- **CDN IP Address**: 34.149.173.174
+- **CDN Domain**: images.tripundlifestyle.com
+- **SSL Certificate**: tripund-images-ssl (managed)
+- **Backend Bucket**: tripund-images-backend
+- **GCS Bucket**: tripund-product-images
+
+### DNS Configuration
+Add this A record to your DNS provider:
+- **Type**: A
+- **Name**: images
+- **Value**: 34.149.173.174
+- **TTL**: 300
+
+### Image URLs
+- **Category Images**: https://images.tripundlifestyle.com/categories/[image-name].png
+- **Product Images**: https://images.tripundlifestyle.com/products/[image-name].jpg
+
+### CDN Benefits
+- Images served via Google Cloud CDN for faster loading
+- Global edge caching
+- Automatic HTTPS with managed SSL certificates
+- No need for public GCS bucket access
+
 ## Notes for AI Assistants
 1. Always run `npm install` before running dev servers
 2. Check `.env` files exist before running locally
