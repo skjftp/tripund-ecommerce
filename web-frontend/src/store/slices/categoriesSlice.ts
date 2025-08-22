@@ -53,8 +53,9 @@ const categoriesSlice = createSlice({
       })
       .addCase(fetchCategories.fulfilled, (state, action) => {
         state.loading = false;
-        state.categories = action.payload.categories || [];
+        state.categories = Array.isArray(action.payload.categories) ? action.payload.categories : [];
         state.source = action.payload.source || 'api';
+        state.error = null;
       })
       .addCase(fetchCategories.rejected, (state, action) => {
         state.loading = false;

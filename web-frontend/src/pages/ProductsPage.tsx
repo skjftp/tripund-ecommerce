@@ -2,18 +2,9 @@ import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from '../store';
 import { fetchProducts, setFilters } from '../store/slices/productSlice';
+import { fetchCategories } from '../store/slices/categoriesSlice';
 import ProductGrid from '../components/product/ProductGrid';
 import { ChevronDown } from 'lucide-react';
-
-const categories = [
-  'All',
-  'Spiritual Wall Art',
-  'Metal Art',
-  'Wood Carvings',
-  'Textiles',
-  'Ceramics',
-  'Paintings',
-];
 
 const sortOptions = [
   { value: 'newest', label: 'Newest First' },
@@ -25,11 +16,13 @@ const sortOptions = [
 export default function ProductsPage() {
   const dispatch = useDispatch<AppDispatch>();
   const { products, loading, filters } = useSelector((state: RootState) => state.products);
+  const { categories } = useSelector((state: RootState) => state.categories);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [sortBy, setSortBy] = useState('newest');
 
   useEffect(() => {
     dispatch(fetchProducts());
+    dispatch(fetchCategories());
   }, [dispatch]);
 
   const handleCategoryChange = (category: string) => {
@@ -71,17 +64,29 @@ export default function ProductsPage() {
             <div className="bg-white p-6 rounded-lg shadow-md">
               <h3 className="font-semibold mb-4">Categories</h3>
               <ul className="space-y-2">
-                {categories.map((category) => (
-                  <li key={category}>
+                <li>
+                  <button
+                    onClick={() => handleCategoryChange('All')}
+                    className={`w-full text-left px-3 py-2 rounded-md transition-colors ${
+                      selectedCategory === 'All'
+                        ? 'bg-primary-100 text-primary-700 font-semibold'
+                        : 'text-gray-700 hover:bg-gray-100'
+                    }`}
+                  >
+                    All
+                  </button>
+                </li>
+                {Array.isArray(categories) && categories.map((category) => (
+                  <li key={category.slug}>
                     <button
-                      onClick={() => handleCategoryChange(category)}
+                      onClick={() => handleCategoryChange(category.slug)}
                       className={`w-full text-left px-3 py-2 rounded-md transition-colors ${
-                        selectedCategory === category
+                        selectedCategory === category.slug
                           ? 'bg-primary-100 text-primary-700 font-semibold'
                           : 'text-gray-700 hover:bg-gray-100'
                       }`}
                     >
-                      {category}
+                      {category.name}
                     </button>
                   </li>
                 ))}

@@ -51,7 +51,7 @@ export default function CategoriesPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {categories.map((category) => (
+        {Array.isArray(categories) && categories.map((category) => (
           <div
             key={category.id}
             onClick={() => handleCategoryClick(category.slug)}
