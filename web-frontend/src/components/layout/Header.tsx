@@ -47,7 +47,7 @@ export default function Header() {
               <img 
                 src={tripundLogo} 
                 alt="TRIPUND LIFESTYLE" 
-                className="h-10 w-auto"
+                className="h-8 w-auto max-w-[160px] object-contain"
               />
             </Link>
           </div>
