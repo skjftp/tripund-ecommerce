@@ -4,7 +4,7 @@ import { RootState, AppDispatch } from '../store';
 import { fetchProducts, setFilters } from '../store/slices/productSlice';
 import { fetchCategories } from '../store/slices/categoriesSlice';
 import ProductGrid from '../components/product/ProductGrid';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Filter, X } from 'lucide-react';
 
 const sortOptions = [
   { value: 'newest', label: 'Newest First' },
@@ -19,6 +19,8 @@ export default function ProductsPage() {
   const { categories } = useSelector((state: RootState) => state.categories);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [sortBy, setSortBy] = useState('newest');
+  const [showFilters, setShowFilters] = useState(false);
+  const [priceRange, setPriceRange] = useState(50000);
 
   useEffect(() => {
     dispatch(fetchProducts());
@@ -60,8 +62,25 @@ export default function ProductsPage() {
         </div>
 
         <div className="flex flex-col lg:flex-row gap-8">
-          <aside className="lg:w-64">
-            <div className="bg-white p-6 rounded-lg shadow-md">
+          {/* Mobile Filter Toggle */}
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className="lg:hidden flex items-center justify-center gap-2 bg-white px-4 py-2 rounded-lg shadow-md"
+          >
+            <Filter size={20} />
+            <span>Filters</span>
+          </button>
+
+          {/* Sidebar - Collapsible on mobile */}
+          <aside className={`${showFilters ? 'block' : 'hidden'} lg:block lg:w-64`}>
+            <div className="bg-white p-6 rounded-lg shadow-md relative">
+              {/* Close button for mobile */}
+              <button
+                onClick={() => setShowFilters(false)}
+                className="lg:hidden absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+              >
+                <X size={20} />
+              </button>
               <h3 className="font-semibold mb-4">Categories</h3>
               <ul className="space-y-2">
                 <li>
@@ -99,14 +118,17 @@ export default function ProductsPage() {
                     type="range"
                     min="0"
                     max="50000"
+                    value={priceRange}
                     className="w-full"
-                    onChange={(e) =>
-                      dispatch(setFilters({ maxPrice: parseInt(e.target.value) }))
-                    }
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value);
+                      setPriceRange(value);
+                      dispatch(setFilters({ maxPrice: value }));
+                    }}
                   />
                   <div className="flex justify-between text-sm text-gray-600">
                     <span>₹0</span>
-                    <span>₹{filters.maxPrice.toLocaleString()}</span>
+                    <span>₹{priceRange.toLocaleString()}</span>
                   </div>
                 </div>
               </div>

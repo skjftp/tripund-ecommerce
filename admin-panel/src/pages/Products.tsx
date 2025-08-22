@@ -86,6 +86,11 @@ export default function Products() {
     }
   };
 
+  const handleView = (product: Product) => {
+    // Open product in new tab on the main website
+    window.open(`https://tripundlifestyle.netlify.app/products/${product.id}`, '_blank');
+  };
+
   const handleEdit = (product: Product) => {
     setEditingProduct(product);
     setShowAddModal(true);
@@ -327,7 +332,10 @@ export default function Products() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex items-center space-x-3">
-                        <button className="text-gray-600 hover:text-gray-900">
+                        <button 
+                          onClick={() => handleView(product)}
+                          className="text-gray-600 hover:text-gray-900"
+                        >
                           <Eye size={18} />
                         </button>
                         <button 

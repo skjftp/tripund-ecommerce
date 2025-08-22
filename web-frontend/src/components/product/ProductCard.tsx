@@ -6,6 +6,7 @@ import { addToCart } from '../../store/slices/cartSlice';
 import { addToWishlist, removeFromWishlist } from '../../store/slices/wishlistSlice';
 import { RootState } from '../../store';
 import ImageCarousel from '../common/ImageCarousel';
+import { toProperCase } from '../../utils/textUtils';
 import toast from 'react-hot-toast';
 
 interface ProductCardProps {
@@ -75,7 +76,7 @@ export default function ProductCard({ product }: ProductCardProps) {
 
         <div className="p-4">
           <h3 className="text-lg font-semibold text-gray-800 mb-1 line-clamp-2">
-            {product.name}
+            {toProperCase(product.name || '')}
           </h3>
           
           <p className="text-sm text-gray-500 mb-2 line-clamp-2">

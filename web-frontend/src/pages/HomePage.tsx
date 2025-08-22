@@ -123,6 +123,36 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Company Story Section */}
+      <section className="bg-gradient-to-r from-primary-50 to-primary-100 py-12">
+        <div className="max-w-4xl mx-auto px-4 text-center">
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
+            Celebrating Indian Craftsmanship
+          </h2>
+          <p className="text-gray-700 leading-relaxed mb-6">
+            At TRIPUND, we bridge the gap between traditional Indian artisans and modern homes. 
+            Each piece in our collection tells a story of heritage, skill, and passion passed down 
+            through generations. From the intricate Madhubani paintings of Bihar to the divine brass 
+            idols of Tamil Nadu, we bring you authentic handcrafted treasures that transform your 
+            living spaces into galleries of cultural art.
+          </p>
+          <div className="flex justify-center gap-8 mt-8">
+            <div className="text-center">
+              <div className="text-3xl font-bold text-primary-600">500+</div>
+              <div className="text-sm text-gray-600 mt-1">Artisan Partners</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-primary-600">15</div>
+              <div className="text-sm text-gray-600 mt-1">Indian States</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-primary-600">100%</div>
+              <div className="text-sm text-gray-600 mt-1">Handcrafted</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Minimalist Features Bar */}
       <section className="bg-white border-t border-b py-6">
         <div className="max-w-7xl mx-auto px-4">

@@ -22,6 +22,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import CategoryForm from '../components/CategoryForm';
 
 interface SubCategory {
   name: string;
@@ -354,6 +355,17 @@ export default function Categories() {
           </div>
         </div>
       </div>
+
+      {/* Category Form Modal */}
+      <CategoryForm
+        isOpen={showAddModal}
+        onClose={() => {
+          setShowAddModal(false);
+          setEditingCategory(null);
+        }}
+        category={editingCategory}
+        onSubmit={handleSubmitCategory}
+      />
     </div>
   );
 }
