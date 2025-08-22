@@ -69,13 +69,13 @@ export default function WishlistPage() {
             <div key={product.id} className="bg-white rounded-lg shadow-md overflow-hidden">
               <Link to={`/products/${product.id}`} className="block relative aspect-square">
                 <img
-                  src={product.images.main}
-                  alt={product.title}
+                  src={product.images?.[0] || ''}
+                  alt={product.name || product.title}
                   className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                 />
-                {product.discount > 0 && (
+                {product.sale_price && product.price > product.sale_price && (
                   <div className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 text-sm rounded">
-                    -{product.discount}%
+                    -{Math.round(((product.price - product.sale_price) / product.price) * 100)}%
                   </div>
                 )}
               </Link>
@@ -83,24 +83,20 @@ export default function WishlistPage() {
               <div className="p-4">
                 <Link to={`/products/${product.id}`}>
                   <h3 className="text-lg font-semibold text-gray-800 mb-1 line-clamp-2 hover:text-primary-600">
-                    {product.title}
+                    {product.name || product.title}
                   </h3>
                 </Link>
 
-                {product.artisan && (
-                  <p className="text-sm text-gray-500 mb-2">
-                    by {product.artisan.name}
-                  </p>
-                )}
+                {/* Artisan info removed - not in new structure */}
 
                 <div className="flex items-center justify-between mb-3">
                   <div>
                     <span className="text-xl font-bold text-primary-600">
-                      {product.price.currency}{product.price.current.toLocaleString()}
+                      ₹{(product.sale_price || product.price).toLocaleString()}
                     </span>
-                    {product.price.original > product.price.current && (
+                    {product.sale_price && product.price > product.sale_price && (
                       <span className="ml-2 text-sm text-gray-500 line-through">
-                        {product.price.currency}{product.price.original.toLocaleString()}
+                        ₹{product.price.toLocaleString()}
                       </span>
                     )}
                   </div>
@@ -109,11 +105,11 @@ export default function WishlistPage() {
                 <div className="flex space-x-2">
                   <button
                     onClick={() => handleAddToCart(product)}
-                    disabled={!product.inventory.in_stock}
+                    disabled={product.stock_status !== 'in_stock'}
                     className="flex-1 bg-primary-600 text-white py-2 px-3 rounded-md hover:bg-primary-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center text-sm"
                   >
                     <ShoppingCart size={16} className="mr-1" />
-                    {product.inventory.in_stock ? 'Add to Cart' : 'Out of Stock'}
+                    {product.stock_status === 'in_stock' ? 'Add to Cart' : 'Out of Stock'}
                   </button>
                   <button
                     onClick={() => handleRemove(product.id)}

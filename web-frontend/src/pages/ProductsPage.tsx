@@ -39,9 +39,9 @@ export default function ProductsPage() {
   const sortedProducts = [...products].sort((a, b) => {
     switch (sortBy) {
       case 'price-low':
-        return a.price.current - b.price.current;
+        return (a.sale_price || a.price) - (b.sale_price || b.price);
       case 'price-high':
-        return b.price.current - a.price.current;
+        return (b.sale_price || b.price) - (a.sale_price || a.price);
       case 'popular':
         return b.featured ? 1 : -1;
       default:
