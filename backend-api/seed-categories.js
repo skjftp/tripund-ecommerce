@@ -15,7 +15,7 @@ const categories = [
     name: 'Festivals',
     slug: 'festivals',
     description: 'Festive decorations and items',
-    image: 'https://images.tripundlifestyle.com/categories/festivals.png',
+    image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop',
     order: 1,
     children: [
       { name: 'Torans', product_count: 0 },
@@ -32,7 +32,7 @@ const categories = [
     name: 'Wall Décor',
     slug: 'wall-decor',
     description: 'Wall decorations and hangings',
-    image: 'https://images.tripundlifestyle.com/categories/wall-decor.png',
+    image: 'https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?w=400&h=300&fit=crop',
     order: 2,
     children: [
       { name: 'Wall Hangings', product_count: 0 },
@@ -49,7 +49,7 @@ const categories = [
     name: 'Lighting',
     slug: 'lighting',
     description: 'Decorative lighting solutions',
-    image: 'https://images.tripundlifestyle.com/categories/lighting.png',
+    image: 'https://images.unsplash.com/photo-1514933651103-005eec06c04b?w=400&h=300&fit=crop',
     order: 3,
     children: [
       { name: 'Candles', product_count: 0 },
@@ -65,7 +65,7 @@ const categories = [
     name: 'Home Accent',
     slug: 'home-accent',
     description: 'Home decoration accents',
-    image: 'https://images.tripundlifestyle.com/categories/home-accent.png',
+    image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop',
     order: 4,
     children: [
       { name: 'Cushion Covers', product_count: 0 },
@@ -81,7 +81,7 @@ const categories = [
     name: 'Divine Collections',
     slug: 'divine-collections',
     description: 'Religious and spiritual items',
-    image: 'https://images.tripundlifestyle.com/categories/divine-collections.png',
+    image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop',
     order: 5,
     children: [
       { name: 'Idols', product_count: 0 },
@@ -96,7 +96,7 @@ const categories = [
     name: 'Storage & Bags',
     slug: 'storage-bags',
     description: 'Storage solutions and bags',
-    image: 'https://images.tripundlifestyle.com/categories/storage-bags.png',
+    image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=300&fit=crop',
     order: 6,
     children: [
       { name: 'Storage Boxes', product_count: 0 },
@@ -111,7 +111,7 @@ const categories = [
     name: 'Gifting',
     slug: 'gifting',
     description: 'Gift items and hampers',
-    image: 'https://images.tripundlifestyle.com/categories/gifting.png',
+    image: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=400&h=300&fit=crop',
     order: 7,
     children: [
       { name: 'Gift Sets', product_count: 0 },
