@@ -19,7 +19,7 @@ export default function CartPage() {
     dispatch(removeFromCart(productId));
   };
 
-  if (items.length === 0) {
+  if (!Array.isArray(items) || items.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50 py-16">
         <div className="max-w-4xl mx-auto px-4 text-center">
@@ -48,7 +48,7 @@ export default function CartPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
             <div className="bg-white rounded-lg shadow-md">
-              {items.map((item) => (
+              {Array.isArray(items) && items.map((item) => (
                 <div
                   key={item.product_id}
                   className="flex items-center p-6 border-b last:border-b-0"

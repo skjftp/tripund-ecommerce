@@ -36,7 +36,8 @@ export const fetchProducts = createAsyncThunk(
   async (params?: { category?: string; featured?: boolean; limit?: number }) => {
     try {
       const response = await api.get('/products', { params });
-      return response.data.products;
+      const products = response.data.products;
+      return Array.isArray(products) ? products : [];
     } catch (error) {
       // Return sample data if API fails
       let filteredProducts = [...sampleProducts];
@@ -72,8 +73,14 @@ export const fetchProductById = createAsyncThunk(
 export const searchProducts = createAsyncThunk(
   'products/searchProducts',
   async (query: string) => {
-    const response = await api.get('/products/search', { params: { q: query } });
-    return response.data.products;
+    try {
+      const response = await api.get('/products/search', { params: { q: query } });
+      const products = response.data.products;
+      return Array.isArray(products) ? products : [];
+    } catch (error) {
+      console.error('Search failed:', error);
+      return [];
+    }
   }
 );
 
@@ -96,9 +103,9 @@ const productSlice = createSlice({
       })
       .addCase(fetchProducts.fulfilled, (state, action: PayloadAction<Product[]>) => {
         state.loading = false;
-        state.products = action.payload;
+        state.products = Array.isArray(action.payload) ? action.payload : [];
         if ((action as any).meta?.arg?.featured) {
-          state.featuredProducts = action.payload;
+          state.featuredProducts = Array.isArray(action.payload) ? action.payload : [];
         }
       })
       .addCase(fetchProducts.rejected, (state, action) => {
@@ -118,7 +125,7 @@ const productSlice = createSlice({
         state.error = action.error.message || 'Failed to fetch product';
       })
       .addCase(searchProducts.fulfilled, (state, action: PayloadAction<Product[]>) => {
-        state.products = action.payload;
+        state.products = Array.isArray(action.payload) ? action.payload : [];
       });
   },
 });
