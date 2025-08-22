@@ -170,3 +170,75 @@ func (h *AuthHandler) UpdateProfile(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Profile updated successfully"})
 }
+
+func (h *AuthHandler) AdminLogin(c *gin.Context) {
+	var req models.LoginRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// For demo purposes, check hardcoded admin credentials
+	// In production, this should check against database
+	if req.Email == "admin@tripund.com" && req.Password == "admin123" {
+		// Create admin user object
+		adminUser := models.User{
+			ID:    "admin-001",
+			Email: "admin@tripund.com",
+			Profile: models.UserProfile{
+				FirstName: "Admin",
+				LastName:  "User",
+			},
+			Role: "admin",
+		}
+
+		token, expiresIn, err := h.generateToken(adminUser)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
+			return
+		}
+
+		c.JSON(http.StatusOK, models.AuthResponse{
+			Token:     token,
+			ExpiresIn: expiresIn,
+			User:      adminUser,
+		})
+		return
+	}
+
+	// Check database for admin users
+	query := h.db.Client.Collection("users").Where("email", "==", req.Email).Where("role", "==", "admin").Limit(1)
+	docs, err := query.Documents(h.db.Context).GetAll()
+	if err != nil || len(docs) == 0 {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid admin credentials"})
+		return
+	}
+
+	var user models.User
+	if err := docs[0].DataTo(&user); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to parse user data"})
+		return
+	}
+	user.ID = docs[0].Ref.ID
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password)); err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid admin credentials"})
+		return
+	}
+
+	docs[0].Ref.Update(h.db.Context, []firestore.Update{
+		{Path: "last_login_at", Value: time.Now()},
+	})
+
+	token, expiresIn, err := h.generateToken(user)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
+		return
+	}
+
+	c.JSON(http.StatusOK, models.AuthResponse{
+		Token:     token,
+		ExpiresIn: expiresIn,
+		User:      user,
+	})
+}

@@ -61,6 +61,13 @@ func main() {
 			}
 		}
 
+		// Admin auth routes (no middleware)
+		adminAuth := api.Group("/admin/auth")
+		{
+			adminAuth.POST("/login", authHandler.AdminLogin)
+		}
+
+		// Protected admin routes
 		admin := api.Group("/admin")
 		admin.Use(middleware.AuthMiddleware(cfg.JWTSecret), middleware.AdminMiddleware())
 		{
