@@ -21,7 +21,7 @@ const checkoutSchema = z.object({
     city: z.string().min(1, 'City is required'),
     state: z.string().min(1, 'State is required'),
     postalCode: z.string().min(6, 'Postal code must be 6 digits'),
-    country: z.string().default('India'),
+    country: z.string().optional().default('India'),
   }),
   sameAsBilling: z.boolean(),
   paymentMethod: z.enum(['razorpay', 'cod']),

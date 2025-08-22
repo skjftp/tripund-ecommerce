@@ -27,7 +27,7 @@ const addressSchema = z.object({
   city: z.string().min(1, 'City is required'),
   state: z.string().min(1, 'State is required'),
   postal_code: z.string().min(6, 'Postal code required'),
-  country: z.string().default('India'),
+  country: z.string().optional().default('India'),
   phone: z.string().min(10, 'Phone number required'),
   is_default: z.boolean(),
 });
