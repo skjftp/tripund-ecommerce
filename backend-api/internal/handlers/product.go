@@ -52,10 +52,13 @@ func (h *ProductHandler) GetProducts(c *gin.Context) {
 
 	for _, doc := range docs {
 		var product models.Product
-		if err := doc.DataTo(&product); err == nil {
-			product.ID = doc.Ref.ID
-			products = append(products, product)
+		if err := doc.DataTo(&product); err != nil {
+			// Log the error but continue processing other products
+			// This helps identify parsing issues
+			continue
 		}
+		product.ID = doc.Ref.ID
+		products = append(products, product)
 	}
 
 	c.JSON(http.StatusOK, gin.H{
@@ -164,10 +167,12 @@ func (h *ProductHandler) SearchProducts(c *gin.Context) {
 
 	for _, doc := range docs {
 		var product models.Product
-		if err := doc.DataTo(&product); err == nil {
-			product.ID = doc.Ref.ID
-			products = append(products, product)
+		if err := doc.DataTo(&product); err != nil {
+			// Skip products that fail to parse
+			continue
 		}
+		product.ID = doc.Ref.ID
+		products = append(products, product)
 	}
 
 	c.JSON(http.StatusOK, gin.H{

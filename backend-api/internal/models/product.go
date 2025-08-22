@@ -4,8 +4,8 @@ import "time"
 
 type Product struct {
 	ID               string                 `json:"id" firestore:"-"`
-	SKU              string                 `json:"sku" firestore:"sku" validate:"required"`
-	Name             string                 `json:"name" firestore:"name" validate:"required"`
+	SKU              string                 `json:"sku" firestore:"sku"`
+	Name             string                 `json:"name" firestore:"name"`
 	Slug             string                 `json:"slug" firestore:"slug"`
 	Description      string                 `json:"description" firestore:"description"`
 	ShortDescription string                 `json:"short_description" firestore:"short_description"`
@@ -24,6 +24,7 @@ type Product struct {
 	Weight           ProductWeight          `json:"weight" firestore:"weight"`
 	CreatedAt        time.Time              `json:"created_at" firestore:"created_at"`
 	UpdatedAt        time.Time              `json:"updated_at" firestore:"updated_at"`
+	ParsedDescription map[string]interface{} `json:"parsed_description,omitempty" firestore:"parsed_description,omitempty"`
 }
 
 type ProductAttribute struct {
