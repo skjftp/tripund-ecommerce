@@ -5,6 +5,7 @@ import { Product } from '../../types';
 import { addToCart } from '../../store/slices/cartSlice';
 import { addToWishlist, removeFromWishlist } from '../../store/slices/wishlistSlice';
 import { RootState } from '../../store';
+import ImageCarousel from '../common/ImageCarousel';
 import toast from 'react-hot-toast';
 
 interface ProductCardProps {
@@ -33,31 +34,34 @@ export default function ProductCard({ product }: ProductCardProps) {
     }
   };
 
-  const discountPercentage = product.discount || 
-    Math.round(((product.price.original - product.price.current) / product.price.original) * 100);
+  const discountPercentage = product.sale_price ? 
+    Math.round(((product.price - product.sale_price) / product.price) * 100) : 0;
+
+  const displayPrice = product.sale_price || product.price;
+  const isInStock = product.stock_status === 'in_stock' && product.stock_quantity > 0;
 
   return (
     <Link to={`/products/${product.id}`} className="group">
       <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow">
         <div className="relative aspect-square">
-          <img
-            src={product.images.main}
-            alt={product.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          <ImageCarousel 
+            images={product.images || []} 
+            productName={product.name}
+            className="h-full"
           />
           {discountPercentage > 0 && (
-            <div className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 text-sm rounded">
+            <div className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 text-sm rounded z-10">
               -{discountPercentage}%
             </div>
           )}
           {product.featured && (
-            <div className="absolute top-2 right-2 bg-primary-600 text-white px-2 py-1 text-sm rounded">
+            <div className="absolute top-2 right-2 bg-primary-600 text-white px-2 py-1 text-sm rounded z-10">
               Featured
             </div>
           )}
           <button
             onClick={handleWishlistToggle}
-            className="absolute bottom-2 right-2 bg-white p-2 rounded-full shadow-md hover:shadow-lg transition-shadow"
+            className="absolute bottom-2 right-2 bg-white p-2 rounded-full shadow-md hover:shadow-lg transition-shadow z-10"
           >
             <Heart
               size={20}
@@ -68,27 +72,25 @@ export default function ProductCard({ product }: ProductCardProps) {
 
         <div className="p-4">
           <h3 className="text-lg font-semibold text-gray-800 mb-1 line-clamp-2">
-            {product.title}
+            {product.name}
           </h3>
           
-          {product.artisan && (
-            <p className="text-sm text-gray-500 mb-2">
-              by {product.artisan.name} • {product.artisan.location}
-            </p>
-          )}
+          <p className="text-sm text-gray-500 mb-2 line-clamp-2">
+            {product.short_description || product.description}
+          </p>
 
           <div className="flex items-center justify-between mb-3">
             <div>
               <span className="text-xl font-bold text-primary-600">
-                {product.price.currency}{product.price.current.toLocaleString()}
+                ₹{displayPrice.toLocaleString()}
               </span>
-              {product.price.original > product.price.current && (
+              {product.sale_price && (
                 <span className="ml-2 text-sm text-gray-500 line-through">
-                  {product.price.currency}{product.price.original.toLocaleString()}
+                  ₹{product.price.toLocaleString()}
                 </span>
               )}
             </div>
-            {product.inventory.in_stock ? (
+            {isInStock ? (
               <span className="text-sm text-green-600">In Stock</span>
             ) : (
               <span className="text-sm text-red-600">Out of Stock</span>
@@ -97,7 +99,7 @@ export default function ProductCard({ product }: ProductCardProps) {
 
           <button
             onClick={handleAddToCart}
-            disabled={!product.inventory.in_stock}
+            disabled={!isInStock}
             className="w-full bg-primary-600 text-white py-2 px-4 rounded-md hover:bg-primary-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center space-x-2"
           >
             <ShoppingCart size={18} />

@@ -3,6 +3,8 @@
 ## Project Overview
 TRIPUND is a full-stack e-commerce platform for Indian handicrafts with three main components: Backend API (Go), Web Frontend (React), and Admin Panel (React). The platform uses Firebase/Firestore for data persistence and Google Cloud Run for backend hosting.
 
+**IMPORTANT**: Never run or test anything on localhost. All development should be done directly in code and deployed to production environments.
+
 ## Quick Access URLs
 - **Production Frontend**: https://tripundlifestyle.netlify.app
 - **Production Admin**: https://tripundlifestyle-admin.netlify.app
@@ -373,17 +375,68 @@ Add this A record to your DNS provider:
 - Automatic HTTPS with managed SSL certificates
 - No need for public GCS bucket access
 
+## Recent Development Work Completed
+
+### Product Management System (August 2025)
+1. **Cloud CDN Implementation**:
+   - Set up Google Cloud CDN for image serving (IP: 34.149.173.174)
+   - Created backend bucket: `tripund-images-backend`
+   - Configured SSL certificate for `images.tripundlifestyle.com`
+   - Updated all image URLs to use CDN instead of direct GCS access
+
+2. **Product Data Creation**:
+   - Created 40+ products from document analysis
+   - Uploaded 100+ product images to GCS bucket
+   - Organized images by SKU in `/products/{SKU}/` structure
+   - Created `upload-product-images.sh` script for batch processing
+
+3. **Document Parsing System**:
+   - Implemented `parse-product-descriptions.js` with mammoth library
+   - Successfully parsed 41 product documents extracting:
+     - Features, materials, specifications, dimensions
+     - Care instructions, origin, artisan stories
+   - Updated all products in Firestore with rich metadata
+
+4. **Backend Updates**:
+   - Completely restructured Go Product model to flat structure
+   - Updated product handlers for array-contains category filtering
+   - Fixed API endpoints to return proper product data
+
+5. **Frontend Components**:
+   - Created `ImageCarousel.tsx` with thumbnail navigation
+   - Updated `ProductCard.tsx` for multi-image display
+   - Implemented proper fallback image handling
+
+6. **Admin Panel Enhancements**:
+   - Complete rewrite of Products page with real API integration
+   - Created comprehensive `ProductForm.tsx` component for CRUD operations
+   - Added full validation and error handling
+   - Integrated form with Products page for complete workflow
+   - Features: Multi-image URLs, dynamic attributes, category selection, tags
+
+### Product Categories Created
+- **Divine Collections**: 23 products (idols, spiritual items)
+- **Wall Décor**: 14 products (paintings, wall hangings)
+- **Festivals**: 3 products (torans, decorations)
+
+### Scripts Created
+- `seed-categories.js` - Initialize TRIPUND categories
+- `create-products.js` - Generate products from folders
+- `parse-product-descriptions.js` - Extract data from .docx files
+- `upload-product-images.sh` - Batch upload images to GCS
+- `test-products.js` - Test Firestore product queries
+
 ## Notes for AI Assistants
-1. Always run `npm install` before running dev servers
-2. Check `.env` files exist before running locally
+1. **NEVER run or test anything on localhost - work directly in code**
+2. Check `.env` files exist before deployment
 3. Use `git status` before committing to verify changes
-4. Test API endpoints with curl before assuming they work
+4. Test API endpoints with curl after deployment
 5. Clear Netlify cache if builds show old content
 6. Check Cloud Run IAM settings if getting 403 errors
 7. Verify CORS configuration when adding new domains
 8. Always use Node.js v20+ for builds
 9. Use Tailwind CSS v3 (not v4) for compatibility
-10. Run build commands locally to test before deploying
+10. Deploy directly to production for testing
 
 ## Quick Fixes
 

@@ -121,7 +121,23 @@ export default function Categories() {
                 </button>
               )}
               <div className="flex items-center">
-                <div className="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center mr-3">
+                {category.image ? (
+                  <img 
+                    src={category.image} 
+                    alt={category.name}
+                    className="w-10 h-10 object-cover rounded-lg mr-3"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      const fallback = target.nextElementSibling as HTMLElement;
+                      if (fallback) fallback.style.display = 'flex';
+                    }}
+                  />
+                ) : null}
+                <div 
+                  className="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center mr-3"
+                  style={{ display: category.image ? 'none' : 'flex' }}
+                >
                   {isExpanded ? <FolderOpen size={20} className="text-gray-500" /> : <Folder size={20} className="text-gray-500" />}
                 </div>
                 <div>

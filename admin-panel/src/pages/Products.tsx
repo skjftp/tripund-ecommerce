@@ -9,10 +9,32 @@ import {
   Download,
   Upload,
   Package,
+  RefreshCw,
 } from 'lucide-react';
-import { productAPI } from '../services/api';
-import { Product } from '../types';
+import axios from 'axios';
 import toast from 'react-hot-toast';
+import ProductForm from '../components/ProductForm';
+
+interface Product {
+  id: string;
+  sku: string;
+  name: string;
+  description: string;
+  short_description?: string;
+  price: number;
+  sale_price?: number;
+  stock_quantity: number;
+  stock_status: string;
+  status: string;
+  featured: boolean;
+  images: string[];
+  categories: string[];
+  attributes: { name: string; value: string }[];
+  created_at: string;
+  updated_at: string;
+}
+
+const API_URL = import.meta.env.VITE_API_URL || 'https://tripund-backend-rafqv5m7ga-el.a.run.app/api/v1';
 
 export default function Products() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -21,52 +43,32 @@ export default function Products() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
-  // Mock data for demonstration
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${API_URL}/products?limit=50`);
+      const fetchedProducts = response.data.products || [];
+      setProducts(fetchedProducts);
+      console.log(`Loaded ${fetchedProducts.length} products`);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      toast.error('Failed to load products');
+      setProducts([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const mockProducts: Product[] = [
-      {
-        id: '1',
-        name: 'Handwoven Silk Saree',
-        description: 'Traditional Banarasi silk saree with intricate gold zari work',
-        category: 'Textiles',
-        subcategory: 'Sarees',
-        price: { amount: 8500, currency: 'INR', compare_at: 10000 },
-        images: ['/api/placeholder/400/400'],
-        sku: 'SAR001',
-        inventory: { quantity: 15, track_quantity: true, allow_backorder: false },
-        artisan: { id: '1', name: 'Ravi Kumar', location: 'Varanasi' },
-        tags: ['silk', 'saree', 'wedding', 'traditional'],
-        status: 'active',
-        featured: true,
-        created_at: '2024-01-15',
-        updated_at: '2024-01-20',
-      },
-      {
-        id: '2',
-        name: 'Ceramic Dinner Set',
-        description: 'Handcrafted ceramic dinner set for 6 people',
-        category: 'Pottery',
-        subcategory: 'Dinnerware',
-        price: { amount: 3200, currency: 'INR' },
-        images: ['/api/placeholder/400/400'],
-        sku: 'CER002',
-        inventory: { quantity: 8, track_quantity: true, allow_backorder: true },
-        artisan: { id: '2', name: 'Priya Sharma', location: 'Jaipur' },
-        tags: ['ceramic', 'dinnerware', 'handmade'],
-        status: 'active',
-        featured: false,
-        created_at: '2024-01-10',
-        updated_at: '2024-01-18',
-      },
-    ];
-    setProducts(mockProducts);
-    setLoading(false);
+    fetchProducts();
   }, []);
 
   const filteredProducts = products.filter((product) => {
-    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
+    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         product.sku.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = selectedCategory === 'all' || product.categories.includes(selectedCategory);
     const matchesStatus = selectedStatus === 'all' || product.status === selectedStatus;
     return matchesSearch && matchesCategory && matchesStatus;
   });
@@ -74,12 +76,45 @@ export default function Products() {
   const handleDelete = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this product?')) {
       try {
-        // await productAPI.delete(id);
+        await axios.delete(`${API_URL}/products/${id}`);
         setProducts(products.filter((p) => p.id !== id));
         toast.success('Product deleted successfully');
       } catch (error) {
+        console.error('Error deleting product:', error);
         toast.error('Failed to delete product');
       }
+    }
+  };
+
+  const handleEdit = (product: Product) => {
+    setEditingProduct(product);
+    setShowAddModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowAddModal(false);
+    setEditingProduct(null);
+  };
+
+  const handleSubmitProduct = async (productData: any) => {
+    try {
+      if (editingProduct) {
+        // Update existing product
+        const response = await axios.put(`${API_URL}/products/${editingProduct.id}`, productData);
+        setProducts(products.map(p => p.id === editingProduct.id ? { ...productData, id: editingProduct.id } : p));
+        toast.success('Product updated successfully');
+      } else {
+        // Create new product
+        const response = await axios.post(`${API_URL}/products`, productData);
+        const newProduct = response.data;
+        setProducts([...products, newProduct]);
+        toast.success('Product created successfully');
+      }
+      handleCloseModal();
+      fetchProducts(); // Refresh the list to get the latest data
+    } catch (error) {
+      console.error('Error saving product:', error);
+      toast.error(`Failed to ${editingProduct ? 'update' : 'create'} product`);
     }
   };
 
@@ -96,8 +131,8 @@ export default function Products() {
     }
   };
 
-  const getInventoryStatus = (quantity: number) => {
-    if (quantity === 0) return { text: 'Out of Stock', color: 'text-red-600' };
+  const getInventoryStatus = (quantity: number, status: string) => {
+    if (status === 'out_of_stock' || quantity === 0) return { text: 'Out of Stock', color: 'text-red-600' };
     if (quantity < 10) return { text: 'Low Stock', color: 'text-yellow-600' };
     return { text: 'In Stock', color: 'text-green-600' };
   };
@@ -110,6 +145,14 @@ export default function Products() {
           <p className="text-gray-600">Manage your product catalog</p>
         </div>
         <div className="flex items-center space-x-3">
+          <button 
+            onClick={fetchProducts}
+            disabled={loading}
+            className="flex items-center space-x-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+          >
+            <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
+            <span>Refresh</span>
+          </button>
           <button className="flex items-center space-x-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
             <Upload size={20} />
             <span>Import</span>
@@ -148,10 +191,13 @@ export default function Products() {
             className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
             <option value="all">All Categories</option>
-            <option value="Textiles">Textiles</option>
-            <option value="Pottery">Pottery</option>
-            <option value="Jewelry">Jewelry</option>
-            <option value="Woodwork">Woodwork</option>
+            <option value="divine-collections">Divine Collections</option>
+            <option value="wall-decor">Wall Décor</option>
+            <option value="festivals">Festivals</option>
+            <option value="lighting">Lighting</option>
+            <option value="home-accent">Home Accent</option>
+            <option value="storage-bags">Storage & Bags</option>
+            <option value="gifting">Gifting</option>
           </select>
           
           <select
@@ -212,7 +258,8 @@ export default function Products() {
               </tr>
             ) : (
               filteredProducts.map((product) => {
-                const inventoryStatus = getInventoryStatus(product.inventory.quantity);
+                const inventoryStatus = getInventoryStatus(product.stock_quantity, product.stock_status);
+                const displayPrice = product.sale_price || product.price;
                 return (
                   <tr key={product.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -220,8 +267,11 @@ export default function Products() {
                         <div className="h-10 w-10 flex-shrink-0">
                           <img
                             className="h-10 w-10 rounded-lg object-cover"
-                            src={product.images[0] || '/api/placeholder/40/40'}
+                            src={product.images[0] || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop'}
                             alt={product.name}
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop';
+                            }}
                           />
                         </div>
                         <div className="ml-4">
@@ -231,18 +281,20 @@ export default function Products() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{product.category}</div>
-                      {product.subcategory && (
-                        <div className="text-sm text-gray-500">{product.subcategory}</div>
-                      )}
+                      <div className="text-sm text-gray-900">
+                        {product.categories.map(cat => cat.replace('-', ' ')).join(', ')}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        {product.attributes.find(attr => attr.name === 'Material')?.value || 'Handmade'}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">
-                        ₹{product.price.amount.toLocaleString()}
+                        ₹{displayPrice.toLocaleString()}
                       </div>
-                      {product.price.compare_at && (
+                      {product.sale_price && (
                         <div className="text-sm text-gray-500 line-through">
-                          ₹{product.price.compare_at.toLocaleString()}
+                          ₹{product.price.toLocaleString()}
                         </div>
                       )}
                     </td>
@@ -250,7 +302,7 @@ export default function Products() {
                       <div className="flex items-center">
                         <Package size={16} className={inventoryStatus.color} />
                         <span className={`ml-2 text-sm font-medium ${inventoryStatus.color}`}>
-                          {product.inventory.quantity} units
+                          {product.stock_quantity} units
                         </span>
                       </div>
                       <div className={`text-xs ${inventoryStatus.color}`}>
@@ -258,20 +310,30 @@ export default function Products() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadge(
-                          product.status
-                        )}`}
-                      >
-                        {product.status}
-                      </span>
+                      <div className="flex items-center space-x-2">
+                        <span
+                          className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadge(
+                            product.status
+                          )}`}
+                        >
+                          {product.status}
+                        </span>
+                        {product.featured && (
+                          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                            featured
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex items-center space-x-3">
                         <button className="text-gray-600 hover:text-gray-900">
                           <Eye size={18} />
                         </button>
-                        <button className="text-blue-600 hover:text-blue-900">
+                        <button 
+                          onClick={() => handleEdit(product)}
+                          className="text-blue-600 hover:text-blue-900"
+                        >
                           <Edit size={18} />
                         </button>
                         <button
@@ -307,6 +369,14 @@ export default function Products() {
           </button>
         </div>
       </div>
+
+      {/* Product Form Modal */}
+      <ProductForm
+        isOpen={showAddModal}
+        onClose={handleCloseModal}
+        product={editingProduct}
+        onSubmit={handleSubmitProduct}
+      />
     </div>
   );
 }
