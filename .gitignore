@@ -1,0 +1,92 @@
+# Dependencies
+node_modules/
+vendor/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment files
+.env
+.env.local
+.env.production
+.env.development
+
+# Build outputs
+dist/
+build/
+*.out
+*.exe
+*.dll
+*.so
+*.dylib
+*.test
+*.prof
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Backend specific
+backend-api/serviceAccount.json
+backend-api/serviceAccountKey.json
+backend-api/vendor/
+backend-api/tmp/
+backend-api/main
+backend-api/go.sum
+
+# Frontend specific
+web-frontend/dist/
+web-frontend/node_modules/
+web-frontend/.env.local
+
+# Admin panel specific
+admin-panel/dist/
+admin-panel/node_modules/
+admin-panel/.env.local
+
+# Mobile app specific
+mobile-app/.dart_tool/
+mobile-app/.packages
+mobile-app/.pub-cache/
+mobile-app/.pub/
+mobile-app/build/
+mobile-app/*.iml
+mobile-app/*.ipr
+mobile-app/*.iws
+mobile-app/.idea/
+
+# Firebase
+.firebase/
+*.cache
+firebase-debug.log
+
+# Google Cloud
+.gcloudignore
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+*.cache
+tmp/
+temp/
+
+# OS files
+Thumbs.db
+.DS_Store
+Desktop.ini
+
+# Backup files
+*.backup
+*.bak
+*.old
+
+# Coverage
+coverage/
+*.lcov
+.nyc_output/
