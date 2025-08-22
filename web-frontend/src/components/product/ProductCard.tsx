@@ -34,7 +34,7 @@ export default function ProductCard({ product }: ProductCardProps) {
     }
   };
 
-  const price = product.price || 0;
+  const price = typeof product.price === 'number' ? product.price : 0;
   const salePrice = typeof product.sale_price === 'number' ? product.sale_price : null;
   
   const discountPercentage = salePrice && price > 0 ? 

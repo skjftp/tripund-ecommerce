@@ -1,43 +1,46 @@
 export interface Product {
   id: string;
-  title: string;
+  sku: string;
+  name: string;
+  slug: string;
   description: string;
   short_description: string;
-  price: {
-    current: number;
-    original: number;
-    currency: string;
-  };
-  discount: number;
-  category: string;
-  subcategory: string;
+  price: number;
+  sale_price?: number | null;
+  manage_stock: boolean;
+  stock_quantity: number;
+  stock_status: string;
+  featured: boolean;
+  status: string;
+  images: string[];
+  categories: string[];
   tags: string[];
-  images: {
-    main: string;
-    gallery: string[];
-    thumbnails: string[];
+  attributes: Array<{
+    name: string;
+    value: string;
+  }>;
+  dimensions: {
+    length?: number;
+    width?: number;
+    height?: number;
+    unit?: string;
   };
-  inventory: {
+  weight: {
+    value?: number;
+    unit?: string;
+  };
+  created_at: string;
+  updated_at: string;
+  parsed_description?: any;
+  
+  // Legacy fields for backward compatibility
+  title?: string;
+  category?: string;
+  inventory?: {
     in_stock: boolean;
     quantity: number;
     sku: string;
   };
-  artisan: {
-    name: string;
-    location: string;
-    story: string;
-  };
-  specifications: Record<string, any>;
-  seo: {
-    meta_title: string;
-    meta_description: string;
-    keywords: string;
-  };
-  status: string;
-  featured: boolean;
-  is_limited: boolean;
-  created_at: string;
-  updated_at: string;
 }
 
 export interface User {
