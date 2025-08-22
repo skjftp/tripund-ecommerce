@@ -1,13 +1,15 @@
 # TRIPUND E-Commerce Platform - AI Assistant Guide
 
 ## Project Overview
-TRIPUND is a full-stack e-commerce platform for Indian handicrafts with three main components: Backend API (Go), Web Frontend (React), and Admin Panel (React).
+TRIPUND is a full-stack e-commerce platform for Indian handicrafts with three main components: Backend API (Go), Web Frontend (React), and Admin Panel (React). The platform uses Firebase/Firestore for data persistence and Google Cloud Run for backend hosting.
 
 ## Quick Access URLs
 - **Production Frontend**: https://tripundlifestyle.netlify.app
 - **Production Admin**: https://tripundlifestyle-admin.netlify.app
 - **Production API**: https://tripund-backend-665685012221.asia-south1.run.app
 - **GitHub Repo**: https://github.com/skjftp/tripund-ecommerce
+- **Firestore Console**: https://console.cloud.google.com/firestore/databases/-default-/data/panel?project=tripund-ecommerce-1755860933
+- **Firebase Console**: https://console.firebase.google.com/project/tripund-ecommerce-1755860933/overview
 
 ## Project Structure
 ```
@@ -115,6 +117,8 @@ VITE_API_URL=https://tripund-backend-665685012221.asia-south1.run.app/api/v1
 - `POST /api/v1/admin/auth/login` - Admin login
 - `GET /api/v1/products` - List products
 - `GET /api/v1/products/:id` - Get product details
+- `GET /api/v1/categories` - List all categories (returns from Firestore)
+- `GET /api/v1/categories/:id` - Get specific category
 
 ### Protected Endpoints (Requires JWT)
 - `GET /api/v1/profile` - Get user profile
@@ -126,6 +130,10 @@ VITE_API_URL=https://tripund-backend-665685012221.asia-south1.run.app/api/v1
 - `POST /api/v1/admin/products` - Create product
 - `PUT /api/v1/admin/products/:id` - Update product
 - `DELETE /api/v1/admin/products/:id` - Delete product
+- `POST /api/v1/admin/categories` - Create category
+- `PUT /api/v1/admin/categories/:id` - Update category
+- `DELETE /api/v1/admin/categories/:id` - Delete category
+- `POST /api/v1/admin/categories/initialize` - Initialize default TRIPUND categories
 
 ## Deployment
 
@@ -195,8 +203,64 @@ netlify deploy --dir=dist --prod
 - `users` - User accounts and profiles
 - `products` - Product catalog
 - `orders` - Customer orders
-- `categories` - Product categories
+- `categories` - Product categories (7 main TRIPUND categories with subcategories)
 - `payments` - Payment records
+
+### Firestore Setup
+
+#### Enable Firestore in GCP Project
+```bash
+# Enable required Firebase APIs
+gcloud services enable firebase.googleapis.com
+gcloud services enable firebasehosting.googleapis.com
+gcloud services enable firestore.googleapis.com
+
+# Add Firebase to existing GCP project
+curl -X POST \
+  https://firebase.googleapis.com/v1beta1/projects/tripund-ecommerce-1755860933:addFirebase \
+  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  -H "Content-Type: application/json"
+```
+
+#### Configure Application Default Credentials
+```bash
+# Login to GCP
+gcloud auth login
+gcloud config set project tripund-ecommerce-1755860933
+
+# Set application default credentials
+gcloud auth application-default login
+```
+
+### Category Management
+
+#### Seed Categories to Firestore
+```bash
+# Using Node.js script
+cd backend-api
+npm install
+node seed-categories.js
+
+# Using Go seed command
+cd backend-api
+go run cmd/seed/main.go
+```
+
+#### Initialize Categories via API
+```bash
+# Admin endpoint to initialize default TRIPUND categories
+curl -X POST https://tripund-backend-665685012221.asia-south1.run.app/api/v1/admin/categories/initialize \
+  -H "Authorization: Bearer YOUR_ADMIN_JWT_TOKEN"
+```
+
+#### TRIPUND Category Structure
+1. **Festivals** (TLSFL00001) - Torans, Door Décor, Garlands, Decorations, Rangoli
+2. **Wall Décor** (TLSWD00001) - Wall Hangings, Paintings, Frames, Mirrors, Clocks
+3. **Lighting** (TLSLT00001) - Candles, Diyas, Lanterns, Decorative Lights
+4. **Home Accent** (TLSHA00001) - Cushion Covers, Table Décor, Vases, Showpieces
+5. **Divine Collections** (TLSDC00001) - Idols, Pooja Items, Spiritual Décor
+6. **Storage & Bags** (TLSSB00001) - Storage Boxes, Bags, Organizers
+7. **Gifting** (TLSGF00001) - Gift Sets, Hampers, Personalized Gifts
 
 ## Testing
 

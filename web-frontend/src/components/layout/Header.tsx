@@ -4,6 +4,7 @@ import { ShoppingCart, Search, User, Menu, X, Heart } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../store';
 import { logout } from '../../store/slices/authSlice';
+import tripundLogo from '../../assets/tripund-logo.png';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -41,7 +42,11 @@ export default function Header() {
             </button>
             
             <Link to="/" className="ml-4 lg:ml-0">
-              <h1 className="text-2xl font-bold text-primary-600">TRIPUND</h1>
+              <img 
+                src={tripundLogo} 
+                alt="TRIPUND LIFESTYLE" 
+                className="h-10 w-auto"
+              />
             </Link>
           </div>
 

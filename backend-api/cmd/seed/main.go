@@ -29,6 +29,7 @@ func main() {
 			Name:        "Festivals",
 			Slug:        "festivals",
 			Description: "Festive decorations and items",
+			Image:       "https://storage.googleapis.com/tripund-product-images/categories/festivals.png",
 			Order:       1,
 			Children: []models.SubCategory{
 				{Name: "Torans", ProductCount: 0},
@@ -45,6 +46,7 @@ func main() {
 			Name:        "Wall Décor",
 			Slug:        "wall-decor",
 			Description: "Wall decorations and hangings",
+			Image:       "https://storage.googleapis.com/tripund-product-images/categories/wall-decor.png",
 			Order:       2,
 			Children: []models.SubCategory{
 				{Name: "Wall Hangings", ProductCount: 0},
@@ -61,6 +63,7 @@ func main() {
 			Name:        "Lighting",
 			Slug:        "lighting",
 			Description: "Decorative lighting solutions",
+			Image:       "https://storage.googleapis.com/tripund-product-images/categories/lighting.png",
 			Order:       3,
 			Children: []models.SubCategory{
 				{Name: "Candles", ProductCount: 0},
@@ -76,6 +79,7 @@ func main() {
 			Name:        "Home Accent",
 			Slug:        "home-accent",
 			Description: "Home decoration accents",
+			Image:       "https://storage.googleapis.com/tripund-product-images/categories/home-accent.png",
 			Order:       4,
 			Children: []models.SubCategory{
 				{Name: "Cushion Covers", ProductCount: 0},
@@ -91,6 +95,7 @@ func main() {
 			Name:        "Divine Collections",
 			Slug:        "divine-collections",
 			Description: "Religious and spiritual items",
+			Image:       "https://storage.googleapis.com/tripund-product-images/categories/divine-collections.png",
 			Order:       5,
 			Children: []models.SubCategory{
 				{Name: "Idols", ProductCount: 0},
@@ -105,6 +110,7 @@ func main() {
 			Name:        "Storage & Bags",
 			Slug:        "storage-bags",
 			Description: "Storage solutions and bags",
+			Image:       "https://storage.googleapis.com/tripund-product-images/categories/storage-bags.png",
 			Order:       6,
 			Children: []models.SubCategory{
 				{Name: "Storage Boxes", ProductCount: 0},
@@ -119,6 +125,7 @@ func main() {
 			Name:        "Gifting",
 			Slug:        "gifting",
 			Description: "Gift items and hampers",
+			Image:       "https://storage.googleapis.com/tripund-product-images/categories/gifting.png",
 			Order:       7,
 			Children: []models.SubCategory{
 				{Name: "Gift Sets", ProductCount: 0},
