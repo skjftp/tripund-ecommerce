@@ -1,51 +1,46 @@
 import { Product } from '../types';
 
-export const sampleProducts: Product[] = [
+export const sampleProducts: Product[] = [] as Product[];
+
+// Temporarily empty to avoid build errors
+// Real products will be fetched from API
+export const sampleProductsOld = [
   {
     id: 'faith-in-form-crucifix',
-    title: '"Faith in Form" – Handcrafted Wall Crucifix with Calabash Gourd Inlay',
+    sku: 'FIF-CRX-001',
+    name: '"Faith in Form" – Handcrafted Wall Crucifix with Calabash Gourd Inlay',
+    slug: 'faith-in-form-crucifix',
     description: 'A contemporary espresso-toned wall crucifix handcrafted in El Salvador, featuring calabash gourd inlays and enameled wire accents — a modern expression of sacred art for home altars and meditation spaces.',
     short_description: 'Contemporary handcrafted crucifix with gourd inlay',
-    price: {
-      current: 8150,
-      original: 10600,
-      currency: '₹',
-    },
-    discount: 25,
-    category: 'Spiritual Wall Art',
-    subcategory: 'Religious Art',
-    tags: ['handcrafted', 'spiritual', 'el-salvador', 'contemporary'],
-    images: {
-      main: 'https://images.unsplash.com/photo-1548357019-59232d5317c9?w=800',
-      gallery: [
-        'https://images.unsplash.com/photo-1548357019-59232d5317c9?w=800',
-        'https://images.unsplash.com/photo-1584990347449-a3b8ee63b3e2?w=800',
-      ],
-      thumbnails: [],
-    },
-    inventory: {
-      in_stock: true,
-      quantity: 5,
-      sku: 'FIF-CRX-001',
-    },
-    artisan: {
-      name: 'El Salvador Artisan',
-      location: 'El Salvador',
-      story: 'Our El Salvador artisans have been crafting religious art for generations, blending traditional techniques with contemporary design.',
-    },
-    specifications: {
-      dimensions: '24x16 inches',
-      materials: 'Espresso Wood, Calabash Gourd, Enameled Wire',
-      weight: '2.5 kg',
-    },
-    seo: {
-      meta_title: 'Faith in Form Crucifix - Handcrafted Wall Art',
-      meta_description: 'Contemporary espresso-toned wall crucifix with calabash gourd inlay',
-      keywords: 'crucifix, wall art, spiritual, handcrafted',
-    },
-    status: 'active',
+    price: 10600,
+    sale_price: 8150,
+    manage_stock: true,
+    stock_quantity: 5,
+    stock_status: 'in_stock',
     featured: true,
-    is_limited: false,
+    status: 'active',
+    images: [
+      'https://images.unsplash.com/photo-1548357019-59232d5317c9?w=800',
+      'https://images.unsplash.com/photo-1584990347449-a3b8ee63b3e2?w=800',
+    ],
+    categories: ['spiritual-wall-art', 'religious-art'],
+    tags: ['handcrafted', 'spiritual', 'el-salvador', 'contemporary'],
+    attributes: [
+      { name: 'Material', value: 'Espresso Wood, Calabash Gourd, Enameled Wire' },
+      { name: 'Origin', value: 'El Salvador' },
+      { name: 'Dimensions', value: '24x16 inches' },
+      { name: 'Weight', value: '2.5 kg' },
+    ],
+    dimensions: {
+      length: 24,
+      width: 16,
+      height: 2,
+      unit: 'inches'
+    },
+    weight: {
+      value: 2.5,
+      unit: 'kg'
+    },
     created_at: '2024-01-15T10:00:00Z',
     updated_at: '2024-01-15T10:00:00Z',
   },

@@ -50,7 +50,7 @@ const cartSlice = createSlice({
           product_id: product.id,
           product,
           quantity,
-          price: product.price.current,
+          price: product.sale_price || product.price || 0,
           added_at: new Date().toISOString(),
         });
       }

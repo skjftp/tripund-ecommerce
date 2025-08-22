@@ -76,9 +76,11 @@ export default function ProductDetailPage() {
     }
   };
 
-  const allImages = [product.images.main, ...(product.images.gallery || [])];
-  const discountPercentage = product.discount || 
-    Math.round(((product.price.original - product.price.current) / product.price.original) * 100);
+  const allImages = product.images || [];
+  const price = typeof product.price === 'number' ? product.price : 0;
+  const salePrice = typeof product.sale_price === 'number' ? product.sale_price : null;
+  const discountPercentage = salePrice && price > 0 ? 
+    Math.round(((price - salePrice) / price) * 100) : 0;
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -129,35 +131,31 @@ export default function ProductDetailPage() {
             </div>
 
             <div>
-              <h1 className="text-3xl font-bold mb-2">{product.title}</h1>
+              <h1 className="text-3xl font-bold mb-2">{product.name || product.title}</h1>
               
-              {product.artisan && (
-                <p className="text-gray-600 mb-4">
-                  by {product.artisan.name} • {product.artisan.location}
-                </p>
-              )}
+              {/* Artisan info removed - not in new structure */}
 
               <div className="mb-6">
                 <span className="text-3xl font-bold text-primary-600">
-                  {product.price.currency}{product.price.current.toLocaleString()}
+                  ₹{(salePrice || price).toLocaleString()}
                 </span>
-                {product.price.original > product.price.current && (
+                {salePrice && price > salePrice && (
                   <span className="ml-3 text-xl text-gray-500 line-through">
-                    {product.price.currency}{product.price.original.toLocaleString()}
+                    ₹{price.toLocaleString()}
                   </span>
                 )}
               </div>
 
               <p className="text-gray-700 mb-6">{product.description}</p>
 
-              {product.specifications && Object.keys(product.specifications).length > 0 && (
+              {product.attributes && product.attributes.length > 0 && (
                 <div className="mb-6">
                   <h3 className="font-semibold mb-3">Specifications</h3>
                   <dl className="grid grid-cols-2 gap-2">
-                    {Object.entries(product.specifications).map(([key, value]) => (
-                      <div key={key}>
-                        <dt className="text-gray-600 text-sm">{key}:</dt>
-                        <dd className="font-medium">{String(value)}</dd>
+                    {product.attributes.map((attr, index) => (
+                      <div key={index}>
+                        <dt className="text-gray-600 text-sm">{attr.name}:</dt>
+                        <dd className="font-medium">{attr.value}</dd>
                       </div>
                     ))}
                   </dl>
@@ -165,7 +163,7 @@ export default function ProductDetailPage() {
               )}
 
               <div className="mb-6">
-                {product.inventory.in_stock ? (
+                {product.stock_status === 'in_stock' ? (
                   <span className="text-green-600 font-medium">✓ In Stock</span>
                 ) : (
                   <span className="text-red-600 font-medium">Out of Stock</span>
@@ -191,7 +189,7 @@ export default function ProductDetailPage() {
 
                 <button
                   onClick={handleAddToCart}
-                  disabled={!product.inventory.in_stock}
+                  disabled={product.stock_status !== 'in_stock'}
                   className="flex-1 bg-primary-600 text-white py-3 px-6 rounded-md hover:bg-primary-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center space-x-2"
                 >
                   <ShoppingCart size={20} />
@@ -222,12 +220,7 @@ export default function ProductDetailPage() {
             </div>
           </div>
 
-          {product.artisan?.story && (
-            <div className="mt-12 border-t pt-8">
-              <h3 className="text-xl font-semibold mb-4">Artisan Story</h3>
-              <p className="text-gray-700">{product.artisan.story}</p>
-            </div>
-          )}
+          {/* Artisan story section removed - not in new structure */}
         </div>
       </div>
     </div>

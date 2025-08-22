@@ -54,8 +54,8 @@ export default function CartPage() {
                   className="flex items-center p-6 border-b last:border-b-0"
                 >
                   <img
-                    src={item.product.images.main}
-                    alt={item.product.title}
+                    src={item.product.images?.[0] || ''}
+                    alt={item.product.name || item.product.title}
                     className="w-24 h-24 object-cover rounded-md"
                   />
                   
@@ -64,10 +64,10 @@ export default function CartPage() {
                       to={`/products/${item.product_id}`}
                       className="text-lg font-semibold hover:text-primary-600"
                     >
-                      {item.product.title}
+                      {item.product.name || item.product.title}
                     </Link>
                     <p className="text-gray-600 text-sm mt-1">
-                      {item.product.artisan?.name && `by ${item.product.artisan.name}`}
+                      {/* Artisan info removed */}
                     </p>
                     <p className="text-primary-600 font-semibold mt-2">
                       ₹{item.price.toLocaleString()}
