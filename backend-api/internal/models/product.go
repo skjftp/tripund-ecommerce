@@ -3,53 +3,42 @@ package models
 import "time"
 
 type Product struct {
-	ID             string                 `json:"id" firestore:"id"`
-	Title          string                 `json:"title" firestore:"title" validate:"required"`
-	Description    string                 `json:"description" firestore:"description"`
-	ShortDesc      string                 `json:"short_description" firestore:"short_description"`
-	Price          Price                  `json:"price" firestore:"price"`
-	Discount       int                    `json:"discount" firestore:"discount"`
-	Category       string                 `json:"category" firestore:"category"`
-	Subcategory    string                 `json:"subcategory" firestore:"subcategory"`
-	Tags           []string               `json:"tags" firestore:"tags"`
-	Images         Images                 `json:"images" firestore:"images"`
-	Inventory      Inventory              `json:"inventory" firestore:"inventory"`
-	Artisan        Artisan                `json:"artisan" firestore:"artisan"`
-	Specifications map[string]interface{} `json:"specifications" firestore:"specifications"`
-	SEO            SEO                    `json:"seo" firestore:"seo"`
-	Status         string                 `json:"status" firestore:"status"`
-	Featured       bool                   `json:"featured" firestore:"featured"`
-	IsLimited      bool                   `json:"is_limited" firestore:"is_limited"`
-	CreatedAt      time.Time              `json:"created_at" firestore:"created_at"`
-	UpdatedAt      time.Time              `json:"updated_at" firestore:"updated_at"`
+	ID               string                 `json:"id" firestore:"-"`
+	SKU              string                 `json:"sku" firestore:"sku" validate:"required"`
+	Name             string                 `json:"name" firestore:"name" validate:"required"`
+	Slug             string                 `json:"slug" firestore:"slug"`
+	Description      string                 `json:"description" firestore:"description"`
+	ShortDescription string                 `json:"short_description" firestore:"short_description"`
+	Price            float64                `json:"price" firestore:"price"`
+	SalePrice        *float64               `json:"sale_price" firestore:"sale_price,omitempty"`
+	ManageStock      bool                   `json:"manage_stock" firestore:"manage_stock"`
+	StockQuantity    int                    `json:"stock_quantity" firestore:"stock_quantity"`
+	StockStatus      string                 `json:"stock_status" firestore:"stock_status"`
+	Featured         bool                   `json:"featured" firestore:"featured"`
+	Status           string                 `json:"status" firestore:"status"`
+	Images           []string               `json:"images" firestore:"images"`
+	Categories       []string               `json:"categories" firestore:"categories"`
+	Tags             []string               `json:"tags" firestore:"tags"`
+	Attributes       []ProductAttribute     `json:"attributes" firestore:"attributes"`
+	Dimensions       ProductDimensions      `json:"dimensions" firestore:"dimensions"`
+	Weight           ProductWeight          `json:"weight" firestore:"weight"`
+	CreatedAt        time.Time              `json:"created_at" firestore:"created_at"`
+	UpdatedAt        time.Time              `json:"updated_at" firestore:"updated_at"`
 }
 
-type Price struct {
-	Current  float64 `json:"current" firestore:"current"`
-	Original float64 `json:"original" firestore:"original"`
-	Currency string  `json:"currency" firestore:"currency"`
+type ProductAttribute struct {
+	Name  string `json:"name" firestore:"name"`
+	Value string `json:"value" firestore:"value"`
 }
 
-type Images struct {
-	Main       string   `json:"main" firestore:"main"`
-	Gallery    []string `json:"gallery" firestore:"gallery"`
-	Thumbnails []string `json:"thumbnails" firestore:"thumbnails"`
+type ProductDimensions struct {
+	Length float64 `json:"length" firestore:"length"`
+	Width  float64 `json:"width" firestore:"width"`
+	Height float64 `json:"height" firestore:"height"`
+	Unit   string  `json:"unit" firestore:"unit"`
 }
 
-type Inventory struct {
-	InStock  bool   `json:"in_stock" firestore:"in_stock"`
-	Quantity int    `json:"quantity" firestore:"quantity"`
-	SKU      string `json:"sku" firestore:"sku"`
-}
-
-type Artisan struct {
-	Name     string `json:"name" firestore:"name"`
-	Location string `json:"location" firestore:"location"`
-	Story    string `json:"story" firestore:"story"`
-}
-
-type SEO struct {
-	MetaTitle       string `json:"meta_title" firestore:"meta_title"`
-	MetaDescription string `json:"meta_description" firestore:"meta_description"`
-	Keywords        string `json:"keywords" firestore:"keywords"`
+type ProductWeight struct {
+	Value float64 `json:"value" firestore:"value"`
+	Unit  string  `json:"unit" firestore:"unit"`
 }

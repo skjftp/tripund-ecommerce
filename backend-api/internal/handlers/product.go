@@ -24,7 +24,7 @@ func (h *ProductHandler) GetProducts(c *gin.Context) {
 	query := h.db.Client.Collection("products").Query
 
 	if category := c.Query("category"); category != "" {
-		query = query.Where("category", "==", category)
+		query = query.Where("categories", "array-contains", category)
 	}
 
 	if featured := c.Query("featured"); featured == "true" {
