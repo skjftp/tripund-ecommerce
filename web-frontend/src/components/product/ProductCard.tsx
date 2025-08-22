@@ -34,10 +34,13 @@ export default function ProductCard({ product }: ProductCardProps) {
     }
   };
 
-  const discountPercentage = product.sale_price ? 
-    Math.round(((product.price - product.sale_price) / product.price) * 100) : 0;
+  const price = product.price || 0;
+  const salePrice = typeof product.sale_price === 'number' ? product.sale_price : null;
+  
+  const discountPercentage = salePrice && price > 0 ? 
+    Math.round(((price - salePrice) / price) * 100) : 0;
 
-  const displayPrice = product.sale_price || product.price;
+  const displayPrice = salePrice || price;
   const isInStock = product.stock_status === 'in_stock' && product.stock_quantity > 0;
 
   return (
@@ -82,11 +85,11 @@ export default function ProductCard({ product }: ProductCardProps) {
           <div className="flex items-center justify-between mb-3">
             <div>
               <span className="text-xl font-bold text-primary-600">
-                ₹{displayPrice.toLocaleString()}
+                ₹{displayPrice ? displayPrice.toLocaleString() : '0'}
               </span>
-              {product.sale_price && (
+              {salePrice && price > 0 && (
                 <span className="ml-2 text-sm text-gray-500 line-through">
-                  ₹{product.price.toLocaleString()}
+                  ₹{price.toLocaleString()}
                 </span>
               )}
             </div>

@@ -1,7 +1,7 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { ArrowRight, Truck, Shield, Award, RefreshCw } from 'lucide-react';
+import { ArrowRight, Truck, Shield, Award, RefreshCw, Search, Filter, ChevronRight } from 'lucide-react';
 import { RootState, AppDispatch } from '../store';
 import { fetchProducts } from '../store/slices/productSlice';
 import ProductGrid from '../components/product/ProductGrid';
@@ -9,130 +9,141 @@ import ProductGrid from '../components/product/ProductGrid';
 export default function HomePage() {
   const dispatch = useDispatch<AppDispatch>();
   const { featuredProducts, loading } = useSelector((state: RootState) => state.products);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
 
   useEffect(() => {
-    dispatch(fetchProducts({ featured: true, limit: 8 }));
+    dispatch(fetchProducts({ limit: 20 }));
   }, [dispatch]);
 
+  const categories = [
+    { id: 'all', name: 'All Products', icon: '🎨' },
+    { id: 'divine-collections', name: 'Divine Collections', icon: '🕉️' },
+    { id: 'wall-decor', name: 'Wall Décor', icon: '🖼️' },
+    { id: 'festivals', name: 'Festivals', icon: '🎊' },
+    { id: 'lighting', name: 'Lighting', icon: '💡' },
+    { id: 'home-accent', name: 'Home Accent', icon: '🏠' },
+    { id: 'storage-bags', name: 'Storage & Bags', icon: '👜' },
+    { id: 'gifting', name: 'Gifting', icon: '🎁' }
+  ];
+
   return (
-    <div>
-      <section className="relative h-[600px] bg-gradient-to-r from-primary-600 to-primary-800">
-        <div className="absolute inset-0 bg-black opacity-40" />
-        <div className="relative max-w-7xl mx-auto px-4 h-full flex items-center">
-          <div className="text-white max-w-2xl">
-            <h1 className="text-5xl font-bold mb-4">
-              Discover Authentic Indian Artisanship
-            </h1>
-            <p className="text-xl mb-8">
-              Premium handcrafted wall decor, spiritual art, and cultural artifacts from
-              talented artisans across India and beyond.
-            </p>
-            <div className="space-x-4">
+    <div className="min-h-screen bg-gray-50">
+      {/* Minimal Hero with Search */}
+      <section className="bg-white border-b">
+        <div className="max-w-7xl mx-auto px-4 py-8">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
+                Artistic Home Décor
+              </h1>
+              <p className="text-gray-600 mt-1">Handcrafted luxury for modern homes</p>
+            </div>
+            
+            {/* Search Bar */}
+            <div className="w-full md:w-96 relative">
+              <input
+                type="text"
+                placeholder="Search products..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+              />
+              <Search className="absolute left-3 top-2.5 text-gray-400" size={20} />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Category Pills */}
+      <section className="bg-white border-b sticky top-0 z-10">
+        <div className="max-w-7xl mx-auto px-4 py-3">
+          <div className="flex items-center gap-3 overflow-x-auto scrollbar-hide">
+            {categories.map((category) => (
+              <button
+                key={category.id}
+                onClick={() => setSelectedCategory(category.id)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-full whitespace-nowrap transition-all ${
+                  selectedCategory === category.id
+                    ? 'bg-primary-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                <span>{category.icon}</span>
+                <span className="font-medium">{category.name}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Main Products Section */}
+      <section className="py-8">
+        <div className="max-w-7xl mx-auto px-4">
+          {/* Products Grid - Full Width */}
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold text-gray-900">
+                {selectedCategory === 'all' ? 'All Products' : categories.find(c => c.id === selectedCategory)?.name}
+              </h2>
+              <button className="flex items-center gap-2 text-gray-600 hover:text-primary-600">
+                <Filter size={20} />
+                <span>Filters</span>
+              </button>
+            </div>
+            
+            <ProductGrid 
+              products={featuredProducts.filter(product => 
+                selectedCategory === 'all' || product.categories?.includes(selectedCategory)
+              )} 
+              loading={loading} 
+            />
+            
+            {/* Load More Button */}
+            <div className="text-center mt-8">
               <Link
                 to="/products"
-                className="inline-flex items-center bg-white text-primary-600 px-6 py-3 rounded-md font-semibold hover:bg-gray-100 transition-colors"
+                className="inline-flex items-center bg-gray-900 text-white px-8 py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors"
               >
-                Shop Now
-                <ArrowRight className="ml-2" size={20} />
-              </Link>
-              <Link
-                to="/artisans"
-                className="inline-flex items-center bg-transparent border-2 border-white text-white px-6 py-3 rounded-md font-semibold hover:bg-white hover:text-primary-600 transition-colors"
-              >
-                Meet Our Artisans
+                View All Products
+                <ChevronRight className="ml-2" size={20} />
               </Link>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="py-12 bg-white">
+      {/* Minimalist Features Bar */}
+      <section className="bg-white border-t border-b py-6">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div className="text-center">
-              <div className="bg-primary-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Truck className="text-primary-600" size={28} />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div className="flex items-center gap-3">
+              <Truck className="text-gray-400" size={24} />
+              <div>
+                <p className="font-medium text-sm">Free Shipping</p>
+                <p className="text-xs text-gray-500">Orders over ₹5,000</p>
               </div>
-              <h3 className="font-semibold mb-2">Free Shipping</h3>
-              <p className="text-gray-600 text-sm">On orders over ₹5,000</p>
             </div>
-            <div className="text-center">
-              <div className="bg-primary-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Shield className="text-primary-600" size={28} />
+            <div className="flex items-center gap-3">
+              <Shield className="text-gray-400" size={24} />
+              <div>
+                <p className="font-medium text-sm">Secure Payment</p>
+                <p className="text-xs text-gray-500">100% Protected</p>
               </div>
-              <h3 className="font-semibold mb-2">Secure Payment</h3>
-              <p className="text-gray-600 text-sm">100% secure transactions</p>
             </div>
-            <div className="text-center">
-              <div className="bg-primary-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Award className="text-primary-600" size={28} />
+            <div className="flex items-center gap-3">
+              <Award className="text-gray-400" size={24} />
+              <div>
+                <p className="font-medium text-sm">Authentic</p>
+                <p className="text-xs text-gray-500">Handcrafted Quality</p>
               </div>
-              <h3 className="font-semibold mb-2">Authentic Products</h3>
-              <p className="text-gray-600 text-sm">Directly from artisans</p>
             </div>
-            <div className="text-center">
-              <div className="bg-primary-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                <RefreshCw className="text-primary-600" size={28} />
+            <div className="flex items-center gap-3">
+              <RefreshCw className="text-gray-400" size={24} />
+              <div>
+                <p className="font-medium text-sm">Easy Returns</p>
+                <p className="text-xs text-gray-500">30 Days Policy</p>
               </div>
-              <h3 className="font-semibold mb-2">Easy Returns</h3>
-              <p className="text-gray-600 text-sm">30-day return policy</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="py-16 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Featured Products</h2>
-            <p className="text-gray-600">
-              Handpicked artisanal pieces that celebrate tradition and craftsmanship
-            </p>
-          </div>
-          <ProductGrid products={featuredProducts} loading={loading} />
-          <div className="text-center mt-12">
-            <Link
-              to="/products"
-              className="inline-flex items-center bg-primary-600 text-white px-6 py-3 rounded-md font-semibold hover:bg-primary-700 transition-colors"
-            >
-              View All Products
-              <ArrowRight className="ml-2" size={20} />
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      <section className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-            <div>
-              <h2 className="text-3xl font-bold mb-4">Our Story</h2>
-              <p className="text-gray-600 mb-4">
-                TRIPUND Lifestyle bridges the gap between traditional artisans and modern
-                homes. We work directly with skilled craftspeople from India, El Salvador,
-                Mexico, and other regions to bring you authentic, handcrafted pieces that
-                tell a story.
-              </p>
-              <p className="text-gray-600 mb-6">
-                Each product in our collection is carefully selected for its quality,
-                cultural significance, and the skill of the artisan who created it. When
-                you purchase from TRIPUND, you're not just buying a product – you're
-                supporting traditional crafts and the livelihoods of talented artisans.
-              </p>
-              <Link
-                to="/about"
-                className="inline-flex items-center text-primary-600 font-semibold hover:text-primary-700"
-              >
-                Learn More About Us
-                <ArrowRight className="ml-2" size={20} />
-              </Link>
-            </div>
-            <div className="relative h-96">
-              <img
-                src="https://images.unsplash.com/photo-1524634126442-357e0eac3c14?w=800"
-                alt="Artisan at work"
-                className="w-full h-full object-cover rounded-lg shadow-lg"
-              />
             </div>
           </div>
         </div>
