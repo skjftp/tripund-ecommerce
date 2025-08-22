@@ -23,27 +23,15 @@ func NewCategoryHandler(db *database.Firebase) *CategoryHandler {
 }
 
 func (h *CategoryHandler) GetCategories(c *gin.Context) {
-	// Use memory store for now if Firebase is not available
-	if h.memory != nil {
-		categories, err := h.memory.GetCategories(c.Request.Context())
-		if err == nil {
-			c.JSON(http.StatusOK, gin.H{
-				"categories": categories,
-				"count":      len(categories),
-			})
-			return
-		}
-	}
-
-	// Try to fetch from Firestore
 	var categories []models.Category
 	
+	// First try to fetch from Firestore
 	if h.db != nil && h.db.Client != nil {
 		docs, err := h.db.Client.Collection("categories").
 			OrderBy("order", firestore.Asc).
 			Documents(h.db.Context).GetAll()
 		
-		if err == nil {
+		if err == nil && len(docs) > 0 {
 			for _, doc := range docs {
 				var category models.Category
 				if err := doc.DataTo(&category); err == nil {
@@ -51,10 +39,30 @@ func (h *CategoryHandler) GetCategories(c *gin.Context) {
 					categories = append(categories, category)
 				}
 			}
+			
+			c.JSON(http.StatusOK, gin.H{
+				"categories": categories,
+				"count":      len(categories),
+				"source":     "firestore",
+			})
+			return
 		}
 	}
 
-	// Return empty array instead of error if no categories found
+	// Fall back to memory store if Firestore is not available or empty
+	if h.memory != nil {
+		categories, err := h.memory.GetCategories(c.Request.Context())
+		if err == nil && len(categories) > 0 {
+			c.JSON(http.StatusOK, gin.H{
+				"categories": categories,
+				"count":      len(categories),
+				"source":     "memory",
+			})
+			return
+		}
+	}
+
+	// Return empty array if no categories found
 	if categories == nil {
 		categories = []models.Category{}
 	}
@@ -62,6 +70,7 @@ func (h *CategoryHandler) GetCategories(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"categories": categories,
 		"count":      len(categories),
+		"source":     "none",
 	})
 }
 
