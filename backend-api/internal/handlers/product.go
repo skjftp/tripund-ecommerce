@@ -32,11 +32,14 @@ func (h *ProductHandler) GetProducts(c *gin.Context) {
 		query = query.Where("featured", "==", true)
 	}
 
+	// Temporarily remove default status filter for debugging
 	if status := c.Query("status"); status != "" {
 		query = query.Where("status", "==", status)
-	} else {
-		query = query.Where("status", "==", "active")
 	}
+	// Comment out default filter to see all products
+	// else {
+	//	query = query.Where("status", "==", "active")
+	// }
 
 	limit := 20
 	if l := c.Query("limit"); l != "" {
