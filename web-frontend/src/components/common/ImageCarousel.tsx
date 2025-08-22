@@ -5,9 +5,10 @@ interface ImageCarouselProps {
   images: string[];
   productName: string;
   className?: string;
+  showThumbnails?: boolean;
 }
 
-export default function ImageCarousel({ images, productName, className = '' }: ImageCarouselProps) {
+export default function ImageCarousel({ images, productName, className = '', showThumbnails = false }: ImageCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
 
   if (!images || images.length === 0) {
@@ -83,8 +84,8 @@ export default function ImageCarousel({ images, productName, className = '' }: I
         </div>
       </div>
 
-      {/* Thumbnail Navigation */}
-      {images.length > 1 && (
+      {/* Thumbnail Navigation - Only show if explicitly enabled */}
+      {showThumbnails && images.length > 1 && (
         <div className="mt-3 flex space-x-2 overflow-x-auto pb-2">
           {images.map((image, index) => (
             <button
@@ -110,8 +111,8 @@ export default function ImageCarousel({ images, productName, className = '' }: I
         </div>
       )}
 
-      {/* Dots Indicator (alternative to thumbnails for smaller spaces) */}
-      {images.length > 1 && images.length <= 5 && (
+      {/* Dots Indicator - Only show with thumbnails or if explicitly wanted */}
+      {showThumbnails && images.length > 1 && images.length <= 5 && (
         <div className="mt-4 flex justify-center space-x-2">
           {images.map((_, index) => (
             <button
