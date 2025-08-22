@@ -28,6 +28,7 @@ func main() {
 	authHandler := handlers.NewAuthHandler(db, cfg.JWTSecret)
 	productHandler := handlers.NewProductHandler(db)
 	paymentHandler := handlers.NewPaymentHandler(db, cfg.RazorpayKeyID, cfg.RazorpayKeySecret)
+	categoryHandler := handlers.NewCategoryHandler(db)
 
 	api := r.Group("/api/v1")
 	{
@@ -46,6 +47,12 @@ func main() {
 			products.GET("", productHandler.GetProducts)
 			products.GET("/:id", productHandler.GetProduct)
 			products.GET("/search", productHandler.SearchProducts)
+		}
+
+		categories := api.Group("/categories")
+		{
+			categories.GET("", categoryHandler.GetCategories)
+			categories.GET("/:id", categoryHandler.GetCategory)
 		}
 
 		protected := api.Group("")
@@ -74,6 +81,11 @@ func main() {
 			admin.POST("/products", productHandler.CreateProduct)
 			admin.PUT("/products/:id", productHandler.UpdateProduct)
 			admin.DELETE("/products/:id", productHandler.DeleteProduct)
+
+			admin.POST("/categories", categoryHandler.CreateCategory)
+			admin.PUT("/categories/:id", categoryHandler.UpdateCategory)
+			admin.DELETE("/categories/:id", categoryHandler.DeleteCategory)
+			admin.POST("/categories/initialize", categoryHandler.InitializeDefaultCategories)
 		}
 
 		api.POST("/webhook/razorpay", paymentHandler.RazorpayWebhook)
