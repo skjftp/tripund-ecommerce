@@ -19,15 +19,23 @@ export default function ImageCarousel({ images, productName, className = '', sho
     );
   }
 
-  const goToPrevious = () => {
+  const goToPrevious = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     setCurrentIndex(prev => (prev === 0 ? images.length - 1 : prev - 1));
   };
 
-  const goToNext = () => {
+  const goToNext = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     setCurrentIndex(prev => (prev === images.length - 1 ? 0 : prev + 1));
   };
 
-  const goToSlide = (index: number) => {
+  const goToSlide = (index: number, e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     setCurrentIndex(index);
   };
 
@@ -90,7 +98,7 @@ export default function ImageCarousel({ images, productName, className = '', sho
           {images.map((image, index) => (
             <button
               key={index}
-              onClick={() => goToSlide(index)}
+              onClick={(e) => goToSlide(index, e)}
               className={`flex-shrink-0 w-16 h-16 rounded-md overflow-hidden border-2 transition-colors ${
                 index === currentIndex
                   ? 'border-primary-500'
@@ -117,7 +125,7 @@ export default function ImageCarousel({ images, productName, className = '', sho
           {images.map((_, index) => (
             <button
               key={index}
-              onClick={() => goToSlide(index)}
+              onClick={(e) => goToSlide(index, e)}
               className={`w-2 h-2 rounded-full transition-colors ${
                 index === currentIndex ? 'bg-primary-500' : 'bg-gray-300 hover:bg-gray-400'
               }`}

@@ -13,7 +13,8 @@ export default function HomePage() {
   const [selectedCategory, setSelectedCategory] = useState('all');
 
   useEffect(() => {
-    dispatch(fetchProducts({ limit: 20 }));
+    // Fetch all products initially
+    dispatch(fetchProducts({ limit: 40 }));
   }, [dispatch]);
 
   const categories = [
@@ -93,9 +94,18 @@ export default function HomePage() {
             </div>
             
             <ProductGrid 
-              products={featuredProducts.filter(product => 
-                selectedCategory === 'all' || product.categories?.includes(selectedCategory)
-              )} 
+              products={featuredProducts.filter(product => {
+                // Filter by category
+                const categoryMatch = selectedCategory === 'all' || 
+                  (Array.isArray(product.categories) && product.categories.includes(selectedCategory));
+                
+                // Filter by search query
+                const searchMatch = !searchQuery || 
+                  product.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                  product.description?.toLowerCase().includes(searchQuery.toLowerCase());
+                
+                return categoryMatch && searchMatch;
+              })} 
               loading={loading} 
             />
             

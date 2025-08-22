@@ -104,9 +104,8 @@ const productSlice = createSlice({
       .addCase(fetchProducts.fulfilled, (state, action: PayloadAction<Product[]>) => {
         state.loading = false;
         state.products = Array.isArray(action.payload) ? action.payload : [];
-        if ((action as any).meta?.arg?.featured) {
-          state.featuredProducts = Array.isArray(action.payload) ? action.payload : [];
-        }
+        // Also populate featuredProducts for homepage display
+        state.featuredProducts = Array.isArray(action.payload) ? action.payload : [];
       })
       .addCase(fetchProducts.rejected, (state, action) => {
         state.loading = false;
