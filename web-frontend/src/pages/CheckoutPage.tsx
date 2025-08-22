@@ -55,7 +55,7 @@ export default function CheckoutPage() {
     setValue,
     watch,
   } = useForm<CheckoutFormData>({
-    resolver: zodResolver(checkoutSchema),
+    resolver: zodResolver(checkoutSchema) as any,
     defaultValues: {
       sameAsBilling: true,
       paymentMethod: 'razorpay',
@@ -209,7 +209,7 @@ export default function CheckoutPage() {
           ))}
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form onSubmit={handleSubmit(onSubmit as any)}>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2">
               <div className="bg-white rounded-lg shadow-md p-6 mb-6">

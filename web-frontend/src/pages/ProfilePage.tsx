@@ -59,7 +59,7 @@ export default function ProfilePage() {
     formState: { errors: addressErrors },
     reset: resetAddress,
   } = useForm<AddressFormData>({
-    resolver: zodResolver(addressSchema),
+    resolver: zodResolver(addressSchema) as any,
   });
 
   useEffect(() => {
@@ -331,7 +331,7 @@ export default function ProfilePage() {
                       <h3 className="text-lg font-semibold mb-4">
                         {editingAddress ? 'Edit Address' : 'Add New Address'}
                       </h3>
-                      <form onSubmit={handleAddressSubmit(handleAddressSubmitForm)} className="space-y-4">
+                      <form onSubmit={handleAddressSubmit(handleAddressSubmitForm as any)} className="space-y-4">
                         <div className="grid grid-cols-2 gap-4">
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -455,7 +455,7 @@ export default function ProfilePage() {
                               onClick={() => {
                                 setEditingAddress(address.id);
                                 setShowAddressForm(true);
-                                resetAddress(address);
+                                resetAddress(address as any);
                               }}
                               className="text-gray-600 hover:text-primary-600"
                             >

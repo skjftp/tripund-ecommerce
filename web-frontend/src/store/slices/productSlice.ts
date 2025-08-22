@@ -97,7 +97,7 @@ const productSlice = createSlice({
       .addCase(fetchProducts.fulfilled, (state, action: PayloadAction<Product[]>) => {
         state.loading = false;
         state.products = action.payload;
-        if (action.meta.arg?.featured) {
+        if ((action as any).meta?.arg?.featured) {
           state.featuredProducts = action.payload;
         }
       })
