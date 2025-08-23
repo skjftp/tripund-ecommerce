@@ -100,7 +100,7 @@ export default function Header() {
           <div className="flex items-center space-x-4">
             <button 
               onClick={() => navigate('/search')}
-              className="text-gray-700 hover:text-primary-600"
+              className="hidden md:block text-gray-700 hover:text-primary-600"
               aria-label="Search"
             >
               <Search size={24} />
@@ -206,17 +206,6 @@ export default function Header() {
               onClick={() => setIsMenuOpen(false)}
             >
               About
-            </Link>
-            
-            <Link
-              to="/search"
-              className="block px-4 py-3 text-gray-700 hover:bg-white hover:text-primary-600 transition-colors border-t"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              <div className="flex items-center">
-                <Search size={20} className="mr-2" />
-                <span>Search Products</span>
-              </div>
             </Link>
           </nav>
         </div>
