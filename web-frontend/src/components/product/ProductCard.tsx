@@ -45,13 +45,14 @@ export default function ProductCard({ product }: ProductCardProps) {
   const isInStock = product.stock_status === 'in_stock' && product.stock_quantity > 0;
 
   return (
-    <Link to={`/products/${product.id}`} className="group">
-      <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow">
-        <div className="relative aspect-square">
+    <Link to={`/products/${product.id}`} className="group h-full">
+      <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow h-full flex flex-col">
+        {/* Fixed aspect ratio container for image */}
+        <div className="relative aspect-square bg-gray-100">
           <ImageCarousel 
             images={product.images || []} 
             productName={product.name}
-            className="h-full"
+            className="absolute inset-0 w-full h-full"
           />
           {discountPercentage > 0 && (
             <div className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 text-sm rounded z-10">
@@ -74,41 +75,45 @@ export default function ProductCard({ product }: ProductCardProps) {
           </button>
         </div>
 
-        <div className="p-4">
-          <h3 className="text-lg font-semibold text-gray-800 mb-1 line-clamp-2">
+        {/* Content section with flex-grow */}
+        <div className="p-4 flex flex-col flex-grow">
+          <h3 className="text-lg font-semibold text-gray-800 mb-1 line-clamp-2 min-h-[3.5rem]">
             {toProperCase(product.name || '')}
           </h3>
           
-          <p className="text-sm text-gray-500 mb-2 line-clamp-2">
+          <p className="text-sm text-gray-500 mb-2 line-clamp-2 min-h-[2.5rem]">
             {product.short_description || product.description}
           </p>
 
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <span className="text-xl font-bold text-primary-600">
-                ₹{displayPrice ? displayPrice.toLocaleString() : '0'}
-              </span>
-              {salePrice && price > 0 && (
-                <span className="ml-2 text-sm text-gray-500 line-through">
-                  ₹{price.toLocaleString()}
+          {/* Push price section to bottom */}
+          <div className="mt-auto">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <span className="text-xl font-bold text-primary-600">
+                  ₹{displayPrice ? displayPrice.toLocaleString() : '0'}
                 </span>
+                {salePrice && price > 0 && (
+                  <span className="ml-2 text-sm text-gray-500 line-through">
+                    ₹{price.toLocaleString()}
+                  </span>
+                )}
+              </div>
+              {isInStock ? (
+                <span className="text-sm text-green-600">In Stock</span>
+              ) : (
+                <span className="text-sm text-red-600">Out of Stock</span>
               )}
             </div>
-            {isInStock ? (
-              <span className="text-sm text-green-600">In Stock</span>
-            ) : (
-              <span className="text-sm text-red-600">Out of Stock</span>
-            )}
-          </div>
 
-          <button
-            onClick={handleAddToCart}
-            disabled={!isInStock}
-            className="w-full bg-primary-600 text-white py-2 px-4 rounded-md hover:bg-primary-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center space-x-2"
-          >
-            <ShoppingCart size={18} />
-            <span>Add to Cart</span>
-          </button>
+            <button
+              onClick={handleAddToCart}
+              disabled={!isInStock}
+              className="w-full bg-primary-600 text-white py-2 px-4 rounded-md hover:bg-primary-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center space-x-2"
+            >
+              <ShoppingCart size={18} />
+              <span>Add to Cart</span>
+            </button>
+          </div>
         </div>
       </div>
     </Link>

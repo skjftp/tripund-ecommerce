@@ -100,7 +100,7 @@ export default function Header() {
           <div className="flex items-center space-x-4">
             <button 
               onClick={() => navigate('/search')}
-              className="hidden md:block text-gray-700 hover:text-primary-600"
+              className="text-gray-700 hover:text-primary-600"
               aria-label="Search"
             >
               <Search size={24} />
