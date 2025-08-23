@@ -254,8 +254,7 @@ func (f *Firebase) InitializeDefaultContent() error {
 
 // Helper function to convert struct to map
 func structToMap(v interface{}) map[string]interface{} {
-	// This is a simple implementation - in production you'd use reflection or a library
-	// For now, we'll handle the conversion in the handlers
+	// Simple implementation that wraps the struct in a data field
 	return map[string]interface{}{
 		"data": v,
 	}
