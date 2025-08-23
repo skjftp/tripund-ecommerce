@@ -33,9 +33,12 @@ export default function ContentManagement() {
     mainContent: '',
     mission: '',
     vision: '',
-    values: [''],
+    values: [{ title: '', description: '' }],
     stats: [{ number: '', label: '' }],
-    whyChooseUs: ['']
+    whyChooseUs: [''],
+    teamMembers: [{ name: '', position: '', bio: '', image: '' }],
+    missionImage: '',
+    heroImage: ''
   });
 
   const [footerContent, setFooterContent] = useState({
@@ -106,7 +109,53 @@ export default function ContentManagement() {
       ]);
 
       if (aboutRes?.data?.content?.data) {
-        setAboutContent(aboutRes.data.content.data);
+        const data = aboutRes.data.content.data;
+        // Ensure values have the right structure
+        if (data.values && Array.isArray(data.values)) {
+          // Check if values are strings (old format) or objects (new format)
+          if (typeof data.values[0] === 'string') {
+            data.values = data.values.map((v: string) => ({ title: v, description: '' }));
+          }
+        }
+        // Ensure other arrays exist
+        data.teamMembers = data.teamMembers || [];
+        data.whyChooseUs = data.whyChooseUs || [];
+        data.stats = data.stats || [];
+        setAboutContent(data);
+      } else {
+        // Set default content if nothing fetched
+        setAboutContent({
+          title: 'Our Story',
+          subtitle: 'TRIPUND Lifestyle bridges the gap between traditional artisans and modern homes, bringing you authentic handcrafted treasures from around the world.',
+          mainContent: `At TRIPUND Lifestyle, we believe that every home deserves unique, meaningful pieces that tell a story. Our mission is to connect discerning customers with talented artisans from India, El Salvador, Mexico, and beyond.\n\nWe curate a collection of handcrafted wall decor, spiritual art, and cultural artifacts that celebrate tradition while embracing contemporary aesthetics. Each piece in our collection is carefully selected for its quality, cultural significance, and the skill of the artisan who created it.\n\nWhen you purchase from TRIPUND, you're not just buying a product – you're supporting traditional crafts, preserving cultural heritage, and bringing home a piece of art that has been crafted with love and dedication.`,
+          mission: 'To connect discerning customers with talented artisans from India, El Salvador, Mexico, and beyond.',
+          vision: 'To be the leading platform for authentic handcrafted art and decor.',
+          values: [
+            { title: 'Quality Craftsmanship', description: 'Every piece is handcrafted with meticulous attention to detail by skilled artisans.' },
+            { title: 'Artisan Empowerment', description: 'We provide fair wages and sustainable livelihoods to traditional craftspeople.' },
+            { title: 'Cultural Preservation', description: 'Keeping ancient art forms alive for future generations to appreciate and enjoy.' },
+            { title: 'Sustainable Practices', description: 'Eco-friendly materials and processes that respect our planet and communities.' }
+          ],
+          stats: [
+            { number: '500+', label: 'Artisan Partners' },
+            { number: '10,000+', label: 'Happy Customers' },
+            { number: '15+', label: 'Countries Served' },
+            { number: '5,000+', label: 'Unique Products' }
+          ],
+          whyChooseUs: [
+            'Direct from artisan partnerships',
+            'Authentic handcrafted products',
+            'Supporting traditional crafts',
+            'Quality assured products'
+          ],
+          teamMembers: [
+            { name: 'Priya Sharma', position: 'Founder & CEO', bio: '', image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400' },
+            { name: 'Rajesh Kumar', position: 'Head of Artisan Relations', bio: '', image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400' },
+            { name: 'Anita Patel', position: 'Creative Director', bio: '', image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400' }
+          ],
+          missionImage: 'https://images.unsplash.com/photo-1524634126442-357e0eac3c14?w=800',
+          heroImage: ''
+        });
       }
       if (footerRes?.data?.content?.data) {
         setFooterContent(footerRes.data.content.data);
@@ -142,7 +191,15 @@ export default function ContentManagement() {
       
       switch(type) {
         case 'about':
-          contentData = { data: aboutContent };
+          // Clean up empty values before saving
+          const cleanedAbout = {
+            ...aboutContent,
+            values: aboutContent.values.filter(v => v.title),
+            stats: aboutContent.stats.filter(s => s.number && s.label),
+            teamMembers: aboutContent.teamMembers.filter(m => m.name),
+            whyChooseUs: aboutContent.whyChooseUs.filter(w => w)
+          };
+          contentData = { data: cleanedAbout };
           break;
         case 'footer':
           contentData = { data: footerContent };
@@ -288,30 +345,44 @@ export default function ContentManagement() {
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">Values</label>
         {aboutContent.values.map((value, index) => (
-          <div key={index} className="flex gap-2 mb-2">
-            <input
-              type="text"
-              value={value}
+          <div key={index} className="border border-gray-200 rounded-md p-3 mb-2">
+            <div className="flex gap-2 mb-2">
+              <input
+                type="text"
+                placeholder="Value Title (e.g., Quality Craftsmanship)"
+                value={value.title}
+                onChange={(e) => {
+                  const newValues = [...aboutContent.values];
+                  newValues[index].title = e.target.value;
+                  setAboutContent({ ...aboutContent, values: newValues });
+                }}
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-md"
+              />
+              <button
+                onClick={() => {
+                  const newValues = aboutContent.values.filter((_, i) => i !== index);
+                  setAboutContent({ ...aboutContent, values: newValues });
+                }}
+                className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-md"
+              >
+                <Trash2 size={20} />
+              </button>
+            </div>
+            <textarea
+              placeholder="Value Description"
+              value={value.description}
               onChange={(e) => {
                 const newValues = [...aboutContent.values];
-                newValues[index] = e.target.value;
+                newValues[index].description = e.target.value;
                 setAboutContent({ ...aboutContent, values: newValues });
               }}
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-md"
+              rows={2}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md"
             />
-            <button
-              onClick={() => {
-                const newValues = aboutContent.values.filter((_, i) => i !== index);
-                setAboutContent({ ...aboutContent, values: newValues });
-              }}
-              className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-md"
-            >
-              <Trash2 size={20} />
-            </button>
           </div>
         ))}
         <button
-          onClick={() => setAboutContent({ ...aboutContent, values: [...aboutContent.values, ''] })}
+          onClick={() => setAboutContent({ ...aboutContent, values: [...aboutContent.values, { title: '', description: '' }] })}
           className="text-blue-600 hover:text-blue-700 text-sm flex items-center gap-1"
         >
           <Plus size={16} /> Add Value
@@ -361,6 +432,133 @@ export default function ContentManagement() {
         >
           <Plus size={16} /> Add Statistic
         </button>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Why Choose Us</label>
+        {aboutContent.whyChooseUs.map((reason, index) => (
+          <div key={index} className="flex gap-2 mb-2">
+            <input
+              type="text"
+              value={reason}
+              onChange={(e) => {
+                const newReasons = [...aboutContent.whyChooseUs];
+                newReasons[index] = e.target.value;
+                setAboutContent({ ...aboutContent, whyChooseUs: newReasons });
+              }}
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-md"
+            />
+            <button
+              onClick={() => {
+                const newReasons = aboutContent.whyChooseUs.filter((_, i) => i !== index);
+                setAboutContent({ ...aboutContent, whyChooseUs: newReasons });
+              }}
+              className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-md"
+            >
+              <Trash2 size={20} />
+            </button>
+          </div>
+        ))}
+        <button
+          onClick={() => setAboutContent({ ...aboutContent, whyChooseUs: [...aboutContent.whyChooseUs, ''] })}
+          className="text-blue-600 hover:text-blue-700 text-sm flex items-center gap-1"
+        >
+          <Plus size={16} /> Add Reason
+        </button>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Team Members</label>
+        {aboutContent.teamMembers.map((member, index) => (
+          <div key={index} className="border border-gray-200 rounded-md p-3 mb-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2">
+              <input
+                type="text"
+                placeholder="Name"
+                value={member.name}
+                onChange={(e) => {
+                  const newMembers = [...aboutContent.teamMembers];
+                  newMembers[index].name = e.target.value;
+                  setAboutContent({ ...aboutContent, teamMembers: newMembers });
+                }}
+                className="px-3 py-2 border border-gray-300 rounded-md"
+              />
+              <input
+                type="text"
+                placeholder="Position"
+                value={member.position}
+                onChange={(e) => {
+                  const newMembers = [...aboutContent.teamMembers];
+                  newMembers[index].position = e.target.value;
+                  setAboutContent({ ...aboutContent, teamMembers: newMembers });
+                }}
+                className="px-3 py-2 border border-gray-300 rounded-md"
+              />
+            </div>
+            <input
+              type="text"
+              placeholder="Image URL"
+              value={member.image}
+              onChange={(e) => {
+                const newMembers = [...aboutContent.teamMembers];
+                newMembers[index].image = e.target.value;
+                setAboutContent({ ...aboutContent, teamMembers: newMembers });
+              }}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md mb-2"
+            />
+            <div className="flex items-center justify-between">
+              <textarea
+                placeholder="Bio (optional)"
+                value={member.bio}
+                onChange={(e) => {
+                  const newMembers = [...aboutContent.teamMembers];
+                  newMembers[index].bio = e.target.value;
+                  setAboutContent({ ...aboutContent, teamMembers: newMembers });
+                }}
+                rows={2}
+                className="flex-1 mr-2 px-3 py-2 border border-gray-300 rounded-md"
+              />
+              <button
+                onClick={() => {
+                  const newMembers = aboutContent.teamMembers.filter((_, i) => i !== index);
+                  setAboutContent({ ...aboutContent, teamMembers: newMembers });
+                }}
+                className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-md"
+              >
+                <Trash2 size={20} />
+              </button>
+            </div>
+          </div>
+        ))}
+        <button
+          onClick={() => setAboutContent({ ...aboutContent, teamMembers: [...aboutContent.teamMembers, { name: '', position: '', bio: '', image: '' }] })}
+          className="text-blue-600 hover:text-blue-700 text-sm flex items-center gap-1"
+        >
+          <Plus size={16} /> Add Team Member
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Hero Image URL</label>
+          <input
+            type="text"
+            value={aboutContent.heroImage}
+            onChange={(e) => setAboutContent({ ...aboutContent, heroImage: e.target.value })}
+            placeholder="Image URL for hero section"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Mission Section Image URL</label>
+          <input
+            type="text"
+            value={aboutContent.missionImage}
+            onChange={(e) => setAboutContent({ ...aboutContent, missionImage: e.target.value })}
+            placeholder="Image URL for mission section"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md"
+          />
+        </div>
       </div>
 
       <button
@@ -772,12 +970,33 @@ export default function ContentManagement() {
 
                   <div className="mb-8">
                     <h3 className="text-xl font-semibold mb-4">Our Values</h3>
-                    <ul className="list-disc list-inside text-gray-600">
-                      {aboutContent.values.filter(v => v).map((value, index) => (
-                        <li key={index}>{value}</li>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {aboutContent.values.filter(v => v.title).map((value, index) => (
+                        <div key={index}>
+                          <h4 className="font-semibold text-gray-800 mb-1">{value.title}</h4>
+                          <p className="text-sm text-gray-600">{value.description}</p>
+                        </div>
                       ))}
-                    </ul>
+                    </div>
                   </div>
+
+                  {aboutContent.teamMembers && aboutContent.teamMembers.filter(m => m.name).length > 0 && (
+                    <div className="mb-8">
+                      <h3 className="text-xl font-semibold mb-4">Meet Our Team</h3>
+                      <div className="grid grid-cols-3 gap-4">
+                        {aboutContent.teamMembers.filter(m => m.name).map((member, index) => (
+                          <div key={index} className="text-center">
+                            {member.image && (
+                              <img src={member.image} alt={member.name} className="w-20 h-20 rounded-full mx-auto mb-2 object-cover" />
+                            )}
+                            <h5 className="font-semibold">{member.name}</h5>
+                            <p className="text-sm text-gray-600">{member.position}</p>
+                            {member.bio && <p className="text-xs text-gray-500 mt-1">{member.bio}</p>}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   <div className="grid grid-cols-3 gap-4 text-center">
                     {aboutContent.stats.filter(s => s.number).map((stat, index) => (
