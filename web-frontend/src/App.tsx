@@ -1,7 +1,9 @@
+import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { Toaster } from 'react-hot-toast';
 import { store } from './store';
+import { initializeAuthRefresh } from './services/auth';
 import Layout from './components/layout/Layout';
 import ScrollToTop from './components/common/ScrollToTop';
 import HomePage from './pages/HomePage';
@@ -22,6 +24,11 @@ import CategoriesPage from './pages/CategoriesPage';
 import SearchPage from './pages/SearchPage';
 
 function App() {
+  useEffect(() => {
+    // Initialize auth token refresh on app start
+    initializeAuthRefresh();
+  }, []);
+
   return (
     <Provider store={store}>
       <Router>

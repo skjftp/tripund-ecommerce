@@ -7,6 +7,7 @@ import { fetchProductById } from '../store/slices/productSlice';
 import { addToCart } from '../store/slices/cartSlice';
 import { addToWishlist, removeFromWishlist } from '../store/slices/wishlistSlice';
 import toast from 'react-hot-toast';
+import MetaTags from '../components/MetaTags';
 
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -47,7 +48,9 @@ export default function ProductDetailPage() {
 
   if (!product) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
+      <>
+        <MetaTags />
+        <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-7xl mx-auto px-4 text-center">
           <h2 className="text-2xl font-bold mb-4">Product not found</h2>
           <button
@@ -58,6 +61,7 @@ export default function ProductDetailPage() {
           </button>
         </div>
       </div>
+      </>
     );
   }
 
@@ -83,8 +87,16 @@ export default function ProductDetailPage() {
     Math.round(((price - salePrice) / price) * 100) : 0;
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4">
+    <>
+      <MetaTags 
+        title={`${product.name || product.title} - TRIPUND Lifestyle`}
+        description={product.short_description || product.description || `Shop ${product.name || product.title} from TRIPUND Lifestyle's collection of premium Indian handicrafts and home decor.`}
+        image={product.images?.[0] || 'https://storage.googleapis.com/tripund-product-images/og-image.jpg'}
+        url={`https://tripundlifestyle.com/products/${product.id}`}
+        type="product"
+      />
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-7xl mx-auto px-4">
         <button
           onClick={() => navigate('/products')}
           className="mb-4 text-gray-600 hover:text-gray-800 flex items-center"
@@ -224,5 +236,6 @@ export default function ProductDetailPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }
