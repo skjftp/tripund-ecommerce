@@ -102,9 +102,13 @@ func (h *SettingsHandler) UpdateSettings(c *gin.Context) {
 
 	settings.UpdatedAt = time.Now()
 
-	_, err := h.db.Client.Collection("settings").Doc("store").Set(h.db.Context, settings, firestore.MergeAll)
+	_, err := h.db.Client.Collection("settings").Doc("store").Set(h.db.Context, settings)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update settings"})
+		// Log the actual error for debugging
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to update settings",
+			"details": err.Error(),
+		})
 		return
 	}
 
