@@ -124,6 +124,14 @@ export default function CheckoutPage() {
             navigate(`/order-confirmation/${createdOrder.id}`);
           } catch (error) {
             toast.error('Payment verification failed');
+            navigate(`/order-status/${createdOrder.id}?payment=failed`);
+          }
+        },
+        modal: {
+          ondismiss: function() {
+            // User closed the payment modal without completing payment
+            toast('Payment cancelled. Your order is saved and you can complete payment later.');
+            navigate(`/order-status/${createdOrder.id}?payment=pending`);
           }
         },
         prefill: {
