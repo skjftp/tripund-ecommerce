@@ -42,43 +42,60 @@ export default function ContentManagement() {
   });
 
   const [footerContent, setFooterContent] = useState({
-    companyName: '',
-    companyDescription: '',
-    email: '',
-    phone: '',
+    companyName: 'TRIPUND',
+    companyDescription: 'Premium Indian artisan marketplace specializing in handcrafted wall decor, spiritual art, and cultural artifacts.',
+    email: 'support@tripundlifestyle.com',
+    phone: '+91 98765 43210',
     address: {
-      street: '',
-      city: '',
-      state: '',
-      country: '',
-      pincode: ''
+      street: '123 Artisan Street',
+      city: 'New Delhi',
+      state: 'Delhi',
+      country: 'India',
+      pincode: '110001'
     },
     socialLinks: {
-      facebook: '',
-      instagram: '',
-      twitter: '',
+      facebook: 'https://facebook.com/tripundlifestyle',
+      instagram: 'https://instagram.com/tripundlifestyle',
+      twitter: 'https://twitter.com/tripundlifestyle',
       linkedin: '',
       youtube: ''
     },
-    copyrightText: ''
+    copyrightText: '© 2024 TRIPUND Lifestyle. All rights reserved.',
+    quickLinks: [
+      { title: 'All Products', url: '/products' },
+      { title: 'Categories', url: '/categories' },
+      { title: 'Our Artisans', url: '/artisans' },
+      { title: 'About Us', url: '/about' }
+    ],
+    customerService: [
+      { title: 'Contact Us', url: '/contact' },
+      { title: 'Shipping Info', url: '/shipping' },
+      { title: 'Returns & Exchanges', url: '/returns' },
+      { title: 'FAQ', url: '/faq' }
+    ]
   });
 
   const [contactContent, setContactContent] = useState({
-    title: '',
-    subtitle: '',
-    description: '',
-    email: '',
-    phone: '',
-    whatsapp: '',
+    title: 'Get in Touch',
+    subtitle: "We'd love to hear from you. Let us know how we can help!",
+    description: 'Have questions about our products or want to know more about our artisan partners? Feel free to reach out!',
+    email: 'support@tripundlifestyle.com',
+    phone: '+91 98765 43210',
+    whatsapp: '+91 98765 43210',
     address: {
-      street: '',
-      city: '',
-      state: '',
-      country: '',
-      pincode: ''
+      street: '123 Artisan Street, Connaught Place',
+      city: 'New Delhi',
+      state: 'Delhi',
+      country: 'India',
+      pincode: '110001'
     },
-    businessHours: [''],
-    mapEmbedUrl: ''
+    businessHours: [
+      'Monday - Friday: 10:00 AM - 7:00 PM IST',
+      'Saturday: 10:00 AM - 4:00 PM IST',
+      'Sunday: Closed'
+    ],
+    mapEmbedUrl: '',
+    socialMediaText: 'Follow us on social media for updates, new arrivals, and artisan stories'
   });
 
   const [faqs, setFaqs] = useState<FAQ[]>([]);
@@ -159,9 +176,67 @@ export default function ContentManagement() {
       }
       if (footerRes?.data?.content?.data) {
         setFooterContent(footerRes.data.content.data);
+      } else {
+        // Set default footer content
+        setFooterContent({
+          companyName: 'TRIPUND',
+          companyDescription: 'Premium Indian artisan marketplace specializing in handcrafted wall decor, spiritual art, and cultural artifacts.',
+          email: 'support@tripundlifestyle.com',
+          phone: '+91 98765 43210',
+          address: {
+            street: '123 Artisan Street',
+            city: 'New Delhi',
+            state: 'Delhi',
+            country: 'India',
+            pincode: '110001'
+          },
+          socialLinks: {
+            facebook: 'https://facebook.com/tripundlifestyle',
+            instagram: 'https://instagram.com/tripundlifestyle',
+            twitter: 'https://twitter.com/tripundlifestyle',
+            linkedin: '',
+            youtube: ''
+          },
+          copyrightText: '© 2024 TRIPUND Lifestyle. All rights reserved.',
+          quickLinks: [
+            { title: 'All Products', url: '/products' },
+            { title: 'Categories', url: '/categories' },
+            { title: 'Our Artisans', url: '/artisans' },
+            { title: 'About Us', url: '/about' }
+          ],
+          customerService: [
+            { title: 'Contact Us', url: '/contact' },
+            { title: 'Shipping Info', url: '/shipping' },
+            { title: 'Returns & Exchanges', url: '/returns' },
+            { title: 'FAQ', url: '/faq' }
+          ]
+        });
       }
       if (contactRes?.data?.content?.data) {
         setContactContent(contactRes.data.content.data);
+      } else {
+        // Set default contact content
+        setContactContent({
+          title: 'Get in Touch',
+          subtitle: "We'd love to hear from you. Let us know how we can help!",
+          description: 'Have questions about our products or want to know more about our artisan partners? Feel free to reach out!',
+          email: 'support@tripundlifestyle.com',
+          phone: '+91 98765 43210',
+          whatsapp: '+91 98765 43210',
+          address: {
+            street: '123 Artisan Street, Connaught Place',
+            city: 'New Delhi',
+            state: 'Delhi',
+            country: 'India',
+            pincode: '110001'
+          },
+          businessHours: [
+            'Monday - Saturday: 10:00 AM - 7:00 PM IST',
+            'Sunday: Closed'
+          ],
+          mapEmbedUrl: '',
+          socialMediaText: 'Follow us on social media for updates, new arrivals, and artisan stories'
+        });
       }
     } catch (error) {
       console.error('Error fetching content:', error);
@@ -176,6 +251,65 @@ export default function ContentManagement() {
       setFaqs(response.data || []);
     } catch (error) {
       console.error('Error fetching FAQs:', error);
+      // Set default FAQs
+      setFaqs([
+        {
+          id: '1',
+          question: 'How long does shipping take?',
+          answer: 'Domestic orders typically arrive within 5-7 business days. International shipping takes 10-15 business days.',
+          order: 1,
+          active: true
+        },
+        {
+          id: '2',
+          question: 'Do you offer custom orders?',
+          answer: 'Yes! We work with our artisans to create custom pieces. Contact us for more details.',
+          order: 2,
+          active: true
+        },
+        {
+          id: '3',
+          question: 'What is your return policy?',
+          answer: 'We offer a 30-day return policy for unused items in original condition. Custom orders are non-refundable.',
+          order: 3,
+          active: true
+        },
+        {
+          id: '4',
+          question: 'How can I become an artisan partner?',
+          answer: "We're always looking for talented artisans. Please fill out the contact form selecting 'Partnership' as the inquiry type.",
+          order: 4,
+          active: true
+        },
+        {
+          id: '5',
+          question: 'What makes TRIPUND products unique?',
+          answer: 'All our products are handcrafted by skilled artisans from various parts of India, ensuring each piece is unique and carries the authentic touch of traditional craftsmanship.',
+          order: 5,
+          active: true
+        },
+        {
+          id: '6',
+          question: 'Do you offer international shipping?',
+          answer: 'Yes, we ship worldwide. International shipping charges and delivery times vary by location. Please check our shipping policy for more details.',
+          order: 6,
+          active: true
+        },
+        {
+          id: '7',
+          question: 'How do I care for handcrafted products?',
+          answer: 'Care instructions vary by product type. Each product comes with specific care guidelines. Generally, avoid direct sunlight and moisture for most handicrafts.',
+          order: 7,
+          active: true
+        },
+        {
+          id: '8',
+          question: 'Can I request custom designs?',
+          answer: "Yes, we accept custom orders for many of our product categories. Please contact us with your requirements and we'll connect you with the right artisan.",
+          order: 8,
+          active: true
+        }
+      ]);
     }
   };
 
@@ -715,6 +849,16 @@ export default function ContentManagement() {
             })}
             className="w-full px-3 py-2 border border-gray-300 rounded-md"
           />
+          <input
+            type="url"
+            placeholder="YouTube URL"
+            value={footerContent.socialLinks.youtube}
+            onChange={(e) => setFooterContent({ 
+              ...footerContent, 
+              socialLinks: { ...footerContent.socialLinks, youtube: e.target.value }
+            })}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md"
+          />
         </div>
       </div>
 
@@ -826,6 +970,18 @@ export default function ContentManagement() {
         >
           <Plus size={16} /> Add Business Hours
         </button>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Map Embed URL (Google Maps iframe URL)</label>
+        <input
+          type="text"
+          value={contactContent.mapEmbedUrl}
+          onChange={(e) => setContactContent({ ...contactContent, mapEmbedUrl: e.target.value })}
+          placeholder="https://www.google.com/maps/embed?..."
+          className="w-full px-3 py-2 border border-gray-300 rounded-md"
+        />
+        <p className="text-xs text-gray-500 mt-1">Get the embed URL from Google Maps by clicking Share → Embed a map</p>
       </div>
 
       <button
