@@ -48,11 +48,19 @@ export default function OrderConfirmationPage() {
   const dispatch = useDispatch();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showProcessing, setShowProcessing] = useState(true);
 
   useEffect(() => {
     // Clear cart when order confirmation page loads
     dispatch(clearCart());
-    fetchOrder();
+    
+    // Show processing animation for 2 seconds before fetching order
+    const timer = setTimeout(() => {
+      setShowProcessing(false);
+      fetchOrder();
+    }, 2000);
+    
+    return () => clearTimeout(timer);
   }, [orderId, dispatch]);
 
   const fetchOrder = async () => {
@@ -66,6 +74,26 @@ export default function OrderConfirmationPage() {
       setLoading(false);
     }
   };
+
+  if (showProcessing) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-white">
+        <div className="text-center p-8">
+          <div className="relative">
+            <div className="animate-spin rounded-full h-24 w-24 border-b-4 border-primary-600 mx-auto"></div>
+            <CheckCircle className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-12 h-12 text-primary-600 animate-pulse" />
+          </div>
+          <h2 className="text-2xl font-bold mt-6 mb-2">Processing Your Order</h2>
+          <p className="text-gray-600">Please wait while we confirm your payment...</p>
+          <div className="flex justify-center space-x-2 mt-4">
+            <div className="w-2 h-2 bg-primary-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+            <div className="w-2 h-2 bg-primary-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+            <div className="w-2 h-2 bg-primary-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -85,10 +113,12 @@ export default function OrderConfirmationPage() {
         {/* Success Message */}
         <div className="bg-white rounded-lg shadow-md p-8 mb-6">
           <div className="text-center mb-8">
-            <CheckCircle className="w-20 h-20 text-green-500 mx-auto mb-4" />
-            <h1 className="text-3xl font-bold mb-2">Order Confirmed!</h1>
-            <p className="text-gray-600 mb-4">
-              Thank you for your purchase. Your order has been successfully placed.
+            <div className="animate-in fade-in duration-500">
+              <CheckCircle className="w-20 h-20 text-green-500 mx-auto mb-4 animate-in zoom-in duration-700" />
+            </div>
+            <h1 className="text-3xl font-bold mb-2 animate-in slide-in-from-bottom duration-500">Order Confirmed!</h1>
+            <p className="text-gray-600 mb-4 animate-in slide-in-from-bottom duration-700 delay-200">
+              Thank you for your purchase. Your order is being processed and will be delivered shortly.
             </p>
             <div className="bg-primary-50 border border-primary-200 rounded-lg p-4 inline-block">
               <p className="text-sm text-gray-600 mb-1">Order Number</p>

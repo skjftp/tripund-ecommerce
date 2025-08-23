@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
+import { paymentAPI } from '../services/api';
 
 interface Payment {
   id: string;

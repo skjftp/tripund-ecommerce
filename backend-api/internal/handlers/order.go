@@ -272,7 +272,60 @@ func (h *OrderHandler) UpdateOrderStatus(c *gin.Context) {
 		return
 	}
 
-	_, err := h.db.Client.Collection("orders").Doc(orderID).Update(h.db.Context, []firestore.Update{
+	// Get the order first to check current status and get items
+	orderDoc, err := h.db.Client.Collection("orders").Doc(orderID).Get(h.db.Context)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Order not found"})
+		return
+	}
+
+	var order models.Order
+	if err := orderDoc.DataTo(&order); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to parse order"})
+		return
+	}
+
+	// If changing status to "shipped", decrement product stock
+	if req.Status == "shipped" && order.Status != "shipped" {
+		// Iterate through order items and decrement stock
+		for _, item := range order.Items {
+			productRef := h.db.Client.Collection("products").Doc(item.ProductID)
+			
+			// Get current product to check stock
+			productDoc, err := productRef.Get(h.db.Context)
+			if err != nil {
+				log.Printf("Failed to get product %s: %v", item.ProductID, err)
+				continue // Skip this product but continue with others
+			}
+
+			var product models.Product
+			if err := productDoc.DataTo(&product); err != nil {
+				log.Printf("Failed to parse product %s: %v", item.ProductID, err)
+				continue
+			}
+
+			// Calculate new stock
+			newStock := product.Stock - item.Quantity
+			if newStock < 0 {
+				newStock = 0 // Prevent negative stock
+			}
+
+			// Update product stock
+			_, err = productRef.Update(h.db.Context, []firestore.Update{
+				{Path: "stock", Value: newStock},
+				{Path: "updated_at", Value: time.Now()},
+			})
+
+			if err != nil {
+				log.Printf("Failed to update stock for product %s: %v", item.ProductID, err)
+			} else {
+				log.Printf("Updated stock for product %s: %d -> %d", item.ProductID, product.Stock, newStock)
+			}
+		}
+	}
+
+	// Update order status
+	_, err = h.db.Client.Collection("orders").Doc(orderID).Update(h.db.Context, []firestore.Update{
 		{Path: "status", Value: req.Status},
 		{Path: "updated_at", Value: time.Now()},
 	})
@@ -282,7 +335,12 @@ func (h *OrderHandler) UpdateOrderStatus(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Order status updated successfully"})
+	message := "Order status updated successfully"
+	if req.Status == "shipped" && order.Status != "shipped" {
+		message = "Order marked as shipped and product stock updated"
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": message})
 }
 
 // CreateGuestOrder creates an order for guest users (no authentication required)

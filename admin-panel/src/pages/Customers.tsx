@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
+import { userAPI } from '../services/api';
 
 interface Customer {
   id: string;
@@ -52,52 +53,86 @@ export default function Customers() {
   const [showDetailModal, setShowDetailModal] = useState(false);
 
   useEffect(() => {
-    const mockCustomers: Customer[] = [
-      {
-        id: '1',
-        name: 'Rahul Sharma',
-        email: 'rahul@example.com',
-        phone: '+91 9876543210',
-        addresses: [
-          {
-            type: 'billing',
-            line1: '123 MG Road',
-            city: 'Mumbai',
-            state: 'Maharashtra',
-            postal_code: '400001',
-            country: 'India',
-            is_default: true,
-          },
-        ],
+    fetchCustomers();
+  }, []);
+
+  const fetchCustomers = async () => {
+    try {
+      setLoading(true);
+      const response = await userAPI.getAll();
+      
+      // Handle the API response
+      const usersData = response.data.users || [];
+      
+      // Map the API response to match the expected Customer type structure
+      const mappedCustomers: Customer[] = usersData.map((user: any) => ({
+        id: user.id,
+        name: user.name || 'N/A',
+        email: user.email,
+        phone: user.phone || '',
+        addresses: [], // Would need separate API call for addresses
         stats: {
-          total_orders: 12,
-          total_spent: 45600,
-          average_order_value: 3800,
-          last_order_date: '2024-01-20T10:00:00Z',
+          total_orders: user.orders_count || 0,
+          total_spent: user.total_spent || 0,
+          average_order_value: user.orders_count > 0 ? (user.total_spent / user.orders_count) : 0,
+          last_order_date: user.last_order_date,
         },
-        tags: ['VIP', 'Repeat Customer'],
-        status: 'active',
-        created_at: '2023-06-15T10:00:00Z',
-        last_login: '2024-01-21T14:00:00Z',
-      },
-      {
-        id: '2',
-        name: 'Priya Patel',
-        email: 'priya@example.com',
-        phone: '+91 9876543211',
-        addresses: [
-          {
-            type: 'shipping',
-            line1: '456 Park Street',
-            city: 'Kolkata',
-            state: 'West Bengal',
-            postal_code: '700001',
-            country: 'India',
-            is_default: true,
+        tags: user.role === 'admin' ? ['Admin'] : user.orders_count > 10 ? ['VIP', 'Repeat Customer'] : [],
+        status: user.status || 'active',
+        created_at: user.created_at,
+        last_login: user.last_login,
+      }));
+      
+      setCustomers(mappedCustomers);
+    } catch (error) {
+      console.error('Error fetching customers:', error);
+      // Fallback to mock data for demo
+      const mockCustomers: Customer[] = [
+        {
+          id: '1',
+          name: 'Rahul Sharma',
+          email: 'rahul@example.com',
+          phone: '+91 9876543210',
+          addresses: [
+            {
+              type: 'billing',
+              line1: '123 MG Road',
+              city: 'Mumbai',
+              state: 'Maharashtra',
+              postal_code: '400001',
+              country: 'India',
+              is_default: true,
+            },
+          ],
+          stats: {
+            total_orders: 12,
+            total_spent: 45600,
+            average_order_value: 3800,
+            last_order_date: '2024-01-20T10:00:00Z',
           },
-        ],
-        stats: {
-          total_orders: 5,
+          tags: ['VIP', 'Repeat Customer'],
+          status: 'active',
+          created_at: '2023-06-15T10:00:00Z',
+          last_login: '2024-01-21T14:00:00Z',
+        },
+        {
+          id: '2',
+          name: 'Priya Patel',
+          email: 'priya@example.com',
+          phone: '+91 9876543211',
+          addresses: [
+            {
+              type: 'shipping',
+              line1: '456 Park Street',
+              city: 'Kolkata',
+              state: 'West Bengal',
+              postal_code: '700001',
+              country: 'India',
+              is_default: true,
+            },
+          ],
+          stats: {
+            total_orders: 5,
           total_spent: 18900,
           average_order_value: 3780,
           last_order_date: '2024-01-18T10:00:00Z',
@@ -106,37 +141,12 @@ export default function Customers() {
         status: 'active',
         created_at: '2023-09-20T10:00:00Z',
         last_login: '2024-01-19T09:00:00Z',
-      },
-      {
-        id: '3',
-        name: 'Amit Kumar',
-        email: 'amit@example.com',
-        phone: '+91 9876543212',
-        addresses: [
-          {
-            type: 'billing',
-            line1: '789 Lake View',
-            city: 'Bangalore',
-            state: 'Karnataka',
-            postal_code: '560001',
-            country: 'India',
-            is_default: true,
-          },
-        ],
-        stats: {
-          total_orders: 2,
-          total_spent: 7800,
-          average_order_value: 3900,
-          last_order_date: '2024-01-10T10:00:00Z',
-        },
-        tags: ['New Customer'],
-        status: 'active',
-        created_at: '2024-01-01T10:00:00Z',
-      },
-    ];
-    setCustomers(mockCustomers);
-    setLoading(false);
-  }, []);
+      }];
+      setCustomers(mockCustomers);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredCustomers = customers.filter((customer) => {
     const matchesSearch = 

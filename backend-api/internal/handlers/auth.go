@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"log"
 	"net/http"
+	"sort"
 	"strings"
 	"time"
 
@@ -299,4 +301,156 @@ func (h *AuthHandler) AdminLogin(c *gin.Context) {
 		ExpiresIn: expiresIn,
 		User:      user,
 	})
+}
+// GetAllUsers returns all users for admin panel
+func (h *AuthHandler) GetAllUsers(c *gin.Context) {
+	// Get query parameters for filtering
+	search := c.Query("search")
+	role := c.Query("role")
+	status := c.Query("status")
+
+	// Start with base query
+	query := h.db.Client.Collection("users").Query
+
+	// Apply filters if provided
+	if role != "" && role != "all" {
+		query = query.Where("role", "==", role)
+	}
+
+	if status != "" && status != "all" {
+		query = query.Where("status", "==", status)
+	}
+
+	// Get all documents
+	docs, err := query.Documents(h.db.Context).GetAll()
+	if err != nil {
+		log.Printf("Error fetching users: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch users"})
+		return
+	}
+
+	users := []map[string]interface{}{}
+	for _, doc := range docs {
+		var user models.User
+		if err := doc.DataTo(&user); err != nil {
+			log.Printf("Error parsing user %s: %v", doc.Ref.ID, err)
+			continue
+		}
+		user.ID = doc.Ref.ID
+
+		// Filter by search if provided
+		if search != "" {
+			searchLower := strings.ToLower(search)
+			if !strings.Contains(strings.ToLower(user.Email), searchLower) &&
+				!strings.Contains(strings.ToLower(user.Profile.FirstName), searchLower) &&
+				!strings.Contains(strings.ToLower(user.Profile.LastName), searchLower) {
+				continue
+			}
+		}
+
+		// Get order count for this user
+		orderDocs, _ := h.db.Client.Collection("orders").Where("user_id", "==", user.ID).Documents(h.db.Context).GetAll()
+		orderCount := len(orderDocs)
+
+		// Calculate total spent
+		totalSpent := 0.0
+		for _, orderDoc := range orderDocs {
+			var order models.Order
+			if err := orderDoc.DataTo(&order); err == nil {
+				totalSpent += order.Totals.Total
+			}
+		}
+
+		// Convert user to response format
+		userResp := map[string]interface{}{
+			"id":           user.ID,
+			"email":        user.Email,
+			"name":         user.Profile.FirstName + " " + user.Profile.LastName,
+			"phone":        user.Profile.Phone,
+			"role":         user.Role,
+			"status":       "active", // Default status
+			"orders_count": orderCount,
+			"total_spent":  totalSpent,
+			"created_at":   user.CreatedAt,
+			"last_login":   user.LastLoginAt,
+		}
+
+		users = append(users, userResp)
+	}
+
+	// Sort users by created_at descending
+	sort.Slice(users, func(i, j int) bool {
+		timeI := users[i]["created_at"].(time.Time)
+		timeJ := users[j]["created_at"].(time.Time)
+		return timeI.After(timeJ)
+	})
+
+	c.JSON(http.StatusOK, gin.H{
+		"users": users,
+		"total": len(users),
+	})
+}
+
+// GetUserDetails returns detailed information about a specific user
+func (h *AuthHandler) GetUserDetails(c *gin.Context) {
+	userID := c.Param("id")
+
+	// Get user document
+	doc, err := h.db.Client.Collection("users").Doc(userID).Get(h.db.Context)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	var user models.User
+	if err := doc.DataTo(&user); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to parse user data"})
+		return
+	}
+	user.ID = doc.Ref.ID
+
+	// Get user's orders
+	orderDocs, _ := h.db.Client.Collection("orders").Where("user_id", "==", userID).Documents(h.db.Context).GetAll()
+	
+	orders := []map[string]interface{}{}
+	totalSpent := 0.0
+	for _, orderDoc := range orderDocs {
+		var order models.Order
+		if err := orderDoc.DataTo(&order); err == nil {
+			order.ID = orderDoc.Ref.ID
+			totalSpent += order.Totals.Total
+			
+			orders = append(orders, map[string]interface{}{
+				"id":           order.ID,
+				"order_number": order.OrderNumber,
+				"status":       order.Status,
+				"total":        order.Totals.Total,
+				"created_at":   order.CreatedAt,
+			})
+		}
+	}
+
+	// Sort orders by created_at descending
+	sort.Slice(orders, func(i, j int) bool {
+		timeI := orders[i]["created_at"].(time.Time)
+		timeJ := orders[j]["created_at"].(time.Time)
+		return timeI.After(timeJ)
+	})
+
+	// Prepare response
+	response := gin.H{
+		"user": gin.H{
+			"id":           user.ID,
+			"email":        user.Email,
+			"profile":      user.Profile,
+			"role":         user.Role,
+			"created_at":   user.CreatedAt,
+			"last_login":   user.LastLoginAt,
+			"orders_count": len(orders),
+			"total_spent":  totalSpent,
+		},
+		"orders": orders,
+	}
+
+	c.JSON(http.StatusOK, response)
 }

@@ -94,4 +94,11 @@ export const categoryAPI = {
   delete: (id: string) => api.delete(`/admin/categories/${id}`),
 };
 
+// Payment APIs
+export const paymentAPI = {
+  getAll: (params?: any) => api.get('/admin/payments', { params }),
+  getById: (id: string) => api.get(`/admin/payments/${id}`),
+  refund: (id: string, amount: number) => api.post(`/admin/payments/${id}/refund`, { amount }),
+};
+
 export default api;

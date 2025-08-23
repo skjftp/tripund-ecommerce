@@ -8,12 +8,15 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"sort"
+	"strings"
 	"time"
 
 	"cloud.google.com/go/firestore"
 	"github.com/gin-gonic/gin"
 	"github.com/razorpay/razorpay-go"
 	"tripund-api/internal/database"
+	"tripund-api/internal/models"
 )
 
 type PaymentHandler struct {
@@ -379,5 +382,83 @@ func (h *PaymentHandler) VerifyGuestPayment(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Payment verified successfully",
 		"order_id": req.OrderID,
+	})
+}
+// GetAllPayments returns all payments for admin panel
+func (h *PaymentHandler) GetAllPayments(c *gin.Context) {
+	// Get query parameters for filtering
+	search := c.Query("search")
+	status := c.Query("status")
+	method := c.Query("method")
+
+	// Get all orders (payments are part of orders)
+	docs, err := h.db.Client.Collection("orders").Documents(h.db.Context).GetAll()
+	if err != nil {
+		log.Printf("Error fetching payments: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch payments"})
+		return
+	}
+
+	payments := []map[string]interface{}{}
+	for _, doc := range docs {
+		var order models.Order
+		if err := doc.DataTo(&order); err != nil {
+			log.Printf("Error parsing order %s: %v", doc.Ref.ID, err)
+			continue
+		}
+		order.ID = doc.Ref.ID
+
+		// Filter by payment status if provided
+		if status != "" && status != "all" {
+			if order.Payment.Status != status {
+				continue
+			}
+		}
+
+		// Filter by payment method if provided
+		if method != "" && method != "all" {
+			if order.Payment.Method != method {
+				continue
+			}
+		}
+
+		// Filter by search if provided
+		if search != "" {
+			searchLower := strings.ToLower(search)
+			if !strings.Contains(strings.ToLower(order.OrderNumber), searchLower) &&
+				!strings.Contains(strings.ToLower(order.Customer.Email), searchLower) &&
+				!strings.Contains(strings.ToLower(order.Payment.TransactionID), searchLower) {
+				continue
+			}
+		}
+
+		// Convert order to payment response format
+		paymentResp := map[string]interface{}{
+			"id":             order.ID,
+			"order_id":       order.ID,
+			"order_number":   order.OrderNumber,
+			"customer_name":  order.Customer.Name,
+			"customer_email": order.Customer.Email,
+			"amount":         order.Totals.Total,
+			"method":         order.Payment.Method,
+			"status":         order.Payment.Status,
+			"transaction_id": order.Payment.TransactionID,
+			"created_at":     order.CreatedAt,
+			"paid_at":        order.Payment.PaidAt,
+		}
+
+		payments = append(payments, paymentResp)
+	}
+
+	// Sort payments by created_at descending
+	sort.Slice(payments, func(i, j int) bool {
+		timeI := payments[i]["created_at"].(time.Time)
+		timeJ := payments[j]["created_at"].(time.Time)
+		return timeI.After(timeJ)
+	})
+
+	c.JSON(http.StatusOK, gin.H{
+		"payments": payments,
+		"total":    len(payments),
 	})
 }

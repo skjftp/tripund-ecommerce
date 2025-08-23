@@ -119,6 +119,14 @@ func main() {
 			// Order management (admin only)
 			admin.GET("/orders", orderHandler.GetAllOrders)
 			admin.PUT("/orders/:id/status", orderHandler.UpdateOrderStatus)
+			admin.PATCH("/orders/:id/status", orderHandler.UpdateOrderStatus)
+
+			// User/Customer management (admin only)
+			admin.GET("/users", authHandler.GetAllUsers)
+			admin.GET("/users/:id", authHandler.GetUserDetails)
+
+			// Payment management (admin only)
+			admin.GET("/payments", paymentHandler.GetAllPayments)
 
 			// Content management endpoints (admin only)
 			admin.PUT("/content/:type", contentHandler.UpdateContent)

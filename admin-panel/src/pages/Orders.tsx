@@ -14,6 +14,7 @@ import {
 import { Order } from '../types';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
+import { orderAPI } from '../services/api';
 
 export default function Orders() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -24,114 +25,60 @@ export default function Orders() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
 
-  // Mock data
+  // Fetch orders from API
   useEffect(() => {
-    const mockOrders: Order[] = [
-      {
-        id: '1',
-        order_number: 'ORD-2024-001',
-        customer: {
-          id: '1',
-          name: 'Rahul Sharma',
-          email: 'rahul@example.com',
-          phone: '+91 9876543210',
-        },
-        items: [
-          {
-            product_id: '1',
-            product_name: 'Handwoven Silk Saree',
-            quantity: 1,
-            price: 8500,
-            total: 8500,
-          },
-        ],
-        shipping_address: {
-          line1: '123 MG Road',
-          city: 'Mumbai',
-          state: 'Maharashtra',
-          postal_code: '400001',
-          country: 'India',
-        },
-        billing_address: {
-          line1: '123 MG Road',
-          city: 'Mumbai',
-          state: 'Maharashtra',
-          postal_code: '400001',
-          country: 'India',
-        },
-        payment: {
-          method: 'razorpay',
-          status: 'paid',
-          transaction_id: 'pay_123456',
-          paid_at: '2024-01-20T10:30:00Z',
-        },
-        totals: {
-          subtotal: 8500,
-          shipping: 0,
-          tax: 1530,
-          discount: 0,
-          total: 10030,
-        },
-        status: 'delivered',
-        tracking: {
-          carrier: 'BlueDart',
-          tracking_number: 'BD123456789',
-          url: 'https://bluedart.com/track',
-        },
-        created_at: '2024-01-20T10:00:00Z',
-        updated_at: '2024-01-22T15:00:00Z',
-      },
-      {
-        id: '2',
-        order_number: 'ORD-2024-002',
-        customer: {
-          id: '2',
-          name: 'Priya Patel',
-          email: 'priya@example.com',
-          phone: '+91 9876543211',
-        },
-        items: [
-          {
-            product_id: '2',
-            product_name: 'Ceramic Dinner Set',
-            quantity: 2,
-            price: 3200,
-            total: 6400,
-          },
-        ],
-        shipping_address: {
-          line1: '456 Park Street',
-          city: 'Kolkata',
-          state: 'West Bengal',
-          postal_code: '700001',
-          country: 'India',
-        },
-        billing_address: {
-          line1: '456 Park Street',
-          city: 'Kolkata',
-          state: 'West Bengal',
-          postal_code: '700001',
-          country: 'India',
-        },
-        payment: {
-          method: 'cod',
-          status: 'pending',
-        },
-        totals: {
-          subtotal: 6400,
-          shipping: 100,
-          tax: 1170,
-          discount: 500,
-          total: 7170,
-        },
-        status: 'processing',
-        created_at: '2024-01-21T14:00:00Z',
-        updated_at: '2024-01-21T14:00:00Z',
-      },
-    ];
-    setOrders(mockOrders);
-    setLoading(false);
+    fetchOrders();
   }, []);
+
+  const fetchOrders = async () => {
+    try {
+      setLoading(true);
+      const response = await orderAPI.getAll();
+      
+      // Handle the API response
+      const ordersData = response.data.orders || [];
+      
+      // Map the API response to match the expected Order type structure
+      const mappedOrders: Order[] = ordersData.map((order: any) => ({
+        id: order.id,
+        order_number: order.order_number,
+        customer: order.customer || {
+          id: order.user_id || '',
+          name: order.customer?.name || 'Guest User',
+          email: order.customer?.email || '',
+          phone: order.customer?.phone || '',
+        },
+        items: order.items || [],
+        shipping_address: order.shipping_address || {},
+        billing_address: order.billing_address || order.shipping_address || {},
+        payment: {
+          method: order.payment?.method || 'unknown',
+          status: order.payment?.status || 'pending',
+          transaction_id: order.payment?.transaction_id || order.payment?.razorpay_payment_id,
+          paid_at: order.payment?.paid_at,
+        },
+        totals: order.totals || {
+          subtotal: 0,
+          shipping: 0,
+          tax: 0,
+          discount: 0,
+          total: 0,
+        },
+        status: order.status || 'pending',
+        tracking: order.tracking,
+        created_at: order.created_at,
+        updated_at: order.updated_at,
+      }));
+      
+      setOrders(mappedOrders);
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+      toast.error('Failed to load orders');
+      setOrders([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredOrders = orders.filter((order) => {
     const matchesSearch = 
@@ -199,10 +146,25 @@ export default function Orders() {
 
   const handleStatusUpdate = async (orderId: string, newStatus: string) => {
     try {
-      // await orderAPI.updateStatus(orderId, newStatus);
+      // Call API to update status
+      await orderAPI.updateStatus(orderId, newStatus);
+      
+      // Update local state
       setOrders(orders.map(o => o.id === orderId ? { ...o, status: newStatus as any } : o));
-      toast.success('Order status updated successfully');
+      
+      // Show appropriate message based on status
+      if (newStatus === 'shipped') {
+        toast.success('Order marked as shipped. Product stock has been updated.');
+      } else {
+        toast.success('Order status updated successfully');
+      }
+      
+      // Optionally refresh orders to get latest data
+      if (newStatus === 'shipped' || newStatus === 'delivered') {
+        fetchOrders();
+      }
     } catch (error) {
+      console.error('Error updating order status:', error);
       toast.error('Failed to update order status');
     }
   };
