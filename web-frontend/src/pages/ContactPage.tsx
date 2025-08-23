@@ -1,9 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Mail, Phone, MapPin, Clock, Send, MessageSquare } from 'lucide-react';
 import toast from 'react-hot-toast';
+import axios from 'axios';
+
+const API_URL = 'https://tripund-backend-665685012221.asia-south1.run.app/api/v1';
 
 const contactSchema = z.object({
   name: z.string().min(2, 'Name is required'),
@@ -16,8 +19,36 @@ const contactSchema = z.object({
 
 type ContactFormData = z.infer<typeof contactSchema>;
 
+interface ContactContent {
+  title?: string;
+  subtitle?: string;
+  description?: string;
+  email?: string;
+  phone?: string;
+  whatsapp?: string;
+  address?: {
+    street?: string;
+    city?: string;
+    state?: string;
+    country?: string;
+    pincode?: string;
+  };
+  businessHours?: string[];
+  mapEmbedUrl?: string;
+}
+
+interface FAQ {
+  id?: string;
+  question: string;
+  answer: string;
+  order?: number;
+}
+
 export default function ContactPage() {
   const [loading, setLoading] = useState(false);
+  const [content, setContent] = useState<ContactContent>({});
+  const [faqs, setFaqs] = useState<FAQ[]>([]);
+  const [contentLoading, setContentLoading] = useState(true);
 
   const {
     register,
@@ -31,10 +62,58 @@ export default function ContactPage() {
     },
   });
 
+  useEffect(() => {
+    fetchContent();
+    fetchFAQs();
+  }, []);
+
+  const fetchContent = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/content/contact`);
+      if (response.data?.content?.data) {
+        setContent(response.data.content.data);
+      }
+    } catch (error) {
+      console.error('Error fetching contact content:', error);
+    } finally {
+      setContentLoading(false);
+    }
+  };
+
+  const fetchFAQs = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/content/faqs/list`);
+      if (response.data) {
+        setFaqs(response.data.slice(0, 4)); // Show only first 4 FAQs on contact page
+      }
+    } catch (error) {
+      console.error('Error fetching FAQs:', error);
+      // Use default FAQs if API fails
+      setFaqs([
+        {
+          question: 'How long does shipping take?',
+          answer: 'Domestic orders typically arrive within 5-7 business days. International shipping takes 10-15 business days.',
+        },
+        {
+          question: 'Do you offer custom orders?',
+          answer: 'Yes! We work with our artisans to create custom pieces. Contact us for more details.',
+        },
+        {
+          question: 'What is your return policy?',
+          answer: 'We offer a 30-day return policy for unused items in original condition. Custom orders are non-refundable.',
+        },
+        {
+          question: 'How can I become an artisan partner?',
+          answer: 'We\'re always looking for talented artisans. Please fill out the contact form selecting "Partnership" as the inquiry type.',
+        },
+      ]);
+    }
+  };
+
   const onSubmit = async (data: ContactFormData) => {
     setLoading(true);
     try {
-      // Simulate API call
+      // Simulate API call - replace with actual API endpoint when available
       await new Promise(resolve => setTimeout(resolve, 1500));
       toast.success('Message sent successfully! We\'ll get back to you soon.');
       reset();
@@ -45,60 +124,65 @@ export default function ContactPage() {
     }
   };
 
+  // Use dynamic content if available, otherwise use defaults
+  const pageTitle = content.title || 'Get in Touch';
+  const pageSubtitle = content.subtitle || 'We\'d love to hear from you. Let us know how we can help!';
+  const email = content.email || 'support@tripundlifestyle.com';
+  const phone = content.phone || '+91 98765 43210';
+  const address = content.address || {
+    street: '123 Artisan Street',
+    city: 'New Delhi',
+    state: 'Delhi',
+    country: 'India',
+    pincode: '110001',
+  };
+  const businessHours = content.businessHours && content.businessHours.length > 0 
+    ? content.businessHours 
+    : ['Monday - Saturday', '10:00 AM - 7:00 PM IST'];
+
   const contactInfo = [
     {
       icon: Phone,
       title: 'Phone',
-      content: '+91 98765 43210',
-      subtext: 'Mon-Sat, 10 AM - 7 PM IST',
+      content: phone,
+      subtext: businessHours[0] || 'Mon-Sat, 10 AM - 7 PM IST',
     },
     {
       icon: Mail,
       title: 'Email',
-      content: 'support@tripundlifestyle.com',
+      content: email,
       subtext: 'We reply within 24 hours',
     },
     {
       icon: MapPin,
       title: 'Office',
-      content: '123 Artisan Street',
-      subtext: 'New Delhi, India 110001',
+      content: address.street || '123 Artisan Street',
+      subtext: `${address.city || 'New Delhi'}, ${address.country || 'India'} ${address.pincode || '110001'}`,
     },
     {
       icon: Clock,
       title: 'Business Hours',
-      content: 'Monday - Saturday',
-      subtext: '10:00 AM - 7:00 PM IST',
+      content: businessHours[0]?.split(':')[0] || 'Monday - Saturday',
+      subtext: businessHours[0]?.includes(':') ? businessHours[0].split(':').slice(1).join(':').trim() : '10:00 AM - 7:00 PM IST',
     },
   ];
 
-  const faqs = [
-    {
-      question: 'How long does shipping take?',
-      answer: 'Domestic orders typically arrive within 5-7 business days. International shipping takes 10-15 business days.',
-    },
-    {
-      question: 'Do you offer custom orders?',
-      answer: 'Yes! We work with our artisans to create custom pieces. Contact us for more details.',
-    },
-    {
-      question: 'What is your return policy?',
-      answer: 'We offer a 30-day return policy for unused items in original condition. Custom orders are non-refundable.',
-    },
-    {
-      question: 'How can I become an artisan partner?',
-      answer: 'We\'re always looking for talented artisans. Please fill out the contact form selecting "Partnership" as the inquiry type.',
-    },
-  ];
+  if (contentLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
       <section className="bg-primary-600 py-16">
         <div className="max-w-7xl mx-auto px-4 text-center text-white">
-          <h1 className="text-4xl font-bold mb-4">Get in Touch</h1>
+          <h1 className="text-4xl font-bold mb-4">{pageTitle}</h1>
           <p className="text-xl text-primary-100">
-            We'd love to hear from you. Let us know how we can help!
+            {pageSubtitle}
           </p>
         </div>
       </section>
@@ -244,15 +328,30 @@ export default function ContactPage() {
               {/* Map Placeholder */}
               <div className="bg-white rounded-lg shadow-md p-8 mb-8">
                 <h3 className="text-xl font-semibold mb-4">Visit Our Office</h3>
-                <div className="aspect-video bg-gray-200 rounded-lg flex items-center justify-center">
-                  <p className="text-gray-500">Map Integration Coming Soon</p>
-                </div>
+                {content.mapEmbedUrl ? (
+                  <iframe
+                    src={content.mapEmbedUrl}
+                    className="w-full aspect-video rounded-lg"
+                    allowFullScreen
+                    loading="lazy"
+                  />
+                ) : (
+                  <div className="aspect-video bg-gray-200 rounded-lg flex items-center justify-center">
+                    <p className="text-gray-500">Map Integration Coming Soon</p>
+                  </div>
+                )}
                 <div className="mt-4">
                   <p className="text-gray-600">
                     <strong>TRIPUND Lifestyle</strong><br />
-                    123 Artisan Street, Connaught Place<br />
-                    New Delhi, India 110001
+                    {address.street}<br />
+                    {address.city}, {address.state}<br />
+                    {address.country} {address.pincode}
                   </p>
+                  {content.whatsapp && (
+                    <p className="mt-2 text-gray-600">
+                      WhatsApp: {content.whatsapp}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -261,7 +360,7 @@ export default function ContactPage() {
                 <h3 className="text-xl font-semibold mb-4">Frequently Asked Questions</h3>
                 <div className="space-y-4">
                   {faqs.map((faq, index) => (
-                    <div key={index} className="border-b pb-4 last:border-b-0">
+                    <div key={faq.id || index} className="border-b pb-4 last:border-b-0">
                       <h4 className="font-medium text-gray-800 mb-2">{faq.question}</h4>
                       <p className="text-gray-600 text-sm">{faq.answer}</p>
                     </div>
@@ -278,7 +377,7 @@ export default function ContactPage() {
         <div className="max-w-4xl mx-auto px-4 text-center">
           <h3 className="text-2xl font-bold mb-4">Connect With Us</h3>
           <p className="text-gray-600 mb-6">
-            Follow us on social media for updates, new arrivals, and artisan stories
+            {content.description || 'Follow us on social media for updates, new arrivals, and artisan stories'}
           </p>
           <div className="flex justify-center space-x-6">
             <a href="#" className="text-gray-600 hover:text-primary-600">
