@@ -42,6 +42,7 @@ gcloud run deploy ${SERVICE_NAME} \
   --set-env-vars "STORAGE_BUCKET=${PROJECT_ID}.appspot.com" \
   --set-env-vars "RAZORPAY_KEY_ID=rzp_live_R8hjOfsT9hUkwE" \
   --set-env-vars "RAZORPAY_KEY_SECRET=eYQYNCRSIv9z5kvGBAgSyyk0" \
+  --set-env-vars "RAZORPAY_WEBHOOK_SECRET=webhook-tripund-678!!" \
   --project=${PROJECT_ID}
 
 if [ $? -eq 0 ]; then
