@@ -71,6 +71,7 @@ func main() {
 
 		// Guest checkout endpoints (no authentication required)
 		api.POST("/guest/orders", orderHandler.CreateGuestOrder)
+		api.GET("/guest/orders", orderHandler.GetGuestOrders) // Get guest orders by email
 		api.GET("/guest/orders/:id", orderHandler.GetGuestOrder)
 		api.POST("/guest/payment/create-order", paymentHandler.CreateGuestRazorpayOrder)
 		api.POST("/guest/payment/verify", paymentHandler.VerifyGuestPayment)

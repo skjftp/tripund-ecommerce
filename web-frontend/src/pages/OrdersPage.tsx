@@ -193,10 +193,13 @@ export default function OrdersPage() {
   const fetchOrders = async () => {
     try {
       const response = await api.get('/orders');
-      setOrders(response.data.orders);
+      // Handle both empty array and actual orders
+      const fetchedOrders = response.data.orders || [];
+      setOrders(fetchedOrders);
     } catch (error) {
-      // Use sample data if API fails
-      setOrders(sampleOrders);
+      console.error('Error fetching orders:', error);
+      // Don't use sample data - show actual state
+      setOrders([]);
     } finally {
       setLoading(false);
     }

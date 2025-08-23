@@ -2,7 +2,9 @@ package handlers
 
 import (
 	"fmt"
+	"log"
 	"net/http"
+	"sort"
 	"time"
 
 	"cloud.google.com/go/firestore"
@@ -132,24 +134,68 @@ func (h *OrderHandler) GetUserOrders(c *gin.Context) {
 	}
 
 	orders := make([]models.Order, 0)
-	iter := h.db.Client.Collection("orders").Where("user_id", "==", userID).OrderBy("created_at", firestore.Desc).Documents(h.db.Context)
 	
-	for {
-		doc, err := iter.Next()
-		if err == iterator.Done {
-			break
-		}
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch orders"})
-			return
-		}
-		
+	// Try without OrderBy first to avoid index requirements
+	docs, err := h.db.Client.Collection("orders").Where("user_id", "==", userID.(string)).Documents(h.db.Context).GetAll()
+	if err != nil {
+		log.Printf("Error fetching orders for user %s: %v", userID, err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch orders"})
+		return
+	}
+	
+	for _, doc := range docs {
 		var order models.Order
 		if err := doc.DataTo(&order); err != nil {
+			log.Printf("Error parsing order document %s: %v", doc.Ref.ID, err)
 			continue
 		}
+		order.ID = doc.Ref.ID
 		orders = append(orders, order)
 	}
+	
+	// Sort orders by created_at in memory
+	sort.Slice(orders, func(i, j int) bool {
+		return orders[i].CreatedAt.After(orders[j].CreatedAt)
+	})
+
+	c.JSON(http.StatusOK, gin.H{
+		"orders": orders,
+		"total":  len(orders),
+	})
+}
+
+// GetGuestOrders retrieves orders for guest users by email
+func (h *OrderHandler) GetGuestOrders(c *gin.Context) {
+	email := c.Query("email")
+	if email == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Email is required"})
+		return
+	}
+
+	orders := make([]models.Order, 0)
+	
+	// Fetch orders by guest email
+	docs, err := h.db.Client.Collection("orders").Where("guest_email", "==", email).Documents(h.db.Context).GetAll()
+	if err != nil {
+		log.Printf("Error fetching guest orders for email %s: %v", email, err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch orders"})
+		return
+	}
+	
+	for _, doc := range docs {
+		var order models.Order
+		if err := doc.DataTo(&order); err != nil {
+			log.Printf("Error parsing order document %s: %v", doc.Ref.ID, err)
+			continue
+		}
+		order.ID = doc.Ref.ID
+		orders = append(orders, order)
+	}
+	
+	// Sort orders by created_at in memory
+	sort.Slice(orders, func(i, j int) bool {
+		return orders[i].CreatedAt.After(orders[j].CreatedAt)
+	})
 
 	c.JSON(http.StatusOK, gin.H{
 		"orders": orders,

@@ -166,6 +166,9 @@ func (h *PaymentHandler) RazorpayWebhook(c *gin.Context) {
 		return
 	}
 
+	// Log the webhook event for debugging
+	log.Printf("Received Razorpay webhook: %s", string(body))
+
 	// Handle different webhook events
 	event, ok := payload["event"].(string)
 	if !ok {
@@ -201,7 +204,21 @@ func (h *PaymentHandler) RazorpayWebhook(c *gin.Context) {
 }
 
 func (h *PaymentHandler) handlePaymentCaptured(payload map[string]interface{}) error {
-	paymentData := payload["payload"].(map[string]interface{})["payment"].(map[string]interface{})["entity"].(map[string]interface{})
+	// Safely extract payment data with type assertions
+	payloadData, ok := payload["payload"].(map[string]interface{})
+	if !ok {
+		return fmt.Errorf("invalid payload structure")
+	}
+	
+	paymentWrapper, ok := payloadData["payment"].(map[string]interface{})
+	if !ok {
+		return fmt.Errorf("payment data not found in payload")
+	}
+	
+	paymentData, ok := paymentWrapper["entity"].(map[string]interface{})
+	if !ok {
+		return fmt.Errorf("entity data not found in payment")
+	}
 	
 	// Extract order ID from notes or description
 	notes, _ := paymentData["notes"].(map[string]interface{})
