@@ -70,6 +70,28 @@ export default function Categories() {
     }
   };
 
+  const handleEditCategory = (category: Category) => {
+    setEditingCategory(category);
+    setShowAddModal(true);
+  };
+
+  const handleSubmitCategory = async (categoryData: Category) => {
+    try {
+      if (editingCategory) {
+        await dispatch(updateCategory({ id: editingCategory.id, ...categoryData })).unwrap();
+        toast.success('Category updated successfully');
+      } else {
+        await dispatch(createCategory(categoryData)).unwrap();
+        toast.success('Category created successfully');
+      }
+      setShowAddModal(false);
+      setEditingCategory(null);
+      dispatch(fetchCategories());
+    } catch (error) {
+      toast.error(`Failed to ${editingCategory ? 'update' : 'create'} category`);
+    }
+  };
+
   const handleDeleteCategory = async (categoryId: string) => {
     if (window.confirm('Are you sure you want to delete this category?')) {
       try {
@@ -166,7 +188,7 @@ export default function Categories() {
           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
             <div className="flex items-center space-x-3">
               <button
-                onClick={() => setEditingCategory(category)}
+                onClick={() => handleEditCategory(category)}
                 className="text-blue-600 hover:text-blue-900"
               >
                 <Edit size={18} />
