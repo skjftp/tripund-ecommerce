@@ -11,8 +11,9 @@ import {
   Package,
   RefreshCw,
 } from 'lucide-react';
-import axios from 'axios';
 import toast from 'react-hot-toast';
+import api, { productAPI } from '../services/api';
+import { useNavigate } from 'react-router-dom';
 import ProductForm from '../components/ProductForm';
 
 interface Product {
@@ -37,6 +38,7 @@ interface Product {
 const API_URL = import.meta.env.VITE_API_URL || 'https://tripund-backend-rafqv5m7ga-el.a.run.app/api/v1';
 
 export default function Products() {
+  const navigate = useNavigate();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -48,7 +50,7 @@ export default function Products() {
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_URL}/products?limit=50`);
+      const response = await api.get('/products?limit=50');
       const fetchedProducts = response.data.products || [];
       setProducts(fetchedProducts);
       console.log(`Loaded ${fetchedProducts.length} products`);
@@ -76,16 +78,15 @@ export default function Products() {
   const handleDelete = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this product?')) {
       try {
-        const token = localStorage.getItem('adminToken');
-        await axios.delete(`${API_URL}/admin/products/${id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        await productAPI.delete(id);
         setProducts(products.filter((p) => p.id !== id));
         toast.success('Product deleted successfully');
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error deleting product:', error);
+        if (error.response?.status === 401) {
+          // Will be handled by interceptor
+          return;
+        }
         toast.error('Failed to delete product');
       }
     }
@@ -108,29 +109,27 @@ export default function Products() {
 
   const handleSubmitProduct = async (productData: any) => {
     try {
-      const token = localStorage.getItem('adminToken');
-      const config = {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      };
 
       if (editingProduct) {
         // Update existing product
-        const response = await axios.put(`${API_URL}/admin/products/${editingProduct.id}`, productData, config);
+        const response = await productAPI.update(editingProduct.id, productData);
         setProducts(products.map(p => p.id === editingProduct.id ? { ...productData, id: editingProduct.id } : p));
         toast.success('Product updated successfully');
       } else {
         // Create new product
-        const response = await axios.post(`${API_URL}/admin/products`, productData, config);
+        const response = await productAPI.create(productData);
         const newProduct = response.data;
         setProducts([...products, newProduct]);
         toast.success('Product created successfully');
       }
       handleCloseModal();
       fetchProducts(); // Refresh the list to get the latest data
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving product:', error);
+      if (error.response?.status === 401) {
+        // Will be handled by interceptor
+        return;
+      }
       toast.error(`Failed to ${editingProduct ? 'update' : 'create'} product`);
     }
   };

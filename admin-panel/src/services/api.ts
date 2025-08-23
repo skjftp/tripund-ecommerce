@@ -1,4 +1,5 @@
 import axios from 'axios';
+import toast from 'react-hot-toast';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://tripund-backend-665685012221.asia-south1.run.app/api/v1';
 
@@ -21,8 +22,16 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
+      // Clear token
       localStorage.removeItem('adminToken');
-      window.location.href = '/login';
+      
+      // Show toast message
+      toast.error('Session expired. Please login again.');
+      
+      // Redirect to login after a short delay to show the toast
+      setTimeout(() => {
+        window.location.href = '/login';
+      }, 1000);
     }
     return Promise.reject(error);
   }

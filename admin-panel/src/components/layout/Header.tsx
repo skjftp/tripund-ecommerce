@@ -1,7 +1,10 @@
 import { Bell, Search, User, Menu } from 'lucide-react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../store';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { logout } from '../../store/slices/authSlice';
+import toast from 'react-hot-toast';
 
 interface HeaderProps {
   onMenuClick?: () => void;
@@ -9,8 +12,17 @@ interface HeaderProps {
 
 export default function Header({ onMenuClick }: HeaderProps) {
   const { user } = useSelector((state: RootState) => state.auth);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+
+  const handleLogout = () => {
+    dispatch(logout());
+    localStorage.removeItem('adminToken');
+    toast.success('Logged out successfully');
+    navigate('/login');
+  };
 
   return (
     <header className="bg-white border-b border-gray-200 px-6 py-4">
@@ -89,7 +101,9 @@ export default function Header({ onMenuClick }: HeaderProps) {
                   Settings
                 </a>
                 <hr className="my-1" />
-                <button className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
+                <button 
+                  onClick={handleLogout}
+                  className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
                   Logout
                 </button>
               </div>
