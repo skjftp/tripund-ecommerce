@@ -223,32 +223,37 @@ export default function CheckoutPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gray-50 py-4 sm:py-8">
       <div className="max-w-7xl mx-auto px-4">
-        <h1 className="text-3xl font-bold mb-8">Checkout</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8">Checkout</h1>
 
-        <div className="flex items-center justify-center mb-8">
-          {steps.map((step, index) => (
-            <div key={step.id} className="flex items-center">
-              <div
-                className={`flex items-center justify-center w-10 h-10 rounded-full ${
-                  currentStep >= step.id
-                    ? 'bg-primary-600 text-white'
-                    : 'bg-gray-200 text-gray-600'
-                }`}
-              >
-                <step.icon size={20} />
+        {/* Progress Steps - Mobile Optimized */}
+        <div className="flex items-center justify-center mb-8 overflow-x-auto">
+          <div className="flex items-center min-w-max px-4">
+            {steps.map((step, index) => (
+              <div key={step.id} className="flex items-center">
+                <div className="flex items-center">
+                  <div
+                    className={`flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full ${
+                      currentStep >= step.id
+                        ? 'bg-primary-600 text-white'
+                        : 'bg-gray-200 text-gray-600'
+                    }`}
+                  >
+                    <step.icon size={16} className="sm:w-5 sm:h-5" />
+                  </div>
+                  <span className={`ml-1 sm:ml-2 text-xs sm:text-sm ${currentStep >= step.id ? 'text-primary-600 font-medium' : 'text-gray-600'}`}>
+                    {step.name}
+                  </span>
+                </div>
+                {index < steps.length - 1 && (
+                  <div className={`w-8 sm:w-16 md:w-24 h-0.5 sm:h-1 mx-2 sm:mx-4 ${
+                    currentStep > step.id ? 'bg-primary-600' : 'bg-gray-200'
+                  }`} />
+                )}
               </div>
-              <span className={`ml-2 ${currentStep >= step.id ? 'text-primary-600' : 'text-gray-600'}`}>
-                {step.name}
-              </span>
-              {index < steps.length - 1 && (
-                <div className={`w-24 h-1 mx-4 ${
-                  currentStep > step.id ? 'bg-primary-600' : 'bg-gray-200'
-                }`} />
-              )}
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit as any)}>

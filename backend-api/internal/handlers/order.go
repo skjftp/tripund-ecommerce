@@ -16,11 +16,15 @@ import (
 )
 
 type OrderHandler struct {
-	db *database.Firebase
+	db                   *database.Firebase
+	notificationHandler  *NotificationHandler
 }
 
 func NewOrderHandler(db *database.Firebase) *OrderHandler {
-	return &OrderHandler{db: db}
+	return &OrderHandler{
+		db:                  db,
+		notificationHandler: NewNotificationHandler(db),
+	}
 }
 
 type CreateOrderRequest struct {
@@ -114,6 +118,9 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create order"})
 		return
 	}
+
+	// Create notification for new order
+	h.notificationHandler.NotifyNewOrder(orderID, orderNumber, req.Totals.Total)
 
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "Order created successfully",
@@ -413,6 +420,9 @@ func (h *OrderHandler) CreateGuestOrder(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create order"})
 		return
 	}
+
+	// Create notification for new guest order
+	h.notificationHandler.NotifyNewOrder(orderID, orderNumber, req.Totals.Total)
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Order created successfully",

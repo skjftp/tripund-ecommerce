@@ -179,8 +179,172 @@ export default function Customers() {
     }
   };
 
+  const CustomerDetailModal = () => {
+    if (!selectedCustomer) return null;
+    
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-lg max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+          <div className="p-6 border-b border-gray-200">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold">Customer Details</h2>
+              <button
+                onClick={() => setShowDetailModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                ×
+              </button>
+            </div>
+          </div>
+          
+          <div className="p-6">
+            {/* Customer Header */}
+            <div className="flex items-center mb-6">
+              <div className="w-16 h-16 bg-primary-100 text-primary-600 rounded-full flex items-center justify-center font-semibold text-xl">
+                {selectedCustomer.name.split(' ').map(n => n[0]).join('')}
+              </div>
+              <div className="ml-4">
+                <h3 className="text-lg font-semibold">{selectedCustomer.name}</h3>
+                <span className={`inline-block px-2 py-1 text-xs rounded-full ${getStatusBadge(selectedCustomer.status)}`}>
+                  {selectedCustomer.status}
+                </span>
+              </div>
+            </div>
+            
+            {/* Contact Information */}
+            <div className="mb-6">
+              <h4 className="font-semibold mb-3">Contact Information</h4>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm text-gray-500">Email</label>
+                  <p className="font-medium">{selectedCustomer.email}</p>
+                </div>
+                <div>
+                  <label className="text-sm text-gray-500">Phone</label>
+                  <p className="font-medium">{selectedCustomer.phone || 'Not provided'}</p>
+                </div>
+              </div>
+            </div>
+            
+            {/* Addresses */}
+            {selectedCustomer.addresses.length > 0 && (
+              <div className="mb-6">
+                <h4 className="font-semibold mb-3">Addresses</h4>
+                <div className="space-y-3">
+                  {selectedCustomer.addresses.map((address, index) => (
+                    <div key={index} className="p-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium text-gray-600 uppercase">{address.type}</span>
+                        {address.is_default && (
+                          <span className="text-xs bg-primary-100 text-primary-700 px-2 py-1 rounded">Default</span>
+                        )}
+                      </div>
+                      <p className="text-sm">{address.line1}</p>
+                      {address.line2 && <p className="text-sm">{address.line2}</p>}
+                      <p className="text-sm">{address.city}, {address.state} {address.postal_code}</p>
+                      <p className="text-sm">{address.country}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {/* Order Statistics */}
+            <div className="mb-6">
+              <h4 className="font-semibold mb-3">Order Statistics</h4>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="p-3 bg-gray-50 rounded-lg">
+                  <div className="text-2xl font-bold text-primary-600">{selectedCustomer.stats.total_orders}</div>
+                  <div className="text-sm text-gray-600">Total Orders</div>
+                </div>
+                <div className="p-3 bg-gray-50 rounded-lg">
+                  <div className="text-2xl font-bold text-primary-600">₹{selectedCustomer.stats.total_spent.toLocaleString()}</div>
+                  <div className="text-sm text-gray-600">Total Spent</div>
+                </div>
+                <div className="p-3 bg-gray-50 rounded-lg">
+                  <div className="text-2xl font-bold text-primary-600">₹{selectedCustomer.stats.average_order_value.toLocaleString()}</div>
+                  <div className="text-sm text-gray-600">Average Order</div>
+                </div>
+                {selectedCustomer.stats.last_order_date && (
+                  <div className="p-3 bg-gray-50 rounded-lg">
+                    <div className="text-lg font-bold text-primary-600">
+                      {format(new Date(selectedCustomer.stats.last_order_date), 'MMM dd')}
+                    </div>
+                    <div className="text-sm text-gray-600">Last Order</div>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            {/* Tags */}
+            {selectedCustomer.tags.length > 0 && (
+              <div className="mb-6">
+                <h4 className="font-semibold mb-3">Tags</h4>
+                <div className="flex flex-wrap gap-2">
+                  {selectedCustomer.tags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="px-3 py-1 bg-primary-50 text-primary-700 text-sm rounded-full"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {/* Timeline */}
+            <div className="mb-6">
+              <h4 className="font-semibold mb-3">Timeline</h4>
+              <div className="space-y-2">
+                <div className="flex items-center text-sm">
+                  <Calendar size={16} className="mr-2 text-gray-400" />
+                  <span className="text-gray-600">Customer since</span>
+                  <span className="ml-auto font-medium">{format(new Date(selectedCustomer.created_at), 'MMMM d, yyyy')}</span>
+                </div>
+                {selectedCustomer.last_login && (
+                  <div className="flex items-center text-sm">
+                    <Calendar size={16} className="mr-2 text-gray-400" />
+                    <span className="text-gray-600">Last login</span>
+                    <span className="ml-auto font-medium">{format(new Date(selectedCustomer.last_login), 'MMMM d, yyyy h:mm a')}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            {/* Actions */}
+            <div className="flex space-x-3">
+              <button className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700">
+                View Orders
+              </button>
+              <button className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                Edit Customer
+              </button>
+              {selectedCustomer.status === 'active' ? (
+                <button
+                  onClick={() => handleStatusUpdate(selectedCustomer.id, 'blocked')}
+                  className="px-4 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50"
+                >
+                  Block
+                </button>
+              ) : (
+                <button
+                  onClick={() => handleStatusUpdate(selectedCustomer.id, 'active')}
+                  className="px-4 py-2 border border-green-300 text-green-600 rounded-lg hover:bg-green-50"
+                >
+                  Activate
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="p-6">
+      {showDetailModal && <CustomerDetailModal />}
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Customers</h1>

@@ -20,21 +20,23 @@ import (
 )
 
 type PaymentHandler struct {
-	db            *database.Firebase
-	client        *razorpay.Client
-	keyID         string
-	secret        string
-	webhookSecret string
+	db                  *database.Firebase
+	client              *razorpay.Client
+	keyID               string
+	secret              string
+	webhookSecret       string
+	notificationHandler *NotificationHandler
 }
 
 func NewPaymentHandler(db *database.Firebase, keyID, keySecret, webhookSecret string) *PaymentHandler {
 	client := razorpay.NewClient(keyID, keySecret)
 	return &PaymentHandler{
-		db:            db,
-		client:        client,
-		keyID:         keyID,
-		secret:        keySecret,
-		webhookSecret: webhookSecret,
+		db:                  db,
+		client:              client,
+		keyID:               keyID,
+		secret:              keySecret,
+		webhookSecret:       webhookSecret,
+		notificationHandler: NewNotificationHandler(db),
 	}
 }
 
@@ -121,6 +123,14 @@ func (h *PaymentHandler) VerifyPayment(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update order payment status"})
 		return
 	}
+
+	// Get order details for notification
+	orderDoc, _ := h.db.Client.Collection("orders").Doc(req.OrderID).Get(h.db.Context)
+	var order models.Order
+	orderDoc.DataTo(&order)
+	
+	// Create notification for payment received
+	h.notificationHandler.NotifyPaymentReceived(order.OrderNumber, order.Totals.Total)
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Payment verified successfully",

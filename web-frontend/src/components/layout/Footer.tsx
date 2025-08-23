@@ -139,6 +139,16 @@ export default function Footer() {
                   FAQ
                 </Link>
               </li>
+              <li>
+                <Link to="/privacy-policy" className="text-gray-400 hover:text-white">
+                  Privacy Policy
+                </Link>
+              </li>
+              <li>
+                <Link to="/terms-conditions" className="text-gray-400 hover:text-white">
+                  Terms & Conditions
+                </Link>
+              </li>
             </ul>
           </div>
 

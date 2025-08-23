@@ -101,4 +101,16 @@ export const paymentAPI = {
   refund: (id: string, amount: number) => api.post(`/admin/payments/${id}/refund`, { amount }),
 };
 
+// Notification APIs
+export const notificationAPI = {
+  getAll: (params?: { unread?: boolean }) => {
+    const query = params?.unread ? '?unread=true' : '';
+    return api.get(`/admin/notifications${query}`);
+  },
+  markAsRead: (id: string) => api.put(`/admin/notifications/${id}/read`),
+  markAllAsRead: () => api.put('/admin/notifications/read-all'),
+  delete: (id: string) => api.delete(`/admin/notifications/${id}`),
+  clearAll: () => api.delete('/admin/notifications'),
+};
+
 export default api;

@@ -17,12 +17,17 @@ import (
 )
 
 type AuthHandler struct {
-	db     *database.Firebase
-	secret string
+	db                  *database.Firebase
+	secret              string
+	notificationHandler *NotificationHandler
 }
 
 func NewAuthHandler(db *database.Firebase, secret string) *AuthHandler {
-	return &AuthHandler{db: db, secret: secret}
+	return &AuthHandler{
+		db:                  db,
+		secret:              secret,
+		notificationHandler: NewNotificationHandler(db),
+	}
 }
 
 func (h *AuthHandler) Register(c *gin.Context) {
@@ -57,6 +62,11 @@ func (h *AuthHandler) Register(c *gin.Context) {
 	}
 
 	user.ID = docRef.ID
+	
+	// Create notification for new user registration
+	userName := req.FirstName + " " + req.LastName
+	h.notificationHandler.NotifyNewUser(userName, req.Email)
+	
 	token, expiresIn, err := h.generateToken(user)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})

@@ -16,3 +16,7 @@ func GenerateID() string {
 func GenerateOrderNumber() string {
 	return fmt.Sprintf("%06d", time.Now().UnixNano()%1000000)
 }
+
+func FormatCurrency(amount float64) string {
+	return fmt.Sprintf("%.2f", amount)
+}

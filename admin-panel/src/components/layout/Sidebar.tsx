@@ -12,6 +12,7 @@ import {
   CreditCard,
   Bell,
   FileText,
+  Shield,
 } from 'lucide-react';
 import { useDispatch } from 'react-redux';
 import { logout } from '../../store/slices/authSlice';
@@ -31,6 +32,7 @@ export default function Sidebar({ isOpen = true, onClose }: SidebarProps) {
     { icon: Users, label: 'Customers', path: '/customers' },
     { icon: FolderTree, label: 'Categories', path: '/categories' },
     { icon: FileText, label: 'Content', path: '/content' },
+    { icon: Shield, label: 'Legal', path: '/legal' },
     { icon: Tag, label: 'Promotions', path: '/promotions' },
     { icon: CreditCard, label: 'Payments', path: '/payments' },
     { icon: BarChart3, label: 'Analytics', path: '/analytics' },

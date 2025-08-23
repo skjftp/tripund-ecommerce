@@ -32,6 +32,7 @@ func main() {
 	categoryHandler := handlers.NewCategoryHandler(db)
 	contentHandler := handlers.NewContentHandler(db)
 	settingsHandler := handlers.NewSettingsHandler(db)
+	notificationHandler := handlers.NewNotificationHandler(db)
 
 	api := r.Group("/api/v1")
 	{
@@ -149,6 +150,13 @@ func main() {
 			// Settings management
 			admin.GET("/settings", settingsHandler.GetSettings)
 			admin.PUT("/settings", settingsHandler.UpdateSettings)
+			
+			// Notifications management
+			admin.GET("/notifications", notificationHandler.GetNotifications)
+			admin.PUT("/notifications/:id/read", notificationHandler.MarkAsRead)
+			admin.PUT("/notifications/read-all", notificationHandler.MarkAllAsRead)
+			admin.DELETE("/notifications/:id", notificationHandler.DeleteNotification)
+			admin.DELETE("/notifications", notificationHandler.ClearAllNotifications)
 		}
 
 		api.POST("/webhook/razorpay", paymentHandler.RazorpayWebhook)
