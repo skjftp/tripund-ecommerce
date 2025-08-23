@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
+import ImageUpload from './ImageUpload';
 
 interface SubCategory {
   name: string;
@@ -44,11 +45,13 @@ export default function CategoryForm({
 
   const [subcategories, setSubcategories] = useState<string[]>([]);
   const [newSubcategory, setNewSubcategory] = useState('');
+  const [categoryImages, setCategoryImages] = useState<string[]>([]);
 
   useEffect(() => {
     if (category) {
       setFormData(category);
       setSubcategories(category.children?.map(c => c.name) || []);
+      setCategoryImages(category.image ? [category.image] : []);
     } else {
       setFormData({
         sku: '',
@@ -60,6 +63,7 @@ export default function CategoryForm({
         order: 0,
       });
       setSubcategories([]);
+      setCategoryImages([]);
     }
   }, [category]);
 
@@ -67,9 +71,15 @@ export default function CategoryForm({
     e.preventDefault();
     const categoryData = {
       ...formData,
+      image: categoryImages[0] || '',
       children: subcategories.map(name => ({ name, product_count: 0 })),
     };
     onSubmit(categoryData);
+  };
+
+  const handleImagesChange = (images: string[]) => {
+    setCategoryImages(images);
+    setFormData({ ...formData, image: images[0] || '' });
   };
 
   const handleAddSubcategory = () => {
@@ -169,14 +179,11 @@ export default function CategoryForm({
           </div>
 
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Image URL
-            </label>
-            <input
-              type="text"
-              value={formData.image}
-              onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+            <ImageUpload
+              images={categoryImages}
+              onImagesChange={handleImagesChange}
+              maxImages={1}
+              label="Category Image"
             />
           </div>
 

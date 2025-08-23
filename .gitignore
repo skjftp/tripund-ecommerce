@@ -90,3 +90,5 @@ Desktop.ini
 coverage/
 *.lcov
 .nyc_output/
+# Local Netlify folder
+.netlify

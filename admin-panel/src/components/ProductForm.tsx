@@ -1,6 +1,7 @@
-import { useState } from 'react';
-import { X, Plus, Minus, Upload, Image as ImageIcon } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { X, Plus, Minus } from 'lucide-react';
 import toast from 'react-hot-toast';
+import ImageUpload from './ImageUpload';
 
 interface ProductFormProps {
   isOpen: boolean;
@@ -14,34 +15,87 @@ interface ProductAttribute {
   value: string;
 }
 
+interface FormData {
+  sku: string;
+  name: string;
+  slug: string;
+  description: string;
+  short_description: string;
+  price: number;
+  sale_price: number | string;
+  manage_stock: boolean;
+  stock_quantity: number;
+  stock_status: string;
+  featured: boolean;
+  status: string;
+  categories: string[];
+  tags: string[];
+  images: string[];
+  attributes: ProductAttribute[];
+  dimensions: { length: number; width: number; height: number; unit: string };
+  weight: { value: number; unit: string };
+}
+
 export default function ProductForm({ isOpen, onClose, product, onSubmit }: ProductFormProps) {
-  const [formData, setFormData] = useState({
-    sku: product?.sku || '',
-    name: product?.name || '',
-    slug: product?.slug || '',
-    description: product?.description || '',
-    short_description: product?.short_description || '',
-    price: product?.price || 0,
-    sale_price: product?.sale_price || '',
-    manage_stock: product?.manage_stock ?? true,
-    stock_quantity: product?.stock_quantity || 0,
-    stock_status: product?.stock_status || 'in_stock',
-    featured: product?.featured || false,
-    status: product?.status || 'active',
-    categories: product?.categories || [],
-    tags: product?.tags || [],
-    images: product?.images || [],
-    attributes: product?.attributes || [
+  const getInitialFormData = (): FormData => ({
+    sku: '',
+    name: '',
+    slug: '',
+    description: '',
+    short_description: '',
+    price: 0,
+    sale_price: '',
+    manage_stock: true,
+    stock_quantity: 0,
+    stock_status: 'in_stock',
+    featured: false,
+    status: 'active',
+    categories: [],
+    tags: [],
+    images: [],
+    attributes: [
       { name: 'Material', value: '' },
       { name: 'Origin', value: 'India' },
       { name: 'Handmade', value: 'Yes' }
     ],
-    dimensions: product?.dimensions || { length: 0, width: 0, height: 0, unit: 'cm' },
-    weight: product?.weight || { value: 0, unit: 'g' }
+    dimensions: { length: 0, width: 0, height: 0, unit: 'cm' },
+    weight: { value: 0, unit: 'g' }
   });
 
-  const [imageUrls, setImageUrls] = useState<string[]>(product?.images || ['']);
+  const [formData, setFormData] = useState(getInitialFormData());
   const [tagInput, setTagInput] = useState('');
+
+  // Update form data when product changes or modal opens
+  useEffect(() => {
+    if (isOpen && product) {
+      setFormData({
+        sku: product.sku || '',
+        name: product.name || '',
+        slug: product.slug || '',
+        description: product.description || '',
+        short_description: product.short_description || '',
+        price: product.price || 0,
+        sale_price: product.sale_price || '',
+        manage_stock: product.manage_stock ?? true,
+        stock_quantity: product.stock_quantity || 0,
+        stock_status: product.stock_status || 'in_stock',
+        featured: product.featured || false,
+        status: product.status || 'active',
+        categories: product.categories || [],
+        tags: product.tags || [],
+        images: product.images || [],
+        attributes: product.attributes?.length > 0 ? product.attributes : [
+          { name: 'Material', value: '' },
+          { name: 'Origin', value: 'India' },
+          { name: 'Handmade', value: 'Yes' }
+        ],
+        dimensions: product.dimensions || { length: 0, width: 0, height: 0, unit: 'cm' },
+        weight: product.weight || { value: 0, unit: 'g' }
+      });
+    } else if (isOpen && !product) {
+      setFormData(getInitialFormData());
+    }
+  }, [isOpen, product]);
 
   const categories = [
     { value: 'divine-collections', label: 'Divine Collections' },
@@ -90,21 +144,8 @@ export default function ProductForm({ isOpen, onClose, product, onSubmit }: Prod
     }));
   };
 
-  const handleImageChange = (index: number, value: string) => {
-    const newImages = [...imageUrls];
-    newImages[index] = value;
-    setImageUrls(newImages);
-    setFormData(prev => ({ ...prev, images: newImages.filter(url => url.trim()) }));
-  };
-
-  const addImageUrl = () => {
-    setImageUrls(prev => [...prev, '']);
-  };
-
-  const removeImageUrl = (index: number) => {
-    const newImages = imageUrls.filter((_, i) => i !== index);
-    setImageUrls(newImages);
-    setFormData(prev => ({ ...prev, images: newImages.filter(url => url.trim()) }));
+  const handleImagesChange = (images: string[]) => {
+    setFormData(prev => ({ ...prev, images }));
   };
 
   const handleTagAdd = () => {
@@ -143,7 +184,7 @@ export default function ProductForm({ isOpen, onClose, product, onSubmit }: Prod
       return;
     }
 
-    if (formData.sale_price && formData.sale_price >= formData.price) {
+    if (formData.sale_price && Number(formData.sale_price) >= formData.price) {
       toast.error('Sale price must be less than regular price');
       return;
     }
@@ -158,15 +199,9 @@ export default function ProductForm({ isOpen, onClose, product, onSubmit }: Prod
       return;
     }
 
-    // Validate image URLs
-    const imageUrls = formData.images.filter((url: string) => url.trim());
-    for (const url of imageUrls) {
-      try {
-        new URL(url);
-      } catch {
-        toast.error('Please enter valid image URLs');
-        return;
-      }
+    if (formData.images.length === 0) {
+      toast.error('Please upload at least one product image');
+      return;
     }
 
     // Format data for API
@@ -178,7 +213,7 @@ export default function ProductForm({ isOpen, onClose, product, onSubmit }: Prod
       price: parseFloat(formData.price.toString()),
       sale_price: formData.sale_price ? parseFloat(formData.sale_price.toString()) : null,
       stock_quantity: parseInt(formData.stock_quantity.toString()) || 0,
-      images: imageUrls,
+      images: formData.images,
       dimensions: {
         ...formData.dimensions,
         length: parseFloat(formData.dimensions.length.toString()) || 0,
@@ -400,37 +435,12 @@ export default function ProductForm({ isOpen, onClose, product, onSubmit }: Prod
           </div>
 
           {/* Images */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Product Images
-            </label>
-            {imageUrls.map((url, index) => (
-              <div key={index} className="flex items-center space-x-2 mb-2">
-                <input
-                  type="url"
-                  value={url}
-                  onChange={(e) => handleImageChange(index, e.target.value)}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  placeholder="https://images.tripundlifestyle.com/products/..."
-                />
-                <button
-                  type="button"
-                  onClick={() => removeImageUrl(index)}
-                  className="text-red-600 hover:text-red-700"
-                >
-                  <Minus size={18} />
-                </button>
-              </div>
-            ))}
-            <button
-              type="button"
-              onClick={addImageUrl}
-              className="flex items-center space-x-2 text-primary-600 hover:text-primary-700"
-            >
-              <Plus size={18} />
-              <span>Add Image URL</span>
-            </button>
-          </div>
+          <ImageUpload
+            images={formData.images}
+            onImagesChange={handleImagesChange}
+            maxImages={10}
+            label="Product Images"
+          />
 
           {/* Tags */}
           <div>
