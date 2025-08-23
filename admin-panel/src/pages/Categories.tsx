@@ -75,10 +75,13 @@ export default function Categories() {
     setShowAddModal(true);
   };
 
-  const handleSubmitCategory = async (categoryData: Category) => {
+  const handleSubmitCategory = async (categoryData: any) => {
     try {
       if (editingCategory) {
-        await dispatch(updateCategory({ id: editingCategory.id, ...categoryData })).unwrap();
+        await dispatch(updateCategory({ 
+          id: editingCategory.id, 
+          updates: categoryData 
+        })).unwrap();
         toast.success('Category updated successfully');
       } else {
         await dispatch(createCategory(categoryData)).unwrap();

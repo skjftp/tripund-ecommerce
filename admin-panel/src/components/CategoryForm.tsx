@@ -15,6 +15,8 @@ interface Category {
   image?: string;
   children?: SubCategory[];
   order?: number;
+  created_at?: string;
+  updated_at?: string;
 }
 
 interface CategoryFormProps {
