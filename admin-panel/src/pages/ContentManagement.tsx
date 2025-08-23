@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Save, Eye, Smartphone, Monitor, Plus, Trash2, Edit2, ChevronDown, ChevronRight } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
@@ -16,7 +16,7 @@ interface FAQ {
 interface ContentSection {
   id: string;
   title: string;
-  icon: JSX.Element;
+  icon: React.ReactElement;
   expanded: boolean;
 }
 
