@@ -76,7 +76,12 @@ export default function Products() {
   const handleDelete = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this product?')) {
       try {
-        await axios.delete(`${API_URL}/products/${id}`);
+        const token = localStorage.getItem('adminToken');
+        await axios.delete(`${API_URL}/admin/products/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
         setProducts(products.filter((p) => p.id !== id));
         toast.success('Product deleted successfully');
       } catch (error) {
@@ -103,14 +108,21 @@ export default function Products() {
 
   const handleSubmitProduct = async (productData: any) => {
     try {
+      const token = localStorage.getItem('adminToken');
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+
       if (editingProduct) {
         // Update existing product
-        const response = await axios.put(`${API_URL}/products/${editingProduct.id}`, productData);
+        const response = await axios.put(`${API_URL}/admin/products/${editingProduct.id}`, productData, config);
         setProducts(products.map(p => p.id === editingProduct.id ? { ...productData, id: editingProduct.id } : p));
         toast.success('Product updated successfully');
       } else {
         // Create new product
-        const response = await axios.post(`${API_URL}/products`, productData);
+        const response = await axios.post(`${API_URL}/admin/products`, productData, config);
         const newProduct = response.data;
         setProducts([...products, newProduct]);
         toast.success('Product created successfully');
