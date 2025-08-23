@@ -9,7 +9,6 @@ import tripundLogo from '../../assets/tripund-logo.png';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
@@ -26,14 +25,6 @@ export default function Header() {
       dispatch(fetchCategories());
     }
   }, [dispatch, categories.length]);
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
-      setSearchQuery('');
-    }
-  };
 
   const handleLogout = () => {
     dispatch(logout());
@@ -57,25 +48,25 @@ export default function Header() {
               </div>
             </button>
             
-            <Link to="/" className="ml-4 lg:ml-0">
+            <Link to="/" className="ml-4 lg:ml-0 lg:mr-8">
               <img 
                 src={tripundLogo} 
                 alt="TRIPUND LIFESTYLE" 
-                className="h-8 w-auto max-w-[160px] object-contain"
+                className="h-8 w-auto max-w-[140px] object-contain"
               />
             </Link>
           </div>
 
-          <nav className="hidden lg:flex items-center space-x-6">
+          <nav className="hidden lg:flex items-center space-x-3 xl:space-x-4">
             {categories.map((category) => (
               <div key={category.id} className="relative group">
                 <Link
                   to={`/products?category=${category.slug}`}
-                  className="flex items-center space-x-1 text-gray-700 hover:text-primary-600 py-2"
+                  className="flex items-center space-x-1 text-gray-700 hover:text-primary-600 py-2 text-sm whitespace-nowrap"
                 >
                   <span>{category.name}</span>
                   {category.children && category.children.length > 0 && (
-                    <ChevronDown size={14} className="group-hover:rotate-180 transition-transform" />
+                    <ChevronDown size={12} className="group-hover:rotate-180 transition-transform" />
                   )}
                 </Link>
                 
@@ -101,7 +92,7 @@ export default function Header() {
               </div>
             ))}
             
-            <Link to="/about" className="text-gray-700 hover:text-primary-600">
+            <Link to="/about" className="text-gray-700 hover:text-primary-600 text-sm">
               About
             </Link>
           </nav>
@@ -216,24 +207,17 @@ export default function Header() {
             >
               About
             </Link>
-            {/* Mobile Search */}
-            <div className="px-4 py-3 border-t">
-              <form onSubmit={handleSearch} className="flex">
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search products..."
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:border-primary-500"
-                />
-                <button
-                  type="submit"
-                  className="bg-primary-600 text-white px-4 py-2 rounded-r-md hover:bg-primary-700"
-                >
-                  <Search size={20} />
-                </button>
-              </form>
-            </div>
+            
+            <Link
+              to="/search"
+              className="block px-4 py-3 text-gray-700 hover:bg-white hover:text-primary-600 transition-colors border-t"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              <div className="flex items-center">
+                <Search size={20} className="mr-2" />
+                <span>Search Products</span>
+              </div>
+            </Link>
           </nav>
         </div>
       </div>
