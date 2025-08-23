@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react';
 import { X, Plus, Minus } from 'lucide-react';
 import toast from 'react-hot-toast';
 import ImageUpload from './ImageUpload';
+import { useSelector, useDispatch } from 'react-redux';
+import { RootState, AppDispatch } from '../store';
+import { fetchCategories } from '../store/slices/categoriesSlice';
 
 interface ProductFormProps {
   isOpen: boolean;
@@ -29,6 +32,7 @@ interface FormData {
   featured: boolean;
   status: string;
   categories: string[];
+  subcategories: string[];
   tags: string[];
   images: string[];
   attributes: ProductAttribute[];
@@ -37,6 +41,9 @@ interface FormData {
 }
 
 export default function ProductForm({ isOpen, onClose, product, onSubmit }: ProductFormProps) {
+  const dispatch = useDispatch<AppDispatch>();
+  const { categories: dbCategories } = useSelector((state: RootState) => state.categories);
+  
   const getInitialFormData = (): FormData => ({
     sku: '',
     name: '',
@@ -51,6 +58,7 @@ export default function ProductForm({ isOpen, onClose, product, onSubmit }: Prod
     featured: false,
     status: 'active',
     categories: [],
+    subcategories: [],
     tags: [],
     images: [],
     attributes: [
@@ -64,6 +72,25 @@ export default function ProductForm({ isOpen, onClose, product, onSubmit }: Prod
 
   const [formData, setFormData] = useState(getInitialFormData());
   const [tagInput, setTagInput] = useState('');
+  const [availableSubcategories, setAvailableSubcategories] = useState<{[key: string]: string[]}>({});
+
+  // Fetch categories when component mounts
+  useEffect(() => {
+    if (dbCategories.length === 0) {
+      dispatch(fetchCategories());
+    }
+  }, [dispatch, dbCategories.length]);
+
+  // Update available subcategories when categories change
+  useEffect(() => {
+    const subcatMap: {[key: string]: string[]} = {};
+    dbCategories.forEach(cat => {
+      if (cat.children && cat.children.length > 0) {
+        subcatMap[cat.slug] = cat.children.map(child => child.name);
+      }
+    });
+    setAvailableSubcategories(subcatMap);
+  }, [dbCategories]);
 
   // Update form data when product changes or modal opens
   useEffect(() => {
@@ -82,6 +109,7 @@ export default function ProductForm({ isOpen, onClose, product, onSubmit }: Prod
         featured: product.featured || false,
         status: product.status || 'active',
         categories: product.categories || [],
+        subcategories: product.subcategories || [],
         tags: product.tags || [],
         images: product.images || [],
         attributes: product.attributes?.length > 0 ? product.attributes : [
@@ -214,6 +242,7 @@ export default function ProductForm({ isOpen, onClose, product, onSubmit }: Prod
       sale_price: formData.sale_price ? parseFloat(formData.sale_price.toString()) : null,
       stock_quantity: parseInt(formData.stock_quantity.toString()) || 0,
       images: formData.images,
+      subcategories: formData.subcategories,
       dimensions: {
         ...formData.dimensions,
         length: parseFloat(formData.dimensions.length.toString()) || 0,
@@ -411,6 +440,13 @@ export default function ProductForm({ isOpen, onClose, product, onSubmit }: Prod
                         ? [...formData.categories, category.value]
                         : formData.categories.filter((c: string) => c !== category.value);
                       handleInputChange('categories', newCategories);
+                      // Clear subcategories if category is unchecked
+                      if (!e.target.checked && availableSubcategories[category.value]) {
+                        const removedSubcats = availableSubcategories[category.value];
+                        handleInputChange('subcategories', 
+                          formData.subcategories.filter((s: string) => !removedSubcats.includes(s))
+                        );
+                      }
                     }}
                     className="mr-2"
                   />
@@ -419,6 +455,45 @@ export default function ProductForm({ isOpen, onClose, product, onSubmit }: Prod
               ))}
             </div>
           </div>
+
+          {/* Subcategories */}
+          {formData.categories.length > 0 && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Subcategories
+              </label>
+              {formData.categories.map(category => {
+                const subcats = availableSubcategories[category];
+                if (!subcats || subcats.length === 0) return null;
+                
+                return (
+                  <div key={category} className="mb-3">
+                    <p className="text-xs font-medium text-gray-600 mb-2">
+                      {categories.find(c => c.value === category)?.label || category}:
+                    </p>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2 pl-4">
+                      {subcats.map(subcat => (
+                        <label key={subcat} className="flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={formData.subcategories.includes(subcat)}
+                            onChange={(e) => {
+                              const newSubcategories = e.target.checked
+                                ? [...formData.subcategories, subcat]
+                                : formData.subcategories.filter((s: string) => s !== subcat);
+                              handleInputChange('subcategories', newSubcategories);
+                            }}
+                            className="mr-2"
+                          />
+                          <span className="text-sm">{subcat}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
 
           {/* Featured */}
           <div className="flex items-center">
