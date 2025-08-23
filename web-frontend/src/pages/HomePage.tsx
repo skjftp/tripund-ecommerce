@@ -92,7 +92,7 @@ export default function HomePage() {
             {/* Load More Button */}
             <div className="text-center mt-8">
               <Link
-                to="/products"
+                to="/categories"
                 className="inline-flex items-center bg-gray-900 text-white px-8 py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors"
               >
                 View All Products
