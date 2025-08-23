@@ -50,6 +50,60 @@ type PaymentSettings struct {
 	PrepaidDiscount    float64 `json:"prepaid_discount" firestore:"prepaid_discount"`
 }
 
+// GetPublicSettings retrieves public settings (shipping rates, tax, etc) for frontend use
+func (h *SettingsHandler) GetPublicSettings(c *gin.Context) {
+	doc, err := h.db.Client.Collection("settings").Doc("store").Get(h.db.Context)
+	
+	// Default settings if not found
+	defaultSettings := map[string]interface{}{
+		"shipping": map[string]interface{}{
+			"free_shipping_threshold": 5000.0,
+			"standard_shipping_rate":  100.0,
+			"express_shipping_rate":   200.0,
+		},
+		"payment": map[string]interface{}{
+			"tax_rate":         18.0,
+			"prepaid_discount": 5.0,
+			"cod_enabled":      true,
+			"cod_limit":        10000.0,
+		},
+		"general": map[string]interface{}{
+			"currency": "INR",
+		},
+	}
+	
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{"settings": defaultSettings})
+		return
+	}
+
+	var settings Settings
+	if err := doc.DataTo(&settings); err != nil {
+		c.JSON(http.StatusOK, gin.H{"settings": defaultSettings})
+		return
+	}
+
+	// Return only public settings
+	publicSettings := map[string]interface{}{
+		"shipping": map[string]interface{}{
+			"free_shipping_threshold": settings.Shipping.FreeShippingThreshold,
+			"standard_shipping_rate":  settings.Shipping.StandardShippingRate,
+			"express_shipping_rate":   settings.Shipping.ExpressShippingRate,
+		},
+		"payment": map[string]interface{}{
+			"tax_rate":         settings.Payment.TaxRate,
+			"prepaid_discount": settings.Payment.PrepaidDiscount,
+			"cod_enabled":      settings.Payment.CODEnabled,
+			"cod_limit":        settings.Payment.CODLimit,
+		},
+		"general": map[string]interface{}{
+			"currency": settings.General.Currency,
+		},
+	}
+
+	c.JSON(http.StatusOK, gin.H{"settings": publicSettings})
+}
+
 // GetSettings retrieves the current settings
 func (h *SettingsHandler) GetSettings(c *gin.Context) {
 	doc, err := h.db.Client.Collection("settings").Doc("store").Get(h.db.Context)
@@ -102,7 +156,15 @@ func (h *SettingsHandler) UpdateSettings(c *gin.Context) {
 
 	settings.UpdatedAt = time.Now()
 
-	_, err := h.db.Client.Collection("settings").Doc("store").Set(h.db.Context, settings)
+	// Convert struct to map for MergeAll
+	data := map[string]interface{}{
+		"general":    settings.General,
+		"shipping":   settings.Shipping,
+		"payment":    settings.Payment,
+		"updated_at": settings.UpdatedAt,
+	}
+
+	_, err := h.db.Client.Collection("settings").Doc("store").Set(h.db.Context, data, firestore.MergeAll)
 	if err != nil {
 		// Log the actual error for debugging
 		c.JSON(http.StatusInternalServerError, gin.H{

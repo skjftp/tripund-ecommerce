@@ -9,6 +9,7 @@ import { RootState } from '../store';
 import { clearCart } from '../store/slices/cartSlice';
 import toast from 'react-hot-toast';
 import api from '../services/api';
+import { getPublicSettings, calculateShipping, calculateTax, type PublicSettings } from '../services/settings';
 
 const checkoutSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
@@ -43,9 +44,11 @@ export default function CheckoutPage() {
   const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
   const [loading, setLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
+  const [settings, setSettings] = useState<PublicSettings | null>(null);
 
-  const shipping = total > 5000 ? 0 : 500;
-  const tax = Math.round(total * 0.18);
+  // Calculate values using dynamic settings
+  const shipping = settings ? calculateShipping(total, settings) : 0;
+  const tax = settings ? calculateTax(total, settings) : 0;
   const grandTotal = total + shipping + tax;
 
   const {
@@ -72,6 +75,11 @@ export default function CheckoutPage() {
   }, [items, navigate]);
 
   useEffect(() => {
+    // Fetch dynamic settings on component mount
+    getPublicSettings().then(setSettings).catch(console.error);
+  }, []);
+
+  useEffect(() => {
     if (user) {
       setValue('firstName', user.profile.first_name);
       setValue('lastName', user.profile.last_name);
@@ -92,27 +100,32 @@ export default function CheckoutPage() {
 
   const initiateRazorpayPayment = async (orderData: any) => {
     try {
+      // Use guest endpoints if not authenticated
+      const orderEndpoint = isAuthenticated ? '/orders' : '/guest/orders';
+      const paymentEndpoint = isAuthenticated ? '/payment/create-order' : '/guest/payment/create-order';
+      const verifyEndpoint = isAuthenticated ? '/payment/verify' : '/guest/payment/verify';
+      
       // First create the order in backend
-      const orderResponse = await api.post('/orders', orderData);
+      const orderResponse = await api.post(orderEndpoint, orderData);
       const createdOrder = orderResponse.data.order;
 
       // Then create the Razorpay order
-      const response = await api.post('/payment/create-order', {
+      const response = await api.post(paymentEndpoint, {
         amount: grandTotal,
         currency: 'INR',
         order_id: createdOrder.id,
       });
 
       const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY || 'rzp_test_xxxxx',
-        amount: grandTotal * 100,
-        currency: 'INR',
+        key: response.data.key_id || import.meta.env.VITE_RAZORPAY_KEY || 'rzp_test_xxxxx',
+        amount: response.data.amount || grandTotal * 100,
+        currency: response.data.currency || 'INR',
         name: 'TRIPUND Lifestyle',
         description: 'Artisan Marketplace Purchase',
-        order_id: response.data.order_id,
+        order_id: response.data.razorpay_order_id || response.data.order_id,
         handler: async function (response: any) {
           try {
-            await api.post('/payment/verify', {
+            await api.post(verifyEndpoint, {
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
@@ -189,7 +202,8 @@ export default function CheckoutPage() {
         await initiateRazorpayPayment(orderData);
       } else {
         // Cash on Delivery - create order directly
-        const orderResponse = await api.post('/orders', orderData);
+        const orderEndpoint = isAuthenticated ? '/orders' : '/guest/orders';
+        const orderResponse = await api.post(orderEndpoint, orderData);
         const createdOrder = orderResponse.data.order;
         
         dispatch(clearCart());
@@ -464,7 +478,16 @@ export default function CheckoutPage() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Shipping</span>
-                    <span>{shipping === 0 ? 'Free' : `₹${shipping}`}</span>
+                    <span>
+                      {shipping === 0 ? (
+                        <span className="text-green-600 font-medium">
+                          Free {settings && total >= settings.shipping.free_shipping_threshold && 
+                          `(Order above ₹${settings.shipping.free_shipping_threshold})`}
+                        </span>
+                      ) : (
+                        `₹${shipping}`
+                      )}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Tax (GST 18%)</span>

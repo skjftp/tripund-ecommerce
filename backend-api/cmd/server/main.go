@@ -43,6 +43,7 @@ func main() {
 		{
 			auth.POST("/register", authHandler.Register)
 			auth.POST("/login", authHandler.Login)
+			auth.POST("/refresh", authHandler.RefreshToken)
 		}
 
 		products := api.Group("/products")
@@ -64,6 +65,15 @@ func main() {
 			content.GET("/:type", contentHandler.GetContent)
 			content.GET("/faqs/list", contentHandler.GetFAQs)
 		}
+
+		// Public settings endpoint (for shipping rates, tax, etc)
+		api.GET("/settings/public", settingsHandler.GetPublicSettings)
+
+		// Guest checkout endpoints (no authentication required)
+		api.POST("/guest/orders", orderHandler.CreateGuestOrder)
+		api.GET("/guest/orders/:id", orderHandler.GetGuestOrder)
+		api.POST("/guest/payment/create-order", paymentHandler.CreateGuestRazorpayOrder)
+		api.POST("/guest/payment/verify", paymentHandler.VerifyGuestPayment)
 
 		protected := api.Group("")
 		protected.Use(middleware.AuthMiddleware(cfg.JWTSecret))

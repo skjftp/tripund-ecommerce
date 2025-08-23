@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import api from '../../services/api';
 import { User, AuthResponse } from '../../types';
+import { storeToken, clearAuth } from '../../services/auth';
 
 interface AuthState {
   user: User | null;
@@ -53,7 +54,7 @@ const authSlice = createSlice({
       state.user = null;
       state.token = null;
       state.isAuthenticated = false;
-      localStorage.removeItem('token');
+      clearAuth();
     },
     clearError: (state) => {
       state.error = null;
@@ -70,7 +71,8 @@ const authSlice = createSlice({
         state.user = action.payload.user;
         state.token = action.payload.token;
         state.isAuthenticated = true;
-        localStorage.setItem('token', action.payload.token);
+        const expiresAt = action.payload.expires_at || Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60;
+        storeToken(action.payload.token, expiresAt);
       })
       .addCase(login.rejected, (state, action) => {
         state.loading = false;
@@ -85,7 +87,8 @@ const authSlice = createSlice({
         state.user = action.payload.user;
         state.token = action.payload.token;
         state.isAuthenticated = true;
-        localStorage.setItem('token', action.payload.token);
+        const expiresAt = action.payload.expires_at || Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60;
+        storeToken(action.payload.token, expiresAt);
       })
       .addCase(register.rejected, (state, action) => {
         state.loading = false;

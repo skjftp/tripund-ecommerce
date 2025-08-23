@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"strings"
 	"time"
 
 	"cloud.google.com/go/firestore"
@@ -111,7 +112,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 }
 
 func (h *AuthHandler) generateToken(user models.User) (string, int64, error) {
-	expiresIn := time.Now().Add(24 * time.Hour)
+	expiresIn := time.Now().Add(7 * 24 * time.Hour) // 7 days
 	claims := middleware.Claims{
 		UserID: user.ID,
 		Email:  user.Email,
@@ -129,6 +130,63 @@ func (h *AuthHandler) generateToken(user models.User) (string, int64, error) {
 	}
 
 	return tokenString, expiresIn.Unix(), nil
+}
+
+// RefreshToken generates a new token for authenticated users
+func (h *AuthHandler) RefreshToken(c *gin.Context) {
+	// Get the current token from header
+	authHeader := c.GetHeader("Authorization")
+	if authHeader == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "No token provided"})
+		return
+	}
+
+	tokenString := authHeader
+	if strings.HasPrefix(authHeader, "Bearer ") {
+		tokenString = strings.TrimPrefix(authHeader, "Bearer ")
+	}
+
+	// Parse and validate the token (even if expired, we just want the claims)
+	token, _ := jwt.ParseWithClaims(tokenString, &middleware.Claims{}, func(token *jwt.Token) (interface{}, error) {
+		return []byte(h.secret), nil
+	})
+
+	if token == nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+		return
+	}
+
+	claims, ok := token.Claims.(*middleware.Claims)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token claims"})
+		return
+	}
+
+	// Fetch the user from database to ensure they still exist
+	doc, err := h.db.Client.Collection("users").Doc(claims.UserID).Get(h.db.Context)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+		return
+	}
+
+	var user models.User
+	if err := doc.DataTo(&user); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to parse user data"})
+		return
+	}
+
+	// Generate new token
+	newToken, expiresAt, err := h.generateToken(user)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"token":      newToken,
+		"expires_at": expiresAt,
+		"user":       user,
+	})
 }
 
 func (h *AuthHandler) GetProfile(c *gin.Context) {

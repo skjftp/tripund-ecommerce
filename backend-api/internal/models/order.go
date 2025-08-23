@@ -6,6 +6,9 @@ type Order struct {
 	ID            string      `json:"id" firestore:"id"`
 	OrderNumber   string      `json:"order_number" firestore:"order_number"`
 	UserID        string      `json:"user_id" firestore:"user_id"`
+	GuestEmail    string      `json:"guest_email,omitempty" firestore:"guest_email,omitempty"`
+	GuestName     string      `json:"guest_name,omitempty" firestore:"guest_name,omitempty"`
+	GuestPhone    string      `json:"guest_phone,omitempty" firestore:"guest_phone,omitempty"`
 	Items         []OrderItem `json:"items" firestore:"items"`
 	ShippingAddress UserAddress  `json:"shipping_address" firestore:"shipping_address"`
 	BillingAddress  UserAddress  `json:"billing_address" firestore:"billing_address"`

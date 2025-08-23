@@ -150,5 +150,6 @@ export interface Tracking {
 export interface AuthResponse {
   token: string;
   expires_in: number;
+  expires_at?: number;
   user: User;
 }

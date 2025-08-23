@@ -1,13 +1,21 @@
+import { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { Trash2, Plus, Minus, ShoppingBag, ArrowRight } from 'lucide-react';
 import { RootState } from '../store';
 import { removeFromCart, updateQuantity } from '../store/slices/cartSlice';
+import { getPublicSettings, calculateShipping, calculateTax, type PublicSettings } from '../services/settings';
 
 export default function CartPage() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { items, total } = useSelector((state: RootState) => state.cart);
+  const [settings, setSettings] = useState<PublicSettings | null>(null);
+
+  useEffect(() => {
+    // Fetch dynamic settings on component mount
+    getPublicSettings().then(setSettings).catch(console.error);
+  }, []);
 
   const handleQuantityChange = (productId: string, newQuantity: number) => {
     if (newQuantity > 0) {
@@ -110,6 +118,16 @@ export default function CartPage() {
             <div className="bg-white rounded-lg shadow-md p-6 sticky top-24">
               <h3 className="text-xl font-semibold mb-4">Order Summary</h3>
               
+              {/* Free shipping notice */}
+              {settings && total < settings.shipping.free_shipping_threshold && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
+                  <p className="text-sm text-green-800">
+                    Add ₹{(settings.shipping.free_shipping_threshold - total).toLocaleString()} more to get{' '}
+                    <span className="font-semibold">FREE SHIPPING!</span>
+                  </p>
+                </div>
+              )}
+              
               <div className="space-y-2 mb-4">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Subtotal</span>
@@ -117,11 +135,25 @@ export default function CartPage() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Shipping</span>
-                  <span>{total > 5000 ? 'Free' : '₹500'}</span>
+                  <span>
+                    {settings ? (
+                      calculateShipping(total, settings) === 0 ? (
+                        <span className="text-green-600 font-medium">
+                          Free
+                        </span>
+                      ) : (
+                        `₹${calculateShipping(total, settings)}`
+                      )
+                    ) : (
+                      'Calculating...'
+                    )}
+                  </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Tax</span>
-                  <span>₹{Math.round(total * 0.18).toLocaleString()}</span>
+                  <span className="text-gray-600">Tax ({settings?.payment.tax_rate || 18}%)</span>
+                  <span>
+                    ₹{settings ? calculateTax(total, settings).toLocaleString() : Math.round(total * 0.18).toLocaleString()}
+                  </span>
                 </div>
               </div>
 
@@ -129,7 +161,10 @@ export default function CartPage() {
                 <div className="flex justify-between text-lg font-semibold">
                   <span>Total</span>
                   <span>
-                    ₹{(total + (total > 5000 ? 0 : 500) + Math.round(total * 0.18)).toLocaleString()}
+                    ₹{settings ? 
+                      (total + calculateShipping(total, settings) + calculateTax(total, settings)).toLocaleString() :
+                      (total + (total > 5000 ? 0 : 500) + Math.round(total * 0.18)).toLocaleString()
+                    }
                   </span>
                 </div>
               </div>

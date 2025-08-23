@@ -19,6 +19,7 @@ import (
 type PaymentHandler struct {
 	db            *database.Firebase
 	client        *razorpay.Client
+	keyID         string
 	secret        string
 	webhookSecret string
 }
@@ -28,6 +29,7 @@ func NewPaymentHandler(db *database.Firebase, keyID, keySecret, webhookSecret st
 	return &PaymentHandler{
 		db:            db,
 		client:        client,
+		keyID:         keyID,
 		secret:        keySecret,
 		webhookSecret: webhookSecret,
 	}
@@ -259,4 +261,106 @@ func (h *PaymentHandler) handleOrderPaid(payload map[string]interface{}) error {
 	})
 
 	return err
+}
+
+// CreateGuestRazorpayOrder creates a Razorpay order for guest checkout
+func (h *PaymentHandler) CreateGuestRazorpayOrder(c *gin.Context) {
+	var req struct {
+		Amount   float64 `json:"amount" binding:"required"`
+		Currency string  `json:"currency"`
+		OrderID  string  `json:"order_id" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if req.Currency == "" {
+		req.Currency = "INR"
+	}
+
+	// Create Razorpay order
+	orderData := map[string]interface{}{
+		"amount":   int(req.Amount * 100), // Convert to paise
+		"currency": req.Currency,
+		"receipt":  req.OrderID,
+	}
+
+	order, err := h.client.Order.Create(orderData, nil)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create payment order"})
+		return
+	}
+
+	// Update order with Razorpay order ID
+	_, err = h.db.Client.Collection("orders").Doc(req.OrderID).Update(h.db.Context, []firestore.Update{
+		{Path: "payment.razorpay_order_id", Value: order["id"]},
+		{Path: "updated_at", Value: time.Now()},
+	})
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update order"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"razorpay_order_id": order["id"],
+		"amount":           order["amount"],
+		"currency":         order["currency"],
+		"key_id":          h.keyID,
+	})
+}
+
+// VerifyGuestPayment verifies payment for guest checkout
+func (h *PaymentHandler) VerifyGuestPayment(c *gin.Context) {
+	var req struct {
+		RazorpayOrderID   string `json:"razorpay_order_id" binding:"required"`
+		RazorpayPaymentID string `json:"razorpay_payment_id" binding:"required"`
+		RazorpaySignature string `json:"razorpay_signature" binding:"required"`
+		OrderID           string `json:"order_id" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Verify signature
+	params := map[string]interface{}{
+		"razorpay_order_id":   req.RazorpayOrderID,
+		"razorpay_payment_id": req.RazorpayPaymentID,
+		"razorpay_signature": req.RazorpaySignature,
+	}
+
+	// Verify signature manually
+	signature := params["razorpay_order_id"].(string) + "|" + params["razorpay_payment_id"].(string)
+	mac := hmac.New(sha256.New, []byte(h.secret))
+	mac.Write([]byte(signature))
+	expectedSig := hex.EncodeToString(mac.Sum(nil))
+	
+	if params["razorpay_signature"].(string) != expectedSig {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid payment signature"})
+		return
+	}
+
+	// Update order status
+	_, err := h.db.Client.Collection("orders").Doc(req.OrderID).Update(h.db.Context, []firestore.Update{
+		{Path: "payment.status", Value: "completed"},
+		{Path: "payment.transaction_id", Value: req.RazorpayPaymentID},
+		{Path: "payment.razorpay_payment_id", Value: req.RazorpayPaymentID},
+		{Path: "payment.razorpay_signature", Value: req.RazorpaySignature},
+		{Path: "status", Value: "processing"},
+		{Path: "updated_at", Value: time.Now()},
+	})
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update order"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Payment verified successfully",
+		"order_id": req.OrderID,
+	})
 }

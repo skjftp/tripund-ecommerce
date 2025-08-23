@@ -8,7 +8,7 @@ TRIPUND is a full-stack e-commerce platform for Indian handicrafts with three ma
 ## Quick Access URLs
 - **Production Frontend**: https://tripundlifestyle.netlify.app
 - **Production Admin**: https://tripundlifestyle-admin.netlify.app
-- **Production API**: https://tripund-backend-665685012221.asia-south1.run.app
+- **Production API**: https://tripund-backend-665685012221.asia-south1.run.app (alias: https://tripund-backend-rafqv5m7ga-el.a.run.app - both URLs point to the same service)
 - **GitHub Repo**: https://github.com/skjftp/tripund-ecommerce
 - **Firestore Console**: https://console.cloud.google.com/firestore/databases/-default-/data/panel?project=tripund-ecommerce-1755860933
 - **Firebase Console**: https://console.firebase.google.com/project/tripund-ecommerce-1755860933/overview
@@ -459,6 +459,7 @@ Add this A record to your DNS provider:
 ## Notes for AI Assistants
 1. **NEVER run or test anything on localhost - work directly in code**
 2. **NEVER implement temporary workarounds - always fix the root issue properly**
+3. **IMPORTANT: Both https://tripund-backend-665685012221.asia-south1.run.app and https://tripund-backend-rafqv5m7ga-el.a.run.app are aliases for the same Cloud Run service - DO NOT change between them**
 3. Check `.env` files exist before deployment
 4. Use `git status` before committing to verify changes
 5. Test API endpoints with curl after deployment

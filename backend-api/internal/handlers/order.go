@@ -238,3 +238,111 @@ func (h *OrderHandler) UpdateOrderStatus(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Order status updated successfully"})
 }
+
+// CreateGuestOrder creates an order for guest users (no authentication required)
+func (h *OrderHandler) CreateGuestOrder(c *gin.Context) {
+	var req CreateOrderRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Generate order ID and number
+	orderID := utils.GenerateID()
+	orderNumber := fmt.Sprintf("ORD-%d-%s", time.Now().Year(), utils.GenerateOrderNumber())
+
+	// Convert request items to order items
+	var orderItems []models.OrderItem
+	for _, item := range req.Items {
+		// Fetch product details
+		product, err := h.db.GetProductByID(item.ProductID)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Product not found: %s", item.ProductID)})
+			return
+		}
+
+		orderItem := models.OrderItem{
+			ProductID:   item.ProductID,
+			ProductName: product.Name,
+			ProductImage: func() string {
+				if len(product.Images) > 0 {
+					return product.Images[0]
+				}
+				return ""
+			}(),
+			SKU:      product.SKU,
+			Quantity: item.Quantity,
+			Price:    item.Price,
+			Discount: 0,
+			Total:    item.Price * float64(item.Quantity),
+		}
+		orderItems = append(orderItems, orderItem)
+	}
+
+	// Create the order with guest information
+	order := models.Order{
+		ID:          orderID,
+		OrderNumber: orderNumber,
+		UserID:      "guest", // Mark as guest order
+		GuestEmail:  req.Email,
+		GuestName:   fmt.Sprintf("%s %s", req.FirstName, req.LastName),
+		GuestPhone:  req.Phone,
+		Items:       orderItems,
+		ShippingAddress: req.Address,
+		BillingAddress:  req.Address,
+		Payment: models.Payment{
+			Method:   req.PaymentMethod,
+			Status:   "pending",
+			Amount:   req.Totals.Total,
+			Currency: "INR",
+		},
+		Totals:    req.Totals,
+		Status:    "pending",
+		Notes:     req.Notes,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+
+	// Save to Firestore
+	_, err := h.db.Client.Collection("orders").Doc(orderID).Set(h.db.Context, order)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create order"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Order created successfully",
+		"order":   order,
+	})
+}
+
+// GetGuestOrder retrieves a guest order by ID (requires order ID and email verification)
+func (h *OrderHandler) GetGuestOrder(c *gin.Context) {
+	orderID := c.Param("id")
+	email := c.Query("email")
+
+	if email == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Email is required for guest order lookup"})
+		return
+	}
+
+	doc, err := h.db.Client.Collection("orders").Doc(orderID).Get(h.db.Context)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Order not found"})
+		return
+	}
+
+	var order models.Order
+	if err := doc.DataTo(&order); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to parse order"})
+		return
+	}
+
+	// Verify the email matches for guest orders
+	if order.UserID == "guest" && order.GuestEmail != email {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email for this order"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"order": order})
+}

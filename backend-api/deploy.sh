@@ -40,6 +40,8 @@ gcloud run deploy ${SERVICE_NAME} \
   --set-env-vars "JWT_SECRET=change-this-secret-key-in-production" \
   --set-env-vars "CORS_ORIGIN=https://tripundlifestyle.com" \
   --set-env-vars "STORAGE_BUCKET=${PROJECT_ID}.appspot.com" \
+  --set-env-vars "RAZORPAY_KEY_ID=rzp_live_R8hjOfsT9hUkwE" \
+  --set-env-vars "RAZORPAY_KEY_SECRET=eYQYNCRSIv9z5kvGBAgSyyk0" \
   --project=${PROJECT_ID}
 
 if [ $? -eq 0 ]; then
