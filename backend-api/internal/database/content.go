@@ -1,7 +1,6 @@
 package database
 
 import (
-	"context"
 	"fmt"
 	"tripund-api/internal/models"
 

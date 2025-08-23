@@ -458,15 +458,16 @@ Add this A record to your DNS provider:
 
 ## Notes for AI Assistants
 1. **NEVER run or test anything on localhost - work directly in code**
-2. Check `.env` files exist before deployment
-3. Use `git status` before committing to verify changes
-4. Test API endpoints with curl after deployment
-5. Clear Netlify cache if builds show old content
-6. Check Cloud Run IAM settings if getting 403 errors
-7. Verify CORS configuration when adding new domains
-8. Always use Node.js v20+ for builds
-9. Use Tailwind CSS v3 (not v4) for compatibility
-10. Deploy directly to production for testing
+2. **NEVER implement temporary workarounds - always fix the root issue properly**
+3. Check `.env` files exist before deployment
+4. Use `git status` before committing to verify changes
+5. Test API endpoints with curl after deployment
+6. Clear Netlify cache if builds show old content
+7. Check Cloud Run IAM settings if getting 403 errors
+8. Verify CORS configuration when adding new domains
+9. Always use Node.js v20+ for builds
+10. Use Tailwind CSS v3 (not v4) for compatibility
+11. Deploy directly to production for testing
 
 ## Quick Fixes
 

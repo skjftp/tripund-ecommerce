@@ -14,6 +14,7 @@ type Config struct {
 	FirebaseCredentialsPath string
 	RazorpayKeyID         string
 	RazorpayKeySecret     string
+	RazorpayWebhookSecret string
 	JWTSecret             string
 	CORSOrigin            string
 	StorageBucket         string
@@ -31,6 +32,7 @@ func Load() *Config {
 		FirebaseCredentialsPath: getEnv("FIREBASE_CREDENTIALS_PATH", "./serviceAccount.json"),
 		RazorpayKeyID:         getEnv("RAZORPAY_KEY_ID", ""),
 		RazorpayKeySecret:     getEnv("RAZORPAY_KEY_SECRET", ""),
+		RazorpayWebhookSecret: getEnv("RAZORPAY_WEBHOOK_SECRET", ""),
 		JWTSecret:             getEnv("JWT_SECRET", "your-secret-key"),
 		CORSOrigin:            getEnv("CORS_ORIGIN", "http://localhost:5173"),
 		StorageBucket:         getEnv("STORAGE_BUCKET", ""),

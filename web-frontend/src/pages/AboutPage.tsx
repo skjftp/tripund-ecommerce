@@ -217,7 +217,7 @@ When you purchase from TRIPUND, you're not just buying a product – you're supp
                   />
                   <h3 className="text-xl font-semibold">{member.name}</h3>
                   <p className="text-gray-600">{member.position}</p>
-                  {member.bio && (
+                  {'bio' in member && member.bio && (
                     <p className="text-sm text-gray-500 mt-2">{member.bio}</p>
                   )}
                 </div>

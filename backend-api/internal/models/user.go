@@ -7,7 +7,7 @@ type User struct {
 	Email        string      `json:"email" firestore:"email" validate:"required,email"`
 	PasswordHash string      `json:"-" firestore:"password_hash"`
 	Profile      UserProfile `json:"profile" firestore:"profile"`
-	Addresses    []Address   `json:"addresses" firestore:"addresses"`
+	Addresses    []UserAddress   `json:"addresses" firestore:"addresses"`
 	Preferences  Preferences `json:"preferences" firestore:"preferences"`
 	Wishlist     []string    `json:"wishlist" firestore:"wishlist"`
 	OrderHistory []string    `json:"order_history" firestore:"order_history"`
@@ -23,7 +23,7 @@ type UserProfile struct {
 	Avatar    string `json:"avatar" firestore:"avatar"`
 }
 
-type Address struct {
+type UserAddress struct {
 	ID        string `json:"id" firestore:"id"`
 	Type      string `json:"type" firestore:"type"`
 	Line1     string `json:"line1" firestore:"line1" validate:"required"`

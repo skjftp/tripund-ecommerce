@@ -92,10 +92,15 @@ export default function CheckoutPage() {
 
   const initiateRazorpayPayment = async (orderData: any) => {
     try {
+      // First create the order in backend
+      const orderResponse = await api.post('/orders', orderData);
+      const createdOrder = orderResponse.data.order;
+
+      // Then create the Razorpay order
       const response = await api.post('/payment/create-order', {
         amount: grandTotal,
         currency: 'INR',
-        order_id: orderData.id,
+        order_id: createdOrder.id,
       });
 
       const options = {
@@ -111,12 +116,12 @@ export default function CheckoutPage() {
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
-              order_id: orderData.id,
+              order_id: createdOrder.id,
             });
 
             dispatch(clearCart());
             toast.success('Payment successful!');
-            navigate(`/order-confirmation/${orderData.id}`);
+            navigate(`/order-confirmation/${createdOrder.id}`);
           } catch (error) {
             toast.error('Payment verification failed');
           }
@@ -142,8 +147,20 @@ export default function CheckoutPage() {
   const onSubmit = async (data: CheckoutFormData) => {
     setLoading(true);
 
+    // Transform the data to match backend structure
     const orderData = {
-      ...data,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      email: data.email,
+      phone: data.phone,
+      address: {
+        line1: data.address.line1,
+        line2: data.address.line2 || '',
+        city: data.address.city,
+        state: data.address.state,
+        postal_code: data.address.postalCode,
+        country: data.address.country || 'India'
+      },
       items: items.map(item => ({
         product_id: item.product_id,
         quantity: item.quantity,
@@ -155,18 +172,21 @@ export default function CheckoutPage() {
         tax,
         total: grandTotal,
       },
-      status: 'pending',
-      created_at: new Date().toISOString(),
+      paymentMethod: data.paymentMethod,
+      notes: data.notes || ''
     };
 
     try {
       if (data.paymentMethod === 'razorpay') {
         await initiateRazorpayPayment(orderData);
       } else {
-        // Cash on Delivery
+        // Cash on Delivery - create order directly
+        const orderResponse = await api.post('/orders', orderData);
+        const createdOrder = orderResponse.data.order;
+        
         dispatch(clearCart());
         toast.success('Order placed successfully!');
-        navigate('/order-confirmation');
+        navigate(`/order-confirmation/${createdOrder.id}`);
       }
     } catch (error) {
       toast.error('Failed to place order');

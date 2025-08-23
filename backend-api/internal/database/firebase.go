@@ -85,3 +85,31 @@ func fileExists(filename string) bool {
 func (f *Firebase) GetClient() interface{} {
 	return f
 }
+
+// GetProductByID retrieves a product by its ID from Firestore
+func (f *Firebase) GetProductByID(productID string) (*Product, error) {
+	doc, err := f.Client.Collection("products").Doc(productID).Get(f.Context)
+	if err != nil {
+		return nil, err
+	}
+
+	var product Product
+	if err := doc.DataTo(&product); err != nil {
+		return nil, err
+	}
+	product.ID = doc.Ref.ID
+
+	return &product, nil
+}
+
+// Product represents the product structure for database operations
+type Product struct {
+	ID          string   `json:"id" firestore:"id"`
+	SKU         string   `json:"sku" firestore:"sku"`
+	Name        string   `json:"name" firestore:"name"`
+	Description string   `json:"description" firestore:"description"`
+	Price       float64  `json:"price" firestore:"price"`
+	Images      []string `json:"images" firestore:"images"`
+	Categories  []string `json:"categories" firestore:"categories"`
+	Status      string   `json:"status" firestore:"status"`
+}

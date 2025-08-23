@@ -27,7 +27,8 @@ func main() {
 
 	authHandler := handlers.NewAuthHandler(db, cfg.JWTSecret)
 	productHandler := handlers.NewProductHandler(db)
-	paymentHandler := handlers.NewPaymentHandler(db, cfg.RazorpayKeyID, cfg.RazorpayKeySecret)
+	paymentHandler := handlers.NewPaymentHandler(db, cfg.RazorpayKeyID, cfg.RazorpayKeySecret, cfg.RazorpayWebhookSecret)
+	orderHandler := handlers.NewOrderHandler(db)
 	categoryHandler := handlers.NewCategoryHandler(db)
 	contentHandler := handlers.NewContentHandler(db)
 
@@ -69,6 +70,14 @@ func main() {
 			protected.GET("/profile", authHandler.GetProfile)
 			protected.PUT("/profile", authHandler.UpdateProfile)
 
+			// Order endpoints
+			orders := protected.Group("/orders")
+			{
+				orders.POST("", orderHandler.CreateOrder)
+				orders.GET("", orderHandler.GetUserOrders)
+				orders.GET("/:id", orderHandler.GetOrder)
+			}
+
 			payment := protected.Group("/payment")
 			{
 				payment.POST("/create-order", paymentHandler.CreateRazorpayOrder)
@@ -94,6 +103,10 @@ func main() {
 			admin.PUT("/categories/:id", categoryHandler.UpdateCategory)
 			admin.DELETE("/categories/:id", categoryHandler.DeleteCategory)
 			admin.POST("/categories/initialize", categoryHandler.InitializeDefaultCategories)
+
+			// Order management (admin only)
+			admin.GET("/orders", orderHandler.GetAllOrders)
+			admin.PUT("/orders/:id/status", orderHandler.UpdateOrderStatus)
 
 			// Content management endpoints (admin only)
 			admin.PUT("/content/:type", contentHandler.UpdateContent)
