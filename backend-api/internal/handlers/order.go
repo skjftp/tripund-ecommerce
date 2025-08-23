@@ -305,21 +305,21 @@ func (h *OrderHandler) UpdateOrderStatus(c *gin.Context) {
 			}
 
 			// Calculate new stock
-			newStock := product.Stock - item.Quantity
+			newStock := product.StockQuantity - item.Quantity
 			if newStock < 0 {
 				newStock = 0 // Prevent negative stock
 			}
 
 			// Update product stock
 			_, err = productRef.Update(h.db.Context, []firestore.Update{
-				{Path: "stock", Value: newStock},
+				{Path: "stock_quantity", Value: newStock},
 				{Path: "updated_at", Value: time.Now()},
 			})
 
 			if err != nil {
 				log.Printf("Failed to update stock for product %s: %v", item.ProductID, err)
 			} else {
-				log.Printf("Updated stock for product %s: %d -> %d", item.ProductID, product.Stock, newStock)
+				log.Printf("Updated stock for product %s: %d -> %d", item.ProductID, product.StockQuantity, newStock)
 			}
 		}
 	}

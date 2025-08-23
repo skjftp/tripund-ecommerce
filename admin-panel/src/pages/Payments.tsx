@@ -56,7 +56,47 @@ export default function Payments() {
   const [selectedDateRange, setSelectedDateRange] = useState('today');
 
   useEffect(() => {
-    const mockPayments: Payment[] = [
+    fetchPayments();
+  }, []);
+
+  const fetchPayments = async () => {
+    try {
+      setLoading(true);
+      const response = await paymentAPI.getAll({
+        status: selectedStatus !== 'all' ? selectedStatus : undefined,
+        method: selectedMethod !== 'all' ? selectedMethod : undefined,
+      });
+      
+      // Handle the API response
+      const paymentsData = response.data.payments || [];
+      
+      // Map the API response to match the expected Payment type structure
+      const mappedPayments: Payment[] = paymentsData.map((payment: any) => ({
+        id: payment.id,
+        transaction_id: payment.transaction_id || payment.order_number,
+        order_id: payment.order_id,
+        customer: {
+          id: payment.customer_id || '',
+          name: payment.customer_name || 'Guest',
+          email: payment.customer_email || '',
+        },
+        amount: payment.amount,
+        currency: 'INR',
+        method: payment.method || 'unknown',
+        status: payment.status === 'completed' ? 'success' : payment.status,
+        type: 'payment',
+        gateway_response: {
+          razorpay_payment_id: payment.transaction_id,
+        },
+        created_at: payment.created_at,
+        updated_at: payment.paid_at || payment.created_at,
+      }));
+      
+      setPayments(mappedPayments);
+    } catch (error) {
+      console.error('Error fetching payments:', error);
+      // Fallback to mock data for demo
+      const mockPayments: Payment[] = [
       {
         id: '1',
         transaction_id: 'TXN123456789',
@@ -156,11 +196,12 @@ export default function Payments() {
         type: 'payment',
         created_at: '2024-01-19T16:00:00Z',
         updated_at: '2024-01-19T16:00:00Z',
-      },
-    ];
-    setPayments(mockPayments);
-    setLoading(false);
-  }, []);
+      }];
+      setPayments(mockPayments);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredPayments = payments.filter((payment) => {
     const matchesSearch = 

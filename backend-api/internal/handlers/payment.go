@@ -426,10 +426,17 @@ func (h *PaymentHandler) GetAllPayments(c *gin.Context) {
 		if search != "" {
 			searchLower := strings.ToLower(search)
 			if !strings.Contains(strings.ToLower(order.OrderNumber), searchLower) &&
-				!strings.Contains(strings.ToLower(order.Customer.Email), searchLower) &&
+				!strings.Contains(strings.ToLower(order.GuestEmail), searchLower) &&
 				!strings.Contains(strings.ToLower(order.Payment.TransactionID), searchLower) {
 				continue
 			}
+		}
+
+		// Get customer name and email
+		customerName := order.GuestName
+		customerEmail := order.GuestEmail
+		if customerName == "" {
+			customerName = "Guest User"
 		}
 
 		// Convert order to payment response format
@@ -437,8 +444,8 @@ func (h *PaymentHandler) GetAllPayments(c *gin.Context) {
 			"id":             order.ID,
 			"order_id":       order.ID,
 			"order_number":   order.OrderNumber,
-			"customer_name":  order.Customer.Name,
-			"customer_email": order.Customer.Email,
+			"customer_name":  customerName,
+			"customer_email": customerEmail,
 			"amount":         order.Totals.Total,
 			"method":         order.Payment.Method,
 			"status":         order.Payment.Status,
