@@ -1,22 +1,31 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingCart, Search, User, Menu, X, Heart } from 'lucide-react';
+import { ShoppingCart, Search, User, Menu, X, Heart, ChevronDown } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
-import { RootState } from '../../store';
+import { RootState, AppDispatch } from '../../store';
 import { logout } from '../../store/slices/authSlice';
+import { fetchCategories } from '../../store/slices/categoriesSlice';
 import tripundLogo from '../../assets/tripund-logo.png';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const navigate = useNavigate();
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
   const { itemCount } = useSelector((state: RootState) => state.cart);
+  const { categories } = useSelector((state: RootState) => state.categories);
   const wishlistCount = useSelector((state: RootState) => 
     Array.isArray(state.wishlist.items) ? state.wishlist.items.length : 0
   );
+
+  useEffect(() => {
+    if (categories.length === 0) {
+      dispatch(fetchCategories());
+    }
+  }, [dispatch, categories.length]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,37 +66,54 @@ export default function Header() {
             </Link>
           </div>
 
-          <nav className="hidden lg:flex items-center space-x-8">
-            <Link to="/products" className="text-gray-700 hover:text-primary-600">
-              Products
-            </Link>
-            <Link to="/categories" className="text-gray-700 hover:text-primary-600">
-              Categories
-            </Link>
-            <Link to="/artisans" className="text-gray-700 hover:text-primary-600">
-              Artisans
-            </Link>
+          <nav className="hidden lg:flex items-center space-x-6">
+            {categories.map((category) => (
+              <div key={category.id} className="relative group">
+                <Link
+                  to={`/products?category=${category.slug}`}
+                  className="flex items-center space-x-1 text-gray-700 hover:text-primary-600 py-2"
+                >
+                  <span>{category.name}</span>
+                  {category.children && category.children.length > 0 && (
+                    <ChevronDown size={14} className="group-hover:rotate-180 transition-transform" />
+                  )}
+                </Link>
+                
+                {/* Subcategory Dropdown */}
+                {category.children && category.children.length > 0 && (
+                  <div className="absolute left-0 mt-0 w-56 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                    <div className="py-2">
+                      {category.children.map((subcat, index) => (
+                        <Link
+                          key={index}
+                          to={`/products?category=${category.slug}&subcategory=${encodeURIComponent(subcat.name)}`}
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-primary-50 hover:text-primary-600"
+                        >
+                          {subcat.name}
+                          {subcat.product_count !== undefined && (
+                            <span className="text-xs text-gray-500 ml-2">({subcat.product_count})</span>
+                          )}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+            
             <Link to="/about" className="text-gray-700 hover:text-primary-600">
               About
             </Link>
           </nav>
 
           <div className="flex items-center space-x-4">
-            <form onSubmit={handleSearch} className="hidden md:flex items-center">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search products..."
-                className="px-3 py-1 border border-gray-300 rounded-l-md focus:outline-none focus:border-primary-500"
-              />
-              <button
-                type="submit"
-                className="bg-primary-600 text-white px-3 py-1 rounded-r-md hover:bg-primary-700"
-              >
-                <Search size={20} />
-              </button>
-            </form>
+            <button 
+              onClick={() => navigate('/search')}
+              className="text-gray-700 hover:text-primary-600"
+              aria-label="Search"
+            >
+              <Search size={24} />
+            </button>
 
             <Link to="/wishlist" className="relative">
               <Heart className="text-gray-700 hover:text-primary-600" size={24} />
@@ -147,29 +173,42 @@ export default function Header() {
         </div>
 
         {/* Mobile Menu with animation */}
-        <div className={`lg:hidden overflow-hidden transition-all duration-300 ease-in-out ${isMenuOpen ? 'max-h-96' : 'max-h-0'}`}>
+        <div className={`lg:hidden overflow-hidden transition-all duration-300 ease-in-out ${isMenuOpen ? 'max-h-[600px] overflow-y-auto' : 'max-h-0'}`}>
           <nav className="py-4 border-t bg-gray-50">
-            <Link
-              to="/products"
-              className="block px-4 py-3 text-gray-700 hover:bg-white hover:text-primary-600 transition-colors"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              All Products
-            </Link>
-            <Link
-              to="/categories"
-              className="block px-4 py-3 text-gray-700 hover:bg-white hover:text-primary-600 transition-colors"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Categories
-            </Link>
-            <Link
-              to="/artisans"
-              className="block px-4 py-3 text-gray-700 hover:bg-white hover:text-primary-600 transition-colors"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Artisans
-            </Link>
+            {/* Categories with subcategories */}
+            {categories.map((category) => (
+              <div key={category.id}>
+                <button
+                  onClick={() => setExpandedCategory(expandedCategory === category.id ? null : category.id)}
+                  className="w-full flex items-center justify-between px-4 py-3 text-gray-700 hover:bg-white hover:text-primary-600 transition-colors"
+                >
+                  <span>{category.name}</span>
+                  {category.children && category.children.length > 0 && (
+                    <ChevronDown 
+                      size={16} 
+                      className={`transform transition-transform ${expandedCategory === category.id ? 'rotate-180' : ''}`}
+                    />
+                  )}
+                </button>
+                
+                {/* Subcategories */}
+                {category.children && category.children.length > 0 && expandedCategory === category.id && (
+                  <div className="bg-gray-100">
+                    {category.children.map((subcat, index) => (
+                      <Link
+                        key={index}
+                        to={`/products?category=${category.slug}&subcategory=${encodeURIComponent(subcat.name)}`}
+                        className="block pl-8 pr-4 py-2 text-sm text-gray-600 hover:bg-white hover:text-primary-600"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        {subcat.name}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+            
             <Link
               to="/about"
               className="block px-4 py-3 text-gray-700 hover:bg-white hover:text-primary-600 transition-colors"
