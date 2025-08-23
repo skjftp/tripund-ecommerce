@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { CheckCircle, Package, Mail, Phone, MapPin, ArrowRight } from 'lucide-react';
+import { useDispatch } from 'react-redux';
+import { clearCart } from '../store/slices/cartSlice';
 import api from '../services/api';
 
 interface Order {
@@ -43,12 +45,15 @@ interface Order {
 export default function OrderConfirmationPage() {
   const { orderId } = useParams();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Clear cart when order confirmation page loads
+    dispatch(clearCart());
     fetchOrder();
-  }, [orderId]);
+  }, [orderId, dispatch]);
 
   const fetchOrder = async () => {
     try {

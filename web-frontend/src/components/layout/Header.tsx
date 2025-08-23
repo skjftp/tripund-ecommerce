@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ShoppingCart, Search, User, Menu, X, Heart, ChevronDown } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
@@ -10,6 +10,8 @@ import tripundLogo from '../../assets/tripund-logo.png';
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const profileDropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
   
@@ -25,6 +27,18 @@ export default function Header() {
       dispatch(fetchCategories());
     }
   }, [dispatch, categories.length]);
+
+  // Handle click outside for profile dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target as Node)) {
+        setShowProfileDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleLogout = () => {
     dispatch(logout());
@@ -125,31 +139,41 @@ export default function Header() {
             </Link>
 
             {isAuthenticated ? (
-              <div className="relative group">
-                <button className="flex items-center space-x-1 text-gray-700 hover:text-primary-600">
+              <div className="relative" ref={profileDropdownRef}>
+                <button 
+                  onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+                  className="flex items-center space-x-1 text-gray-700 hover:text-primary-600"
+                >
                   <User size={24} />
                   <span className="hidden lg:inline">{user?.profile.first_name}</span>
                 </button>
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 hidden group-hover:block">
-                  <Link
-                    to="/profile"
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                  >
-                    Profile
-                  </Link>
-                  <Link
-                    to="/orders"
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                  >
-                    Orders
-                  </Link>
-                  <button
-                    onClick={handleLogout}
-                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                  >
-                    Logout
-                  </button>
-                </div>
+                {showProfileDropdown && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
+                    <Link
+                      to="/profile"
+                      onClick={() => setShowProfileDropdown(false)}
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      Profile
+                    </Link>
+                    <Link
+                      to="/orders"
+                      onClick={() => setShowProfileDropdown(false)}
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      Orders
+                    </Link>
+                    <button
+                      onClick={() => {
+                        handleLogout();
+                        setShowProfileDropdown(false);
+                      }}
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      Logout
+                    </button>
+                  </div>
+                )}
               </div>
             ) : (
               <Link
