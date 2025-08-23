@@ -22,6 +22,7 @@ import Payments from './pages/Payments';
 import Analytics from './pages/Analytics';
 import Notifications from './pages/Notifications';
 import Settings from './pages/Settings';
+import ContentManagement from './pages/ContentManagement';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useSelector((state: RootState) => state.auth);
@@ -147,6 +148,16 @@ function App() {
               <PrivateRoute>
                 <AdminLayout>
                   <Settings />
+                </AdminLayout>
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/content"
+            element={
+              <PrivateRoute>
+                <AdminLayout>
+                  <ContentManagement />
                 </AdminLayout>
               </PrivateRoute>
             }

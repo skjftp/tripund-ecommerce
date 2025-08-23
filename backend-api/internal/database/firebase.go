@@ -80,3 +80,8 @@ func fileExists(filename string) bool {
 	}
 	return !info.IsDir()
 }
+
+// GetClient returns the Firestore client (for compatibility with existing code)
+func (f *Firebase) GetClient() interface{} {
+	return f
+}

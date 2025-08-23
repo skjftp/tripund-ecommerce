@@ -29,6 +29,7 @@ func main() {
 	productHandler := handlers.NewProductHandler(db)
 	paymentHandler := handlers.NewPaymentHandler(db, cfg.RazorpayKeyID, cfg.RazorpayKeySecret)
 	categoryHandler := handlers.NewCategoryHandler(db)
+	contentHandler := handlers.NewContentHandler(db)
 
 	api := r.Group("/api/v1")
 	{
@@ -53,6 +54,13 @@ func main() {
 		{
 			categories.GET("", categoryHandler.GetCategories)
 			categories.GET("/:id", categoryHandler.GetCategory)
+		}
+
+		// Public content endpoints
+		content := api.Group("/content")
+		{
+			content.GET("/:type", contentHandler.GetContent)
+			content.GET("/faqs/list", contentHandler.GetFAQs)
 		}
 
 		protected := api.Group("")
@@ -86,6 +94,24 @@ func main() {
 			admin.PUT("/categories/:id", categoryHandler.UpdateCategory)
 			admin.DELETE("/categories/:id", categoryHandler.DeleteCategory)
 			admin.POST("/categories/initialize", categoryHandler.InitializeDefaultCategories)
+
+			// Content management endpoints (admin only)
+			admin.PUT("/content/:type", contentHandler.UpdateContent)
+			admin.GET("/content", contentHandler.GetAllContent)
+			
+			// FAQ management
+			admin.POST("/faqs", contentHandler.CreateFAQ)
+			admin.PUT("/faqs/:id", contentHandler.UpdateFAQ)
+			admin.DELETE("/faqs/:id", contentHandler.DeleteFAQ)
+			
+			// Initialize default content
+			admin.POST("/content/initialize", func(c *gin.Context) {
+				if err := db.InitializeDefaultContent(); err != nil {
+					c.JSON(500, gin.H{"error": err.Error()})
+					return
+				}
+				c.JSON(200, gin.H{"message": "Default content initialized successfully"})
+			})
 		}
 
 		api.POST("/webhook/razorpay", paymentHandler.RazorpayWebhook)
