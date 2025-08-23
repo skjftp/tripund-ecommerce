@@ -31,6 +31,7 @@ func main() {
 	orderHandler := handlers.NewOrderHandler(db)
 	categoryHandler := handlers.NewCategoryHandler(db)
 	contentHandler := handlers.NewContentHandler(db)
+	settingsHandler := handlers.NewSettingsHandler(db)
 
 	api := r.Group("/api/v1")
 	{
@@ -125,6 +126,10 @@ func main() {
 				}
 				c.JSON(200, gin.H{"message": "Default content initialized successfully"})
 			})
+			
+			// Settings management
+			admin.GET("/settings", settingsHandler.GetSettings)
+			admin.PUT("/settings", settingsHandler.UpdateSettings)
 		}
 
 		api.POST("/webhook/razorpay", paymentHandler.RazorpayWebhook)

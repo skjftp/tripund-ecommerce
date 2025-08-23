@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import api from '../services/api';
 import {
   Store,
   Globe,
@@ -66,8 +67,49 @@ export default function Settings() {
     { id: 'security', label: 'Security', icon: Shield },
   ];
 
-  const handleSave = () => {
-    toast.success('Settings saved successfully');
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+
+  const fetchSettings = async () => {
+    setLoading(true);
+    try {
+      const response = await api.get('/admin/settings');
+      if (response.data.settings) {
+        setSettings(response.data.settings);
+      }
+    } catch (error: any) {
+      if (error.response?.status === 401) {
+        toast.error('Session expired. Please login again.');
+        localStorage.removeItem('adminToken');
+        window.location.href = '/login';
+      } else {
+        toast.error('Failed to load settings');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await api.put('/admin/settings', settings);
+      toast.success('Settings saved successfully');
+    } catch (error: any) {
+      if (error.response?.status === 401) {
+        toast.error('Session expired. Please login again.');
+        localStorage.removeItem('adminToken');
+        window.location.href = '/login';
+      } else {
+        toast.error('Failed to save settings');
+      }
+    } finally {
+      setSaving(false);
+    }
   };
 
   const renderGeneralSettings = () => (
@@ -546,6 +588,17 @@ export default function Settings() {
     </div>
   );
 
+  if (loading) {
+    return (
+      <div className="p-6 flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading settings...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6">
       <div className="mb-6">
@@ -586,10 +639,11 @@ export default function Settings() {
             <div className="mt-6 pt-6 border-t border-gray-200 flex justify-end">
               <button
                 onClick={handleSave}
-                className="flex items-center space-x-2 admin-button"
+                disabled={saving}
+                className="flex items-center space-x-2 admin-button disabled:opacity-50"
               >
                 <Save size={20} />
-                <span>Save Changes</span>
+                <span>{saving ? 'Saving...' : 'Save Changes'}</span>
               </button>
             </div>
           </div>
