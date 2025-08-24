@@ -81,14 +81,9 @@ async function initializeDefaultContent() {
       console.log('ℹ️  Shipping content already exists');
     }
     
-    // Check if returns content exists
-    const returnsDoc = await db.collection('content').doc('returns').get();
-    if (!returnsDoc.exists) {
-      await db.collection('content').doc('returns').set(returnsContent);
-      console.log('✅ Returns content initialized');
-    } else {
-      console.log('ℹ️  Returns content already exists');
-    }
+    // Always update returns content to ensure it has all fields
+    await db.collection('content').doc('returns').set(returnsContent);
+    console.log('✅ Returns content initialized/updated');
     
     console.log('✅ Default content initialization complete');
     process.exit(0);
