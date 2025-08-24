@@ -140,14 +140,6 @@ func main() {
 			// FAQ management
 			admin.PUT("/faqs", contentHandler.UpdateFAQs)
 			
-			// Initialize default content
-			admin.POST("/content/initialize", func(c *gin.Context) {
-				if err := db.InitializeDefaultContent(); err != nil {
-					c.JSON(500, gin.H{"error": err.Error()})
-					return
-				}
-				c.JSON(200, gin.H{"message": "Default content initialized successfully"})
-			})
 			
 			// Settings management
 			admin.GET("/settings", settingsHandler.GetSettings)
