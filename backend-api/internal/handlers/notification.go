@@ -45,31 +45,38 @@ func (h *NotificationHandler) GetNotifications(c *gin.Context) {
 	limit := 50
 	onlyUnread := c.Query("unread") == "true"
 
-	// Build query
-	query := h.db.Client.Collection("notifications").
-		Where("user_id", "==", "admin").
-		OrderBy("created_at", firestore.Desc)
-
+	// Start with base query - simpler approach without composite index
+	var docs []*firestore.DocumentSnapshot
+	var err error
+	
 	if onlyUnread {
-		query = query.Where("is_read", "==", false)
+		// Query for unread notifications only
+		docs, err = h.db.Client.Collection("notifications").
+			Where("user_id", "==", "admin").
+			Where("is_read", "==", false).
+			Limit(limit).
+			Documents(h.db.Context).GetAll()
+	} else {
+		// Query for all notifications  
+		docs, err = h.db.Client.Collection("notifications").
+			Where("user_id", "==", "admin").
+			Limit(limit).
+			Documents(h.db.Context).GetAll()
 	}
 
-	query = query.Limit(limit)
+	if err != nil {
+		log.Printf("Error fetching notifications: %v", err)
+		// Return empty array instead of error to prevent frontend crash
+		c.JSON(http.StatusOK, gin.H{
+			"notifications": []models.Notification{},
+			"unread_count":  0,
+			"total_count":   0,
+		})
+		return
+	}
 
 	notifications := []models.Notification{}
-	iter := query.Documents(h.db.Context)
-
-	for {
-		doc, err := iter.Next()
-		if err == iterator.Done {
-			break
-		}
-		if err != nil {
-			log.Printf("Error fetching notifications: %v", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch notifications"})
-			return
-		}
-
+	for _, doc := range docs {
 		var notification models.Notification
 		if err := doc.DataTo(&notification); err != nil {
 			log.Printf("Error parsing notification: %v", err)
@@ -78,13 +85,21 @@ func (h *NotificationHandler) GetNotifications(c *gin.Context) {
 		notifications = append(notifications, notification)
 	}
 
+	// Sort notifications by created_at in memory (descending)
+	for i := 0; i < len(notifications)-1; i++ {
+		for j := i + 1; j < len(notifications); j++ {
+			if notifications[i].CreatedAt.Before(notifications[j].CreatedAt) {
+				notifications[i], notifications[j] = notifications[j], notifications[i]
+			}
+		}
+	}
+
 	// Get unread count
 	unreadCount := 0
-	unreadQuery := h.db.Client.Collection("notifications").
+	unreadDocs, err := h.db.Client.Collection("notifications").
 		Where("user_id", "==", "admin").
-		Where("is_read", "==", false)
-	
-	unreadDocs, err := unreadQuery.Documents(h.db.Context).GetAll()
+		Where("is_read", "==", false).
+		Documents(h.db.Context).GetAll()
 	if err == nil {
 		unreadCount = len(unreadDocs)
 	}
