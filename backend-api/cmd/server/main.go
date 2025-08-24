@@ -30,7 +30,7 @@ func main() {
 	paymentHandler := handlers.NewPaymentHandler(db, cfg.RazorpayKeyID, cfg.RazorpayKeySecret, cfg.RazorpayWebhookSecret)
 	orderHandler := handlers.NewOrderHandler(db)
 	categoryHandler := handlers.NewCategoryHandler(db)
-	contentHandler := handlers.NewContentHandler(firestoreClient)
+	contentHandler := handlers.NewContentHandler(db)
 	settingsHandler := handlers.NewSettingsHandler(db)
 	notificationHandler := handlers.NewNotificationHandler(db)
 	contactHandler := handlers.NewContactHandler(db)
