@@ -1063,6 +1063,272 @@ export default function ContentManagement() {
     </div>
   );
 
+  const renderShippingEditor = () => (
+    <div className="space-y-6">
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Title</label>
+        <input
+          type="text"
+          value={shippingContent.title || ''}
+          onChange={(e) => setShippingContent({ ...shippingContent, title: e.target.value })}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Subtitle</label>
+        <input
+          type="text"
+          value={shippingContent.subtitle || ''}
+          onChange={(e) => setShippingContent({ ...shippingContent, subtitle: e.target.value })}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Standard Delivery Time</label>
+        <input
+          type="text"
+          value={shippingContent.deliveryTime || ''}
+          onChange={(e) => setShippingContent({ ...shippingContent, deliveryTime: e.target.value })}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Free Shipping Threshold (₹)</label>
+        <input
+          type="number"
+          value={shippingContent.freeShippingThreshold || 0}
+          onChange={(e) => setShippingContent({ ...shippingContent, freeShippingThreshold: parseInt(e.target.value) })}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md"
+        />
+      </div>
+
+      <div>
+        <h4 className="font-medium mb-2">Shipping Zones</h4>
+        {shippingContent.zones?.map((zone: any, index: number) => (
+          <div key={index} className="bg-gray-50 p-3 rounded-md mb-2">
+            <div className="grid grid-cols-3 gap-3">
+              <input
+                type="text"
+                placeholder="Zone name"
+                value={zone.zone || ''}
+                onChange={(e) => {
+                  const newZones = [...(shippingContent.zones || [])];
+                  newZones[index] = { ...zone, zone: e.target.value };
+                  setShippingContent({ ...shippingContent, zones: newZones });
+                }}
+                className="px-2 py-1 border rounded"
+              />
+              <input
+                type="text"
+                placeholder="Delivery time"
+                value={zone.delivery || ''}
+                onChange={(e) => {
+                  const newZones = [...(shippingContent.zones || [])];
+                  newZones[index] = { ...zone, delivery: e.target.value };
+                  setShippingContent({ ...shippingContent, zones: newZones });
+                }}
+                className="px-2 py-1 border rounded"
+              />
+              <input
+                type="text"
+                placeholder="Charges"
+                value={zone.charges || ''}
+                onChange={(e) => {
+                  const newZones = [...(shippingContent.zones || [])];
+                  newZones[index] = { ...zone, charges: e.target.value };
+                  setShippingContent({ ...shippingContent, zones: newZones });
+                }}
+                className="px-2 py-1 border rounded"
+              />
+            </div>
+          </div>
+        ))}
+        <button
+          onClick={() => setShippingContent({
+            ...shippingContent,
+            zones: [...(shippingContent.zones || []), { zone: '', delivery: '', charges: '' }]
+          })}
+          className="text-blue-600 hover:text-blue-700 text-sm"
+        >
+          + Add Zone
+        </button>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Tracking Information</label>
+        <textarea
+          value={shippingContent.trackingInfo || ''}
+          onChange={(e) => setShippingContent({ ...shippingContent, trackingInfo: e.target.value })}
+          rows={2}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Contact Support</label>
+        <input
+          type="text"
+          value={shippingContent.contactSupport || ''}
+          onChange={(e) => setShippingContent({ ...shippingContent, contactSupport: e.target.value })}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md"
+        />
+      </div>
+
+      <button
+        onClick={() => saveContent('shipping')}
+        className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 flex items-center gap-2"
+      >
+        <Save size={20} /> Save Shipping Content
+      </button>
+    </div>
+  );
+
+  const renderReturnsEditor = () => (
+    <div className="space-y-6">
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Title</label>
+        <input
+          type="text"
+          value={returnsContent.title || ''}
+          onChange={(e) => setReturnsContent({ ...returnsContent, title: e.target.value })}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Subtitle</label>
+        <input
+          type="text"
+          value={returnsContent.subtitle || ''}
+          onChange={(e) => setReturnsContent({ ...returnsContent, subtitle: e.target.value })}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Return Window</label>
+        <input
+          type="text"
+          value={returnsContent.returnWindow || ''}
+          onChange={(e) => setReturnsContent({ ...returnsContent, returnWindow: e.target.value })}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md"
+        />
+      </div>
+
+      <div>
+        <h4 className="font-medium mb-2">Eligible Items</h4>
+        {returnsContent.eligibleItems?.map((item: string, index: number) => (
+          <div key={index} className="flex gap-2 mb-2">
+            <input
+              type="text"
+              value={item}
+              onChange={(e) => {
+                const newItems = [...(returnsContent.eligibleItems || [])];
+                newItems[index] = e.target.value;
+                setReturnsContent({ ...returnsContent, eligibleItems: newItems });
+              }}
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-md"
+            />
+            <button
+              onClick={() => {
+                const newItems = returnsContent.eligibleItems?.filter((_, i) => i !== index);
+                setReturnsContent({ ...returnsContent, eligibleItems: newItems });
+              }}
+              className="text-red-600 hover:text-red-700"
+            >
+              <Trash2 size={20} />
+            </button>
+          </div>
+        ))}
+        <button
+          onClick={() => setReturnsContent({
+            ...returnsContent,
+            eligibleItems: [...(returnsContent.eligibleItems || []), '']
+          })}
+          className="text-blue-600 hover:text-blue-700 text-sm"
+        >
+          + Add Eligible Item
+        </button>
+      </div>
+
+      <div>
+        <h4 className="font-medium mb-2">Non-Returnable Items</h4>
+        {returnsContent.nonReturnableItems?.map((item: string, index: number) => (
+          <div key={index} className="flex gap-2 mb-2">
+            <input
+              type="text"
+              value={item}
+              onChange={(e) => {
+                const newItems = [...(returnsContent.nonReturnableItems || [])];
+                newItems[index] = e.target.value;
+                setReturnsContent({ ...returnsContent, nonReturnableItems: newItems });
+              }}
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-md"
+            />
+            <button
+              onClick={() => {
+                const newItems = returnsContent.nonReturnableItems?.filter((_, i) => i !== index);
+                setReturnsContent({ ...returnsContent, nonReturnableItems: newItems });
+              }}
+              className="text-red-600 hover:text-red-700"
+            >
+              <Trash2 size={20} />
+            </button>
+          </div>
+        ))}
+        <button
+          onClick={() => setReturnsContent({
+            ...returnsContent,
+            nonReturnableItems: [...(returnsContent.nonReturnableItems || []), '']
+          })}
+          className="text-blue-600 hover:text-blue-700 text-sm"
+        >
+          + Add Non-Returnable Item
+        </button>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Exchange Policy</label>
+        <textarea
+          value={returnsContent.exchangePolicy || ''}
+          onChange={(e) => setReturnsContent({ ...returnsContent, exchangePolicy: e.target.value })}
+          rows={2}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Damage Policy</label>
+        <textarea
+          value={returnsContent.damagePolicy || ''}
+          onChange={(e) => setReturnsContent({ ...returnsContent, damagePolicy: e.target.value })}
+          rows={2}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Contact Support</label>
+        <input
+          type="text"
+          value={returnsContent.contactSupport || ''}
+          onChange={(e) => setReturnsContent({ ...returnsContent, contactSupport: e.target.value })}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md"
+        />
+      </div>
+
+      <button
+        onClick={() => saveContent('returns')}
+        className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 flex items-center gap-2"
+      >
+        <Save size={20} /> Save Returns Content
+      </button>
+    </div>
+  );
+
   const renderFAQEditor = () => (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -1362,6 +1628,8 @@ export default function ContentManagement() {
                 {activeSection === 'about' && renderAboutEditor()}
                 {activeSection === 'footer' && renderFooterEditor()}
                 {activeSection === 'contact' && renderContactEditor()}
+                {activeSection === 'shipping' && renderShippingEditor()}
+                {activeSection === 'returns' && renderReturnsEditor()}
                 {activeSection === 'faqs' && renderFAQEditor()}
               </>
             )}
