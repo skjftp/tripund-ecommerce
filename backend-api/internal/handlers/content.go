@@ -6,7 +6,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"tripund-api/internal/database"
-	"tripund-api/internal/models"
 )
 
 type ContentHandler struct {
