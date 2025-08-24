@@ -1144,6 +1144,15 @@ export default function ContentManagement() {
                 className="px-2 py-1 border rounded"
               />
             </div>
+            <button
+              onClick={() => {
+                const newZones = shippingContent.zones?.filter((_, i) => i !== index);
+                setShippingContent({ ...shippingContent, zones: newZones });
+              }}
+              className="text-red-600 hover:text-red-700 text-sm mt-2"
+            >
+              Remove Zone
+            </button>
           </div>
         ))}
         <button
@@ -1158,6 +1167,48 @@ export default function ContentManagement() {
       </div>
 
       <div>
+        <h4 className="font-medium mb-2">Express Shipping</h4>
+        <div className="bg-gray-50 p-3 rounded-md space-y-3">
+          <label className="flex items-center">
+            <input
+              type="checkbox"
+              checked={shippingContent.expressShipping?.available || false}
+              onChange={(e) => setShippingContent({
+                ...shippingContent,
+                expressShipping: { ...shippingContent.expressShipping, available: e.target.checked }
+              })}
+              className="mr-2"
+            />
+            Express Shipping Available
+          </label>
+          {shippingContent.expressShipping?.available && (
+            <>
+              <input
+                type="number"
+                placeholder="Express charges (₹)"
+                value={shippingContent.expressShipping?.charges || ''}
+                onChange={(e) => setShippingContent({
+                  ...shippingContent,
+                  expressShipping: { ...shippingContent.expressShipping, charges: parseInt(e.target.value) }
+                })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              />
+              <input
+                type="text"
+                placeholder="Express delivery time"
+                value={shippingContent.expressShipping?.delivery || ''}
+                onChange={(e) => setShippingContent({
+                  ...shippingContent,
+                  expressShipping: { ...shippingContent.expressShipping, delivery: e.target.value }
+                })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              />
+            </>
+          )}
+        </div>
+      </div>
+
+      <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">Tracking Information</label>
         <textarea
           value={shippingContent.trackingInfo || ''}
@@ -1165,6 +1216,52 @@ export default function ContentManagement() {
           rows={2}
           className="w-full px-3 py-2 border border-gray-300 rounded-md"
         />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Packaging Note</label>
+        <textarea
+          value={shippingContent.packagingNote || ''}
+          onChange={(e) => setShippingContent({ ...shippingContent, packagingNote: e.target.value })}
+          rows={2}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md"
+        />
+      </div>
+
+      <div>
+        <h4 className="font-medium mb-2">Shipping Restrictions</h4>
+        {shippingContent.restrictions?.map((restriction: string, index: number) => (
+          <div key={index} className="flex gap-2 mb-2">
+            <input
+              type="text"
+              value={restriction}
+              onChange={(e) => {
+                const newRestrictions = [...(shippingContent.restrictions || [])];
+                newRestrictions[index] = e.target.value;
+                setShippingContent({ ...shippingContent, restrictions: newRestrictions });
+              }}
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-md"
+            />
+            <button
+              onClick={() => {
+                const newRestrictions = shippingContent.restrictions?.filter((_, i) => i !== index);
+                setShippingContent({ ...shippingContent, restrictions: newRestrictions });
+              }}
+              className="text-red-600 hover:text-red-700"
+            >
+              <Trash2 size={20} />
+            </button>
+          </div>
+        ))}
+        <button
+          onClick={() => setShippingContent({
+            ...shippingContent,
+            restrictions: [...(shippingContent.restrictions || []), '']
+          })}
+          className="text-blue-600 hover:text-blue-700 text-sm"
+        >
+          + Add Restriction
+        </button>
       </div>
 
       <div>
@@ -1219,7 +1316,46 @@ export default function ContentManagement() {
       </div>
 
       <div>
-        <h4 className="font-medium mb-2">Eligible Items</h4>
+        <h4 className="font-medium mb-2">Return Process Steps</h4>
+        {returnsContent.process?.map((step: string, index: number) => (
+          <div key={index} className="flex gap-2 mb-2">
+            <span className="w-8 h-8 bg-primary-600 text-white rounded-full flex items-center justify-center text-sm font-medium">
+              {index + 1}
+            </span>
+            <input
+              type="text"
+              value={step}
+              onChange={(e) => {
+                const newProcess = [...(returnsContent.process || [])];
+                newProcess[index] = e.target.value;
+                setReturnsContent({ ...returnsContent, process: newProcess });
+              }}
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-md"
+            />
+            <button
+              onClick={() => {
+                const newProcess = returnsContent.process?.filter((_, i) => i !== index);
+                setReturnsContent({ ...returnsContent, process: newProcess });
+              }}
+              className="text-red-600 hover:text-red-700"
+            >
+              <Trash2 size={20} />
+            </button>
+          </div>
+        ))}
+        <button
+          onClick={() => setReturnsContent({
+            ...returnsContent,
+            process: [...(returnsContent.process || []), '']
+          })}
+          className="text-blue-600 hover:text-blue-700 text-sm"
+        >
+          + Add Process Step
+        </button>
+      </div>
+
+      <div>
+        <h4 className="font-medium mb-2">Eligible Items for Return</h4>
         {returnsContent.eligibleItems?.map((item: string, index: number) => (
           <div key={index} className="flex gap-2 mb-2">
             <input
@@ -1291,11 +1427,47 @@ export default function ContentManagement() {
       </div>
 
       <div>
+        <h4 className="font-medium mb-2">Refund Methods</h4>
+        {returnsContent.refundMethods?.map((method: string, index: number) => (
+          <div key={index} className="flex gap-2 mb-2">
+            <input
+              type="text"
+              value={method}
+              onChange={(e) => {
+                const newMethods = [...(returnsContent.refundMethods || [])];
+                newMethods[index] = e.target.value;
+                setReturnsContent({ ...returnsContent, refundMethods: newMethods });
+              }}
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-md"
+            />
+            <button
+              onClick={() => {
+                const newMethods = returnsContent.refundMethods?.filter((_, i) => i !== index);
+                setReturnsContent({ ...returnsContent, refundMethods: newMethods });
+              }}
+              className="text-red-600 hover:text-red-700"
+            >
+              <Trash2 size={20} />
+            </button>
+          </div>
+        ))}
+        <button
+          onClick={() => setReturnsContent({
+            ...returnsContent,
+            refundMethods: [...(returnsContent.refundMethods || []), '']
+          })}
+          className="text-blue-600 hover:text-blue-700 text-sm"
+        >
+          + Add Refund Method
+        </button>
+      </div>
+
+      <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">Exchange Policy</label>
         <textarea
           value={returnsContent.exchangePolicy || ''}
           onChange={(e) => setReturnsContent({ ...returnsContent, exchangePolicy: e.target.value })}
-          rows={2}
+          rows={3}
           className="w-full px-3 py-2 border border-gray-300 rounded-md"
         />
       </div>
@@ -1305,7 +1477,7 @@ export default function ContentManagement() {
         <textarea
           value={returnsContent.damagePolicy || ''}
           onChange={(e) => setReturnsContent({ ...returnsContent, damagePolicy: e.target.value })}
-          rows={2}
+          rows={3}
           className="w-full px-3 py-2 border border-gray-300 rounded-md"
         />
       </div>
