@@ -219,6 +219,91 @@ For any questions regarding these terms, please contact us at legal@tripundlifes
 		return map[string]interface{}{
 			"faqs": h.getDefaultFAQs(),
 		}
+	case "about":
+		return map[string]interface{}{
+			"title": "About TRIPUND Lifestyle",
+			"subtitle": "Celebrating India's Rich Heritage Through Handcrafted Excellence",
+			"mainContent": "TRIPUND Lifestyle is your gateway to authentic Indian handicrafts, bringing together centuries-old traditions with contemporary aesthetics. We partner directly with skilled artisans across India to bring you unique, handcrafted pieces that tell stories of our rich cultural heritage.",
+			"mission": "To preserve and promote traditional Indian craftsmanship while providing sustainable livelihoods to artisan communities across the country.",
+			"vision": "To be the leading platform connecting Indian artisans with global customers who value authenticity, quality, and cultural heritage.",
+			"values": []map[string]string{
+				{"title": "Authenticity", "description": "Every product is genuinely handcrafted using traditional techniques"},
+				{"title": "Sustainability", "description": "Supporting eco-friendly practices and sustainable livelihoods"},
+				{"title": "Quality", "description": "Ensuring premium quality through careful curation and quality checks"},
+				{"title": "Heritage", "description": "Preserving India's rich artistic traditions for future generations"},
+			},
+			"stats": []map[string]interface{}{
+				{"number": "500+", "label": "Artisan Partners"},
+				{"number": "10,000+", "label": "Happy Customers"},
+				{"number": "5000+", "label": "Unique Products"},
+				{"number": "28", "label": "States Covered"},
+			},
+			"whyChooseUs": []string{
+				"Direct sourcing from verified artisans",
+				"100% authentic handcrafted products",
+				"Fair trade practices ensuring artisan welfare",
+				"Secure packaging and reliable delivery",
+				"Easy returns and customer support",
+			},
+		}
+	case "footer":
+		return map[string]interface{}{
+			"companyName":        "TRIPUND Lifestyle",
+			"companyDescription": "Your destination for authentic Indian handicrafts, supporting traditional artisans and preserving cultural heritage.",
+			"email":              "support@tripundlifestyle.com",
+			"phone":              "+91 98765 43210",
+			"address": map[string]string{
+				"street":  "123 Artisan Street",
+				"city":    "Mumbai",
+				"state":   "Maharashtra",
+				"country": "India",
+				"pincode": "400001",
+			},
+			"socialLinks": map[string]string{
+				"facebook":  "https://facebook.com/tripundlifestyle",
+				"instagram": "https://instagram.com/tripundlifestyle",
+				"twitter":   "https://twitter.com/tripundlifestyle",
+				"linkedin":  "",
+				"youtube":   "",
+			},
+			"quickLinks": []map[string]string{
+				{"title": "All Products", "url": "/products"},
+				{"title": "Categories", "url": "/categories"},
+				{"title": "New Arrivals", "url": "/products?sort=newest"},
+				{"title": "About Us", "url": "/about"},
+			},
+			"customerService": []map[string]string{
+				{"title": "Contact Us", "url": "/contact"},
+				{"title": "Shipping Info", "url": "/shipping"},
+				{"title": "Returns & Exchanges", "url": "/returns"},
+				{"title": "FAQ", "url": "/faq"},
+				{"title": "Track Order", "url": "/track-order"},
+			},
+			"copyrightText": "© 2024 TRIPUND Lifestyle. All rights reserved.",
+		}
+	case "contact":
+		return map[string]interface{}{
+			"title":       "Get in Touch",
+			"subtitle":    "We'd love to hear from you",
+			"description": "Have questions about our products, need assistance with your order, or want to know more about our artisan partners? We're here to help!",
+			"email":       "support@tripundlifestyle.com",
+			"phone":       "+91 98765 43210",
+			"whatsapp":    "+91 98765 43210",
+			"address": map[string]string{
+				"street":  "123 Artisan Street, Bandra West",
+				"city":    "Mumbai",
+				"state":   "Maharashtra",
+				"country": "India",
+				"pincode": "400050",
+			},
+			"businessHours": []string{
+				"Monday - Friday: 10:00 AM - 7:00 PM IST",
+				"Saturday: 10:00 AM - 4:00 PM IST",
+				"Sunday: Closed",
+			},
+			"mapEmbedUrl":       "",
+			"socialMediaText":   "Follow us on social media for updates, new arrivals, and artisan stories",
+		}
 	default:
 		return nil
 	}
