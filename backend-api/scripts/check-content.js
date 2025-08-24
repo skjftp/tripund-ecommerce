@@ -57,6 +57,8 @@ async function checkContent() {
         console.log('    Category:', faqsData.faqs[0].category);
       }
       console.log('  Categories:', [...new Set(faqsData.faqs?.map(f => f.category) || [])].join(', '));
+      console.log('\nFull FAQs data structure:');
+      console.log(JSON.stringify(faqsData, null, 2));
     } else {
       console.log('\n❌ No FAQs content found');
     }

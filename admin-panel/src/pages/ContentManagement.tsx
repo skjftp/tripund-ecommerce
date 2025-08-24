@@ -9,6 +9,7 @@ interface FAQ {
   id?: string;
   question: string;
   answer: string;
+  category?: string;
   order: number;
   active: boolean;
 }
@@ -480,24 +481,36 @@ export default function ContentManagement() {
           break;
       }
 
-      // For shipping and returns, send the content directly as the backend expects
-      let requestData = {};
-      if (type === 'shipping' || type === 'returns') {
-        requestData = contentData;
-      } else if (type === 'faqs') {
-        requestData = contentData;
+      // Handle different content types differently
+      if (type === 'faqs') {
+        // FAQs use a different endpoint
+        await axios.put(
+          `${API_URL}/admin/faqs`,
+          contentData,
+          {
+            headers: { Authorization: `Bearer ${token}` }
+          }
+        );
+        // Refresh FAQs after saving
+        await fetchFAQs();
       } else {
-        // For about, footer, contact - extract the data field if it exists
-        requestData = contentData.data || contentData;
-      }
-      
-      await axios.put(
-        `${API_URL}/admin/content/${type}`,
-        requestData,
-        {
-          headers: { Authorization: `Bearer ${token}` }
+        // For other content types
+        let requestData = {};
+        if (type === 'shipping' || type === 'returns') {
+          requestData = contentData;
+        } else {
+          // For about, footer, contact - extract the data field if it exists
+          requestData = contentData.data || contentData;
         }
-      );
+        
+        await axios.put(
+          `${API_URL}/admin/content/${type}`,
+          requestData,
+          {
+            headers: { Authorization: `Bearer ${token}` }
+          }
+        );
+      }
 
       toast.success(`${type.charAt(0).toUpperCase() + type.slice(1)} content updated successfully`);
     } catch (error) {
@@ -506,50 +519,35 @@ export default function ContentManagement() {
     }
   };
 
-  const saveFAQ = async () => {
-    try {
-      const token = localStorage.getItem('adminToken');
-      if (!token) {
-        toast.error('Please login to continue');
-        return;
-      }
-
-      // Save all FAQs using the admin endpoint
-      await axios.put(
-        `${API_URL}/admin/faqs`,
-        { faqs: faqs },
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
-      );
-      
-      toast.success('FAQs saved successfully');
-      setEditingFaq(null);
-      fetchFAQs();
-    } catch (error) {
-      console.error('Error saving FAQ:', error);
-      toast.error('Failed to save FAQ');
+  const saveFAQ = () => {
+    // Save the FAQ to local state only
+    if (!editingFaq) return;
+    
+    if (editingFaq.id) {
+      // Update existing FAQ
+      setFaqs(faqs.map(faq => 
+        faq.id === editingFaq.id ? editingFaq : faq
+      ));
+    } else {
+      // Add new FAQ
+      const newFaq = {
+        ...editingFaq,
+        id: Date.now().toString(),
+        category: editingFaq.category || 'General'
+      };
+      setFaqs([...faqs, newFaq]);
     }
+    
+    toast.success('FAQ updated locally. Click "Save All FAQs" to persist changes.');
+    setEditingFaq(null);
   };
 
-  const deleteFAQ = async (id: string) => {
-    try {
-      const token = localStorage.getItem('adminToken');
-      if (!token) {
-        toast.error('Please login to continue');
-        return;
-      }
-
-      if (confirm('Are you sure you want to delete this FAQ?')) {
-        await axios.delete(`${API_URL}/admin/faqs/${id}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        toast.success('FAQ deleted successfully');
-        fetchFAQs();
-      }
-    } catch (error) {
-      console.error('Error deleting FAQ:', error);
-      toast.error('Failed to delete FAQ');
+  const deleteFAQ = (id: string) => {
+    if (confirm('Are you sure you want to delete this FAQ?')) {
+      // Remove from local state only
+      const updatedFaqs = faqs.filter(faq => faq.id !== id);
+      setFaqs(updatedFaqs);
+      toast.success('FAQ deleted locally. Click "Save All FAQs" to persist changes.');
     }
   };
 
@@ -1639,6 +1637,13 @@ export default function ContentManagement() {
           </div>
         ))}
       </div>
+      
+      <button
+        onClick={() => saveContent('faqs')}
+        className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 flex items-center gap-2"
+      >
+        <Save size={20} /> Save All FAQs
+      </button>
     </div>
   );
 
