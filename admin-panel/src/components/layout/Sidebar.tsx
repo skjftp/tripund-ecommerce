@@ -13,6 +13,7 @@ import {
   Bell,
   FileText,
   Shield,
+  MessageSquare,
 } from 'lucide-react';
 import { useDispatch } from 'react-redux';
 import { logout } from '../../store/slices/authSlice';
@@ -30,6 +31,7 @@ export default function Sidebar({ isOpen = true, onClose }: SidebarProps) {
     { icon: Package, label: 'Products', path: '/products' },
     { icon: ShoppingCart, label: 'Orders', path: '/orders' },
     { icon: Users, label: 'Customers', path: '/customers' },
+    { icon: MessageSquare, label: 'Messages', path: '/contact-messages' },
     { icon: FolderTree, label: 'Categories', path: '/categories' },
     { icon: FileText, label: 'Content', path: '/content' },
     { icon: Shield, label: 'Legal', path: '/legal' },

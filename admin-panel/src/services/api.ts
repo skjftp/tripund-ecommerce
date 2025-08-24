@@ -113,4 +113,15 @@ export const notificationAPI = {
   clearAll: () => api.delete('/admin/notifications'),
 };
 
+// Contact Message APIs
+export const contactAPI = {
+  getAll: (params?: { status?: string }) => {
+    const query = params?.status ? `?status=${params.status}` : '';
+    return api.get(`/admin/contact-messages${query}`);
+  },
+  getById: (id: string) => api.get(`/admin/contact-messages/${id}`),
+  update: (id: string, data: any) => api.put(`/admin/contact-messages/${id}`, data),
+  delete: (id: string) => api.delete(`/admin/contact-messages/${id}`),
+};
+
 export default api;

@@ -24,6 +24,9 @@ import CategoriesPage from './pages/CategoriesPage';
 import SearchPage from './pages/SearchPage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 import TermsConditionsPage from './pages/TermsConditionsPage';
+import FAQPage from './pages/FAQPage';
+import ShippingPage from './pages/ShippingPage';
+import ReturnsPage from './pages/ReturnsPage';
 
 function App() {
   useEffect(() => {
@@ -56,6 +59,9 @@ function App() {
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
             <Route path="/terms-conditions" element={<TermsConditionsPage />} />
+            <Route path="/faq" element={<FAQPage />} />
+            <Route path="/shipping" element={<ShippingPage />} />
+            <Route path="/returns" element={<ReturnsPage />} />
           </Routes>
         </Layout>
       </Router>

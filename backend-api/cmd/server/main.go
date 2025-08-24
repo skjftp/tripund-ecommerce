@@ -33,6 +33,7 @@ func main() {
 	contentHandler := handlers.NewContentHandler(db)
 	settingsHandler := handlers.NewSettingsHandler(db)
 	notificationHandler := handlers.NewNotificationHandler(db)
+	contactHandler := handlers.NewContactHandler(db)
 
 	api := r.Group("/api/v1")
 	{
@@ -69,6 +70,9 @@ func main() {
 
 		// Public settings endpoint (for shipping rates, tax, etc)
 		api.GET("/settings/public", settingsHandler.GetPublicSettings)
+		
+		// Contact form submission (public)
+		api.POST("/contact", contactHandler.SubmitContactMessage)
 
 		// Guest checkout endpoints (no authentication required)
 		api.POST("/guest/orders", orderHandler.CreateGuestOrder)
@@ -157,6 +161,12 @@ func main() {
 			admin.PUT("/notifications/read-all", notificationHandler.MarkAllAsRead)
 			admin.DELETE("/notifications/:id", notificationHandler.DeleteNotification)
 			admin.DELETE("/notifications", notificationHandler.ClearAllNotifications)
+			
+			// Contact messages management (admin only)
+			admin.GET("/contact-messages", contactHandler.GetContactMessages)
+			admin.GET("/contact-messages/:id", contactHandler.GetContactMessage)
+			admin.PUT("/contact-messages/:id", contactHandler.UpdateContactMessage)
+			admin.DELETE("/contact-messages/:id", contactHandler.DeleteContactMessage)
 		}
 
 		api.POST("/webhook/razorpay", paymentHandler.RazorpayWebhook)

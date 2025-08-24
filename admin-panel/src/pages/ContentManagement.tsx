@@ -100,11 +100,21 @@ export default function ContentManagement() {
 
   const [faqs, setFaqs] = useState<FAQ[]>([]);
   const [editingFaq, setEditingFaq] = useState<FAQ | null>(null);
+  
+  // Legal content states
+  const [privacyContent, setPrivacyContent] = useState('');
+  const [termsContent, setTermsContent] = useState('');
+  const [shippingContent, setShippingContent] = useState('');
+  const [returnsContent, setReturnsContent] = useState('');
 
   const sections: ContentSection[] = [
     { id: 'about', title: 'About Page', icon: <Monitor size={20} />, expanded: false },
     { id: 'footer', title: 'Footer Content', icon: <Monitor size={20} />, expanded: false },
     { id: 'contact', title: 'Contact Page', icon: <Monitor size={20} />, expanded: false },
+    { id: 'privacy', title: 'Privacy Policy', icon: <Monitor size={20} />, expanded: false },
+    { id: 'terms', title: 'Terms & Conditions', icon: <Monitor size={20} />, expanded: false },
+    { id: 'shipping', title: 'Shipping Information', icon: <Monitor size={20} />, expanded: false },
+    { id: 'returns', title: 'Returns & Exchanges', icon: <Monitor size={20} />, expanded: false },
     { id: 'faqs', title: 'FAQs', icon: <Monitor size={20} />, expanded: false }
   ];
 

@@ -24,6 +24,7 @@ import Notifications from './pages/Notifications';
 import Settings from './pages/Settings';
 import ContentManagement from './pages/ContentManagement';
 import Legal from './pages/Legal';
+import ContactMessages from './pages/ContactMessages';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useSelector((state: RootState) => state.auth);
@@ -169,6 +170,16 @@ function App() {
               <PrivateRoute>
                 <AdminLayout>
                   <Legal />
+                </AdminLayout>
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/contact-messages"
+            element={
+              <PrivateRoute>
+                <AdminLayout>
+                  <ContactMessages />
                 </AdminLayout>
               </PrivateRoute>
             }

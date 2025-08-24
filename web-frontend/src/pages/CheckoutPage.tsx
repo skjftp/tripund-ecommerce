@@ -431,20 +431,22 @@ export default function CheckoutPage() {
                       </p>
                     </div>
                   </label>
-                  <label className="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
-                    <input
-                      {...register('paymentMethod')}
-                      type="radio"
-                      value="cod"
-                      className="text-primary-600 focus:ring-primary-500"
-                    />
-                    <div className="ml-3">
-                      <p className="font-medium">Cash on Delivery</p>
-                      <p className="text-sm text-gray-600">
-                        Pay when you receive your order (+₹50 handling charge)
-                      </p>
-                    </div>
-                  </label>
+                  {settings?.cod_enabled && (
+                    <label className="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
+                      <input
+                        {...register('paymentMethod')}
+                        type="radio"
+                        value="cod"
+                        className="text-primary-600 focus:ring-primary-500"
+                      />
+                      <div className="ml-3">
+                        <p className="font-medium">Cash on Delivery</p>
+                        <p className="text-sm text-gray-600">
+                          Pay when you receive your order {settings?.cod_charges > 0 && `(+₹${settings.cod_charges} handling charge)`}
+                        </p>
+                      </div>
+                    </label>
+                  )}
                 </div>
 
                 <div className="mt-4">

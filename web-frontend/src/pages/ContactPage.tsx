@@ -4,9 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Mail, Phone, MapPin, Clock, Send, MessageSquare } from 'lucide-react';
 import toast from 'react-hot-toast';
-import axios from 'axios';
-
-const API_URL = 'https://tripund-backend-665685012221.asia-south1.run.app/api/v1';
+import api from '../services/api';
 
 const contactSchema = z.object({
   name: z.string().min(2, 'Name is required'),
@@ -69,7 +67,7 @@ export default function ContactPage() {
 
   const fetchContent = async () => {
     try {
-      const response = await axios.get(`${API_URL}/content/contact`);
+      const response = await api.get('/content/contact');
       if (response.data?.content?.data) {
         setContent(response.data.content.data);
       }
@@ -82,7 +80,7 @@ export default function ContactPage() {
 
   const fetchFAQs = async () => {
     try {
-      const response = await axios.get(`${API_URL}/content/faqs/list`);
+      const response = await api.get('/content/faqs/list');
       if (response.data) {
         setFaqs(response.data.slice(0, 4)); // Show only first 4 FAQs on contact page
       }
@@ -113,8 +111,13 @@ export default function ContactPage() {
   const onSubmit = async (data: ContactFormData) => {
     setLoading(true);
     try {
-      // Simulate API call - replace with actual API endpoint when available
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await api.post('/contact', {
+        name: data.name,
+        email: data.email,
+        phone: data.phone || '',
+        subject: data.subject,
+        message: data.message,
+      });
       toast.success('Message sent successfully! We\'ll get back to you soon.');
       reset();
     } catch (error) {
@@ -178,27 +181,27 @@ export default function ContactPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
-      <section className="bg-primary-600 py-16">
+      <section className="bg-primary-600 py-8 sm:py-12 md:py-16">
         <div className="max-w-7xl mx-auto px-4 text-center text-white">
-          <h1 className="text-4xl font-bold mb-4">{pageTitle}</h1>
-          <p className="text-xl text-primary-100">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">{pageTitle}</h1>
+          <p className="text-base sm:text-lg md:text-xl text-primary-100 px-4">
             {pageSubtitle}
           </p>
         </div>
       </section>
 
       {/* Contact Info Grid */}
-      <section className="py-12 -mt-8">
+      <section className="py-6 sm:py-8 md:py-12 -mt-6 sm:-mt-8">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
             {contactInfo.map((info, index) => (
-              <div key={index} className="bg-white rounded-lg shadow-md p-6 text-center">
-                <div className="bg-primary-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <info.icon className="text-primary-600" size={24} />
+              <div key={index} className="bg-white rounded-lg shadow-md p-3 sm:p-4 md:p-6 text-center">
+                <div className="bg-primary-100 w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-3 md:mb-4">
+                  <info.icon className="text-primary-600" size={18} />
                 </div>
-                <h3 className="font-semibold mb-1">{info.title}</h3>
-                <p className="text-gray-800">{info.content}</p>
-                <p className="text-sm text-gray-600 mt-1">{info.subtext}</p>
+                <h3 className="font-semibold mb-1 text-sm sm:text-base">{info.title}</h3>
+                <p className="text-gray-800 text-xs sm:text-sm md:text-base break-words">{info.content}</p>
+                <p className="text-xs sm:text-sm text-gray-600 mt-1 hidden sm:block">{info.subtext}</p>
               </div>
             ))}
           </div>
@@ -206,11 +209,11 @@ export default function ContactPage() {
       </section>
 
       {/* Contact Form & Map */}
-      <section className="py-16">
+      <section className="py-8 sm:py-12 md:py-16">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 md:gap-12">
             {/* Contact Form */}
-            <div className="bg-white rounded-lg shadow-md p-8">
+            <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 md:p-8">
               <div className="flex items-center mb-6">
                 <MessageSquare className="text-primary-600 mr-3" size={28} />
                 <h2 className="text-2xl font-bold">Send us a Message</h2>
