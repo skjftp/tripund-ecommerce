@@ -124,7 +124,7 @@ Address: Mumbai, Maharashtra, India`;
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-4xl mx-auto px-4">
         <div className="bg-white rounded-lg shadow-md p-8">
-          <article className="prose prose-lg max-w-none">
+          <article className="prose prose-lg max-w-none prose-headings:text-gray-900 prose-h1:text-3xl prose-h1:font-bold prose-h1:mb-6 prose-h2:text-2xl prose-h2:font-semibold prose-h2:mt-8 prose-h2:mb-4 prose-h3:text-xl prose-h3:font-semibold prose-h3:mt-6 prose-h3:mb-3 prose-p:text-gray-700 prose-p:mb-4 prose-ul:my-4 prose-li:text-gray-700 prose-strong:text-gray-900">
             <ReactMarkdown>{content}</ReactMarkdown>
           </article>
         </div>
