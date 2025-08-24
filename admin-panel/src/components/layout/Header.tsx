@@ -43,10 +43,19 @@ export default function Header({ onMenuClick }: HeaderProps) {
   const fetchNotifications = async () => {
     try {
       const response = await notificationAPI.getAll();
-      setNotifications(response.data.notifications || []);
-      setUnreadCount(response.data.unread_count || 0);
+      // Handle both array and object responses
+      if (Array.isArray(response.data)) {
+        setNotifications(response.data);
+        setUnreadCount(response.data.filter((n: Notification) => !n.is_read).length);
+      } else {
+        setNotifications(response.data.notifications || []);
+        setUnreadCount(response.data.unread_count || 0);
+      }
     } catch (error) {
       console.error('Failed to fetch notifications:', error);
+      // Set empty state on error to prevent crashes
+      setNotifications([]);
+      setUnreadCount(0);
     }
   };
 

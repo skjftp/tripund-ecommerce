@@ -7,7 +7,6 @@ import (
 
 	"cloud.google.com/go/firestore"
 	"github.com/gin-gonic/gin"
-	"google.golang.org/api/iterator"
 	"tripund-api/internal/database"
 	"tripund-api/internal/models"
 	"tripund-api/internal/utils"
