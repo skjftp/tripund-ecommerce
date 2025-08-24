@@ -514,7 +514,7 @@ export default function ContentManagement() {
         return;
       }
 
-      // Save all FAQs at once to the backend
+      // Save all FAQs using the admin endpoint
       await axios.put(
         `${API_URL}/admin/faqs`,
         { faqs: faqs },
