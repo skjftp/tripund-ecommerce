@@ -124,4 +124,12 @@ export const contactAPI = {
   delete: (id: string) => api.delete(`/admin/contact-messages/${id}`),
 };
 
+// Content APIs
+export const contentAPI = {
+  getByType: (type: string) => api.get(`/admin/content/${type}`),
+  update: (type: string, data: any) => api.put(`/admin/content/${type}`, data),
+  create: (type: string, data: any) => api.post(`/admin/content/${type}`, data),
+  delete: (type: string) => api.delete(`/admin/content/${type}`),
+};
+
 export default api;
