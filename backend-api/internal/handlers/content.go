@@ -1,10 +1,13 @@
 package handlers
 
 import (
+	"context"
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"tripund-api/internal/database"
 )
 
@@ -20,28 +23,46 @@ func NewContentHandler(db *database.Firebase) *ContentHandler {
 func (h *ContentHandler) GetContent(c *gin.Context) {
 	contentType := c.Param("type")
 	
-	// Return default content for now
-	defaultContent := h.getDefaultContent(contentType)
-	if defaultContent != nil {
-		c.JSON(http.StatusOK, defaultContent)
+	// Try to get from Firestore first
+	doc, err := h.db.Client.Collection("content").Doc(contentType).Get(context.Background())
+	if err != nil {
+		if status.Code(err) == codes.NotFound {
+			// Return default content if not found
+			defaultContent := h.getDefaultContent(contentType)
+			if defaultContent != nil {
+				c.JSON(http.StatusOK, defaultContent)
+				return
+			}
+		}
+		c.JSON(http.StatusNotFound, gin.H{"error": "Content not found"})
 		return
 	}
 	
-	c.JSON(http.StatusNotFound, gin.H{"error": "Content not found"})
+	// Return the stored content
+	c.JSON(http.StatusOK, doc.Data())
 }
 
 // GetContentAdmin gets content for admin panel
 func (h *ContentHandler) GetContentAdmin(c *gin.Context) {
 	contentType := c.Param("type")
 	
-	// Return default content for now
-	defaultContent := h.getDefaultContent(contentType)
-	if defaultContent != nil {
-		c.JSON(http.StatusOK, defaultContent)
+	// Try to get from Firestore first
+	doc, err := h.db.Client.Collection("content").Doc(contentType).Get(context.Background())
+	if err != nil {
+		if status.Code(err) == codes.NotFound {
+			// Return default content if not found
+			defaultContent := h.getDefaultContent(contentType)
+			if defaultContent != nil {
+				c.JSON(http.StatusOK, defaultContent)
+				return
+			}
+		}
+		c.JSON(http.StatusNotFound, gin.H{"error": "Content not found"})
 		return
 	}
 	
-	c.JSON(http.StatusNotFound, gin.H{"error": "Content not found"})
+	// Return the stored content
+	c.JSON(http.StatusOK, doc.Data())
 }
 
 // UpdateContent updates content (admin only)
@@ -54,8 +75,22 @@ func (h *ContentHandler) UpdateContent(c *gin.Context) {
 		return
 	}
 
-	// For now, just return success
-	// In production, this would save to Firestore
+	// Add metadata
+	content["type"] = contentType
+	content["updated_at"] = time.Now()
+	
+	// Get user ID from context (set by auth middleware)
+	if userID, exists := c.Get("userID"); exists {
+		content["updated_by"] = userID
+	}
+
+	// Save to Firestore
+	_, err := h.db.Client.Collection("content").Doc(contentType).Set(context.Background(), content)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save content"})
+		return
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Content updated successfully",
 		"type": contentType,
@@ -65,10 +100,30 @@ func (h *ContentHandler) UpdateContent(c *gin.Context) {
 
 // GetFAQs gets all FAQs (public endpoint)
 func (h *ContentHandler) GetFAQs(c *gin.Context) {
-	faqs := h.getDefaultFAQs()
-	c.JSON(http.StatusOK, gin.H{
-		"faqs": faqs,
-	})
+	// Try to get from Firestore first
+	doc, err := h.db.Client.Collection("content").Doc("faqs").Get(context.Background())
+	if err != nil {
+		if status.Code(err) == codes.NotFound {
+			// Return default FAQs if not found
+			c.JSON(http.StatusOK, gin.H{
+				"faqs": h.getDefaultFAQs(),
+			})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch FAQs"})
+		return
+	}
+	
+	data := doc.Data()
+	if faqs, ok := data["faqs"]; ok {
+		c.JSON(http.StatusOK, gin.H{
+			"faqs": faqs,
+		})
+	} else {
+		c.JSON(http.StatusOK, gin.H{
+			"faqs": h.getDefaultFAQs(),
+		})
+	}
 }
 
 // UpdateFAQs updates FAQ list (admin endpoint)
@@ -79,6 +134,25 @@ func (h *ContentHandler) UpdateFAQs(c *gin.Context) {
 	
 	if err := c.ShouldBindJSON(&requestData); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request data"})
+		return
+	}
+	
+	// Prepare content to save
+	content := map[string]interface{}{
+		"type": "faqs",
+		"faqs": requestData.FAQs,
+		"updated_at": time.Now(),
+	}
+	
+	// Get user ID from context
+	if userID, exists := c.Get("userID"); exists {
+		content["updated_by"] = userID
+	}
+	
+	// Save to Firestore
+	_, err := h.db.Client.Collection("content").Doc("faqs").Set(context.Background(), content)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save FAQs"})
 		return
 	}
 	
