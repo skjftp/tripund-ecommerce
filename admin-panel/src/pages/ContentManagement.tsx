@@ -177,10 +177,12 @@ export default function ContentManagement() {
       const token = localStorage.getItem('adminToken');
       
       // Fetch all content types
-      const [aboutRes, footerRes, contactRes] = await Promise.all([
+      const [aboutRes, footerRes, contactRes, shippingRes, returnsRes] = await Promise.all([
         axios.get(`${API_URL}/content/about`).catch(() => null),
         axios.get(`${API_URL}/content/footer`).catch(() => null),
-        axios.get(`${API_URL}/content/contact`).catch(() => null)
+        axios.get(`${API_URL}/content/contact`).catch(() => null),
+        axios.get(`${API_URL}/content/shipping`).catch(() => null),
+        axios.get(`${API_URL}/content/returns`).catch(() => null)
       ]);
 
       if (aboutRes?.data?.content?.data) {
@@ -296,6 +298,16 @@ export default function ContentManagement() {
           socialMediaText: 'Follow us on social media for updates, new arrivals, and artisan stories'
         });
       }
+      
+      // Handle shipping content
+      if (shippingRes?.data) {
+        setShippingContent(shippingRes.data);
+      }
+      
+      // Handle returns content
+      if (returnsRes?.data) {
+        setReturnsContent(returnsRes.data);
+      }
     } catch (error) {
       console.error('Error fetching content:', error);
     } finally {
@@ -401,6 +413,15 @@ export default function ContentManagement() {
           break;
         case 'contact':
           contentData = { data: contactContent };
+          break;
+        case 'shipping':
+          contentData = shippingContent;
+          break;
+        case 'returns':
+          contentData = returnsContent;
+          break;
+        case 'faqs':
+          contentData = { faqs: faqs };
           break;
       }
 

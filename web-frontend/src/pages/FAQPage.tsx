@@ -26,8 +26,11 @@ export default function FAQPage() {
   const fetchFAQs = async () => {
     try {
       const response = await api.get('/content/faqs/list');
-      const faqData = response.data || [];
-      setFaqs(faqData.filter((faq: FAQ) => faq.active));
+      // Handle response which has faqs property
+      const faqData = response.data?.faqs || response.data || [];
+      // Ensure it's an array and filter active ones
+      const faqArray = Array.isArray(faqData) ? faqData : [];
+      setFaqs(faqArray.filter((faq: FAQ) => faq.active !== false));
     } catch (error) {
       console.error('Failed to fetch FAQs:', error);
       // Set default FAQs if API fails

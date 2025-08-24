@@ -68,9 +68,9 @@ export default function ContactPage() {
   const fetchContent = async () => {
     try {
       const response = await api.get('/content/contact');
-      if (response.data?.content?.data) {
-        setContent(response.data.content.data);
-      }
+      // Handle both direct data and nested content.data structures
+      const contactData = response.data?.content?.data || response.data || {};
+      setContent(contactData);
     } catch (error) {
       console.error('Error fetching contact content:', error);
     } finally {
@@ -81,9 +81,13 @@ export default function ContactPage() {
   const fetchFAQs = async () => {
     try {
       const response = await api.get('/content/faqs/list');
-      if (response.data) {
-        setFaqs(response.data.slice(0, 4)); // Show only first 4 FAQs on contact page
-      }
+      // Handle response which has faqs property
+      const faqData = response.data?.faqs || response.data || [];
+      // Ensure it's an array
+      const faqArray = Array.isArray(faqData) ? faqData : [];
+      // Filter active FAQs and show only first 4 on contact page
+      const activeFaqs = faqArray.filter((faq: any) => faq.active !== false);
+      setFaqs(activeFaqs.slice(0, 4));
     } catch (error) {
       console.error('Error fetching FAQs:', error);
       // Use default FAQs if API fails
