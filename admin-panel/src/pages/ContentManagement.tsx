@@ -306,7 +306,10 @@ export default function ContentManagement() {
   const fetchFAQs = async () => {
     try {
       const response = await axios.get(`${API_URL}/content/faqs/list`);
-      setFaqs(response.data || []);
+      // Handle the response which has faqs property
+      const faqData = response.data?.faqs || response.data || [];
+      // Ensure it's an array
+      setFaqs(Array.isArray(faqData) ? faqData : []);
     } catch (error) {
       console.error('Error fetching FAQs:', error);
       // Set default FAQs
@@ -429,28 +432,16 @@ export default function ContentManagement() {
         return;
       }
 
-      if (editingFaq?.id) {
-        // Update existing FAQ
-        await axios.put(
-          `${API_URL}/admin/faqs/${editingFaq.id}`,
-          editingFaq,
-          {
-            headers: { Authorization: `Bearer ${token}` }
-          }
-        );
-        toast.success('FAQ updated successfully');
-      } else if (editingFaq) {
-        // Create new FAQ
-        await axios.post(
-          `${API_URL}/admin/faqs`,
-          editingFaq,
-          {
-            headers: { Authorization: `Bearer ${token}` }
-          }
-        );
-        toast.success('FAQ created successfully');
-      }
-
+      // Save all FAQs at once to the backend
+      await axios.put(
+        `${API_URL}/admin/faqs`,
+        { faqs: faqs },
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+      
+      toast.success('FAQs saved successfully');
       setEditingFaq(null);
       fetchFAQs();
     } catch (error) {
