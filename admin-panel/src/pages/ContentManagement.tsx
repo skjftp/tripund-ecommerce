@@ -104,15 +104,63 @@ export default function ContentManagement() {
   // Legal content states
   const [privacyContent, setPrivacyContent] = useState('');
   const [termsContent, setTermsContent] = useState('');
-  const [shippingContent, setShippingContent] = useState('');
-  const [returnsContent, setReturnsContent] = useState('');
+  const [shippingContent, setShippingContent] = useState({
+    title: 'Shipping Information',
+    subtitle: 'We deliver handcrafted treasures across India',
+    deliveryTime: '5-7 business days for most locations',
+    zones: [
+      { zone: 'Metro Cities', delivery: '3-5 days', charges: 'Free above ₹2000' },
+      { zone: 'Tier 1 Cities', delivery: '5-7 days', charges: '₹100' },
+      { zone: 'Tier 2/3 Cities', delivery: '7-10 days', charges: '₹150' },
+      { zone: 'Remote Areas', delivery: '10-15 days', charges: '₹200' }
+    ],
+    freeShippingThreshold: 2000,
+    expressShipping: {
+      available: true,
+      charges: 200,
+      delivery: '2-3 business days'
+    },
+    trackingInfo: 'You will receive tracking details via email and SMS once your order is dispatched.',
+    packagingNote: 'All items are carefully packaged to ensure they reach you in perfect condition.',
+    restrictions: ['We currently ship only within India', 'P.O. Box addresses are not accepted'],
+    contactSupport: 'For shipping queries, contact us at shipping@tripundlifestyle.com'
+  });
+
+  const [returnsContent, setReturnsContent] = useState({
+    title: 'Returns & Exchanges',
+    subtitle: 'Your satisfaction is our priority',
+    returnWindow: '7 days',
+    eligibleItems: [
+      'Items in original condition with tags',
+      'Unused and unwashed products',
+      'Items with original packaging'
+    ],
+    nonReturnableItems: [
+      'Customized or personalized products',
+      'Items marked as final sale',
+      'Digital gift cards',
+      'Intimate apparel and jewelry'
+    ],
+    process: [
+      'Initiate return request within 7 days of delivery',
+      'Pack the item securely with all original tags',
+      'Our courier partner will pick up the item',
+      'Refund processed within 5-7 business days after inspection'
+    ],
+    exchangePolicy: 'Exchanges are available for size/color variations subject to availability.',
+    refundMethods: [
+      'Original payment method (5-7 days)',
+      'Store credit (instant)',
+      'Bank transfer (7-10 days)'
+    ],
+    damagePolicy: 'For damaged or defective items, report within 48 hours with photos for immediate resolution.',
+    contactSupport: 'For returns & exchanges, email us at returns@tripundlifestyle.com'
+  });
 
   const sections: ContentSection[] = [
     { id: 'about', title: 'About Page', icon: <Monitor size={20} />, expanded: false },
     { id: 'footer', title: 'Footer Content', icon: <Monitor size={20} />, expanded: false },
     { id: 'contact', title: 'Contact Page', icon: <Monitor size={20} />, expanded: false },
-    { id: 'privacy', title: 'Privacy Policy', icon: <Monitor size={20} />, expanded: false },
-    { id: 'terms', title: 'Terms & Conditions', icon: <Monitor size={20} />, expanded: false },
     { id: 'shipping', title: 'Shipping Information', icon: <Monitor size={20} />, expanded: false },
     { id: 'returns', title: 'Returns & Exchanges', icon: <Monitor size={20} />, expanded: false },
     { id: 'faqs', title: 'FAQs', icon: <Monitor size={20} />, expanded: false }

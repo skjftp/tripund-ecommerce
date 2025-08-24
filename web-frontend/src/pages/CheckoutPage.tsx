@@ -431,7 +431,7 @@ export default function CheckoutPage() {
                       </p>
                     </div>
                   </label>
-                  {settings?.cod_enabled && (
+                  {settings?.payment?.cod_enabled && (
                     <label className="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
                       <input
                         {...register('paymentMethod')}
@@ -442,7 +442,7 @@ export default function CheckoutPage() {
                       <div className="ml-3">
                         <p className="font-medium">Cash on Delivery</p>
                         <p className="text-sm text-gray-600">
-                          Pay when you receive your order {settings?.cod_charges > 0 && `(+₹${settings.cod_charges} handling charge)`}
+                          Pay when you receive your order {settings?.payment?.cod_charges > 0 && `(+₹${settings.payment.cod_charges} handling charge)`}
                         </p>
                       </div>
                     </label>

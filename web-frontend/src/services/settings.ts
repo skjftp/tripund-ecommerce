@@ -13,6 +13,7 @@ export interface PublicSettings {
     prepaid_discount: number;
     cod_enabled: boolean;
     cod_limit: number;
+    cod_charges: number;
   };
   general: {
     currency: string;
@@ -52,6 +53,7 @@ export const getPublicSettings = async (): Promise<PublicSettings> => {
         prepaid_discount: 5,
         cod_enabled: true,
         cod_limit: 10000,
+        cod_charges: 50,
       },
       general: {
         currency: 'INR',

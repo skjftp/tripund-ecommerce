@@ -30,7 +30,7 @@ func main() {
 	paymentHandler := handlers.NewPaymentHandler(db, cfg.RazorpayKeyID, cfg.RazorpayKeySecret, cfg.RazorpayWebhookSecret)
 	orderHandler := handlers.NewOrderHandler(db)
 	categoryHandler := handlers.NewCategoryHandler(db)
-	contentHandler := handlers.NewContentHandler(db)
+	contentHandler := handlers.NewContentHandler(firestoreClient)
 	settingsHandler := handlers.NewSettingsHandler(db)
 	notificationHandler := handlers.NewNotificationHandler(db)
 	contactHandler := handlers.NewContactHandler(db)
@@ -134,13 +134,11 @@ func main() {
 			admin.GET("/payments", paymentHandler.GetAllPayments)
 
 			// Content management endpoints (admin only)
+			admin.GET("/content/:type", contentHandler.GetContentAdmin)
 			admin.PUT("/content/:type", contentHandler.UpdateContent)
-			admin.GET("/content", contentHandler.GetAllContent)
 			
 			// FAQ management
-			admin.POST("/faqs", contentHandler.CreateFAQ)
-			admin.PUT("/faqs/:id", contentHandler.UpdateFAQ)
-			admin.DELETE("/faqs/:id", contentHandler.DeleteFAQ)
+			admin.PUT("/faqs", contentHandler.UpdateFAQs)
 			
 			// Initialize default content
 			admin.POST("/content/initialize", func(c *gin.Context) {
