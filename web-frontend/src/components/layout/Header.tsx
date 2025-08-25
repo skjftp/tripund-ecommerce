@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingCart, Search, User, Menu, X, Heart, ChevronDown, MapPin, Phone } from 'lucide-react';
+import { ShoppingCart, Search, User, Menu, X, Heart, ChevronDown } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../../store';
 import { logout } from '../../store/slices/authSlice';
@@ -48,23 +48,17 @@ export default function Header() {
 
   return (
     <>
-      {/* Top Bar - Nestasia Style */}
-      <div className="bg-gray-50 border-b border-gray-200">
+      {/* Promo Banner - Elegant Style */}
+      <div className="bg-gradient-to-r from-primary-600 to-primary-700 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between py-2 text-xs">
-            <div className="flex items-center space-x-4">
-              <a href="tel:+919999999999" className="flex items-center space-x-1 text-gray-600 hover:text-gray-900">
-                <Phone size={12} />
-                <span>+91 99999 99999</span>
-              </a>
-              <span className="text-gray-400">|</span>
-              <span className="text-gray-600">Free Shipping on Orders Above ₹999</span>
-            </div>
-            <div className="flex items-center space-x-4">
-              <button className="flex items-center space-x-1 text-gray-600 hover:text-gray-900">
-                <MapPin size={12} />
-                <span>Track Order</span>
-              </button>
+          <div className="flex items-center justify-center py-2.5">
+            <div className="text-center">
+              <span className="text-xs sm:text-sm font-medium tracking-wide sm:tracking-wider uppercase">
+                <span className="hidden sm:inline">USE CODE </span>
+                <span className="bg-white/20 px-2 py-0.5 mx-1 rounded font-bold">TRIPUND20</span>
+                <span className="hidden sm:inline"> FOR 20% OFF ON YOUR FIRST ORDER</span>
+                <span className="sm:hidden"> - 20% OFF FIRST ORDER</span>
+              </span>
             </div>
           </div>
         </div>
