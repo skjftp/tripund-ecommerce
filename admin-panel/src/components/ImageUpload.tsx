@@ -102,7 +102,13 @@ export default function ImageUpload({
         onDragOver={handleDragOver}
         onDrop={handleDrop}
         className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors cursor-pointer"
-        onClick={() => fileInputRef.current?.click()}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (!uploading && images.length < maxImages) {
+            fileInputRef.current?.click();
+          }
+        }}
       >
         <input
           ref={fileInputRef}
@@ -110,7 +116,7 @@ export default function ImageUpload({
           multiple
           accept="image/*"
           onChange={handleFileSelect}
-          className="hidden"
+          style={{ display: 'none' }}
           disabled={uploading || images.length >= maxImages}
         />
         
@@ -126,6 +132,20 @@ export default function ImageUpload({
             {images.length} of {maxImages} images uploaded
           </p>
         )}
+        
+        {/* Add explicit button for better UX */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            fileInputRef.current?.click();
+          }}
+          disabled={uploading || images.length >= maxImages}
+          className="mt-3 px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+        >
+          Select Images
+        </button>
       </div>
 
       {/* Image Preview Grid */}
@@ -149,7 +169,10 @@ export default function ImageUpload({
               
               {/* Remove button */}
               <button
-                onClick={() => handleRemoveImage(index)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleRemoveImage(index);
+                }}
                 className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                 type="button"
               >
