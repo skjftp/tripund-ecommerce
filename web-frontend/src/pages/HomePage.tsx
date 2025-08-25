@@ -27,6 +27,11 @@ export default function HomePage() {
   console.log('Categories state:', { categories, categoriesLoading, categoriesError });
   console.log('Categories length:', categories.length);
   console.log('Categories data:', categories);
+  
+  // Debug category images specifically
+  categories.forEach((cat, index) => {
+    console.log(`Category ${index}: ${cat.name} - Image: ${cat.image}`);
+  });
 
   // Map categories to showcase format with fallback for empty categories
   const categoryShowcase = categories.length > 0 
