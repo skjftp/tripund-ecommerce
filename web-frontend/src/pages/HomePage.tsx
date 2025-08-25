@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { ArrowRight, Truck, Shield, Award, RefreshCw, Heart, ShoppingBag } from 'lucide-react';
@@ -33,9 +33,12 @@ export default function HomePage() {
     console.log(`Category ${index}: ${cat.name} - Image: ${cat.image}`);
   });
 
-  // Map categories to showcase format with fallback for empty categories
-  const categoryShowcase = categories.length > 0 
-    ? categories.slice(0, 6).map((category, index) => {
+  // Memoize categoryShowcase to ensure proper re-rendering when categories change
+  const categoryShowcase = useMemo(() => {
+    console.log('Recalculating categoryShowcase with categories.length:', categories.length);
+    
+    if (categories.length > 0) {
+      return categories.slice(0, 6).map((category, index) => {
         const showcase = {
           id: category.id,
           name: category.name,
@@ -45,8 +48,11 @@ export default function HomePage() {
         };
         console.log(`Showcase ${index}: ${showcase.name} - Using image: ${showcase.image}`);
         return showcase;
-      })
-    : [
+      });
+    }
+    
+    console.log('Using fallback categories');
+    return [
         {
           id: 'divine-collections',
           name: 'Divine Collections',
@@ -90,6 +96,7 @@ export default function HomePage() {
           slug: 'gifting'
         }
       ];
+  }, [categories]); // Dependency array ensures recalculation when categories change
 
   return (
     <div className="min-h-screen bg-white">
@@ -112,7 +119,7 @@ export default function HomePage() {
           <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
             {categoryShowcase.map((category) => (
               <Link
-                key={category.id}
+                key={`${category.id}-${category.image}`}
                 to={`/category/${category.slug}`}
                 className="group relative overflow-hidden bg-white rounded-lg shadow-sm hover:shadow-xl transition-all duration-300"
                 onMouseEnter={() => setHoveredCategory(category.id)}
@@ -120,6 +127,7 @@ export default function HomePage() {
               >
                 <div className="aspect-square overflow-hidden">
                   <img
+                    key={category.image}
                     src={category.image}
                     alt={category.name}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
