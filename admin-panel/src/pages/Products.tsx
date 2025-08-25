@@ -50,7 +50,8 @@ export default function Products() {
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/products?limit=50');
+      // Fetch all products regardless of status (admin should see all)
+      const response = await api.get('/products?limit=50&status=all');
       const fetchedProducts = response.data.products || [];
       setProducts(fetchedProducts);
       console.log(`Loaded ${fetchedProducts.length} products`);
@@ -290,8 +291,10 @@ export default function Products() {
                             }}
                           />
                         </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">{product.name}</div>
+                        <div className="ml-4 max-w-xs">
+                          <div className="text-sm font-medium text-gray-900 truncate" title={product.name}>
+                            {product.name.length > 50 ? product.name.substring(0, 50) + '...' : product.name}
+                          </div>
                           <div className="text-sm text-gray-500">SKU: {product.sku}</div>
                         </div>
                       </div>
