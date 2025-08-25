@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { RootState } from '../../store';
 
 interface HeroSlide {
-  id: number;
+  id: number | string;
   image: string;
   mobileImage?: string;
   title: string;
@@ -13,7 +15,8 @@ interface HeroSlide {
   overlayColor?: string;
 }
 
-const heroSlides: HeroSlide[] = [
+// Fallback slides for when categories are not loaded
+const fallbackSlides: HeroSlide[] = [
   {
     id: 1,
     image: 'https://images.unsplash.com/photo-1594736797933-d0501ba2fe65?w=1600&h=600&fit=crop',
@@ -56,7 +59,43 @@ const heroSlides: HeroSlide[] = [
   }
 ];
 
+// Subtitle mappings for each category
+const categorySubtitles: Record<string, string> = {
+  'divine-collections': 'Bring spirituality home with our handcrafted idols',
+  'festivals': 'Transform your space with traditional torans & decorations',
+  'wall-decor': 'Elevate your walls with artistic masterpieces',
+  'home-accent': 'Curated collection of premium home accessories',
+  'lighting': 'Illuminate your spaces with beautiful diyas & lanterns',
+  'storage-bags': 'Organize in style with our eco-friendly storage solutions',
+  'gifting': 'Find the perfect gift for every occasion'
+};
+
 export default function HeroSection() {
+  const { categories } = useSelector((state: RootState) => state.categories);
+  
+  // Create hero slides from categories
+  const heroSlides = useMemo(() => {
+    if (categories.length > 0) {
+      // Select specific categories for hero carousel
+      const selectedCategories = ['festivals', 'divine-collections', 'wall-decor', 'home-accent'];
+      const slides = selectedCategories
+        .map(slug => categories.find(cat => cat.slug === slug))
+        .filter(Boolean)
+        .map((category, index) => ({
+          id: category!.id,
+          image: category!.image || fallbackSlides[index].image,
+          mobileImage: category!.image || fallbackSlides[index].mobileImage,
+          title: category!.name,
+          subtitle: categorySubtitles[category!.slug] || category!.description,
+          buttonText: index === 0 ? 'Shop Now' : index === 1 ? 'Explore' : index === 2 ? 'View Collection' : 'Discover',
+          buttonLink: `/category/${category!.slug}`,
+          overlayColor: index % 2 === 0 ? 'from-black/50 to-black/20' : 'from-black/40 to-transparent'
+        }));
+      
+      return slides.length > 0 ? slides : fallbackSlides;
+    }
+    return fallbackSlides;
+  }, [categories]);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
 
