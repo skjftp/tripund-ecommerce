@@ -107,19 +107,22 @@ export default function HomePage() {
                 onMouseEnter={() => setHoveredCategory(category.id)}
                 onMouseLeave={() => setHoveredCategory(null)}
               >
-                <div className="aspect-square overflow-hidden">
+                <div className="aspect-square overflow-hidden relative">
                   <img
                     key={category.image}
                     src={category.image}
                     alt={category.name}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity duration-300" />
+                  {/* Enhanced gradient overlay for better text visibility */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/10" />
+                  {/* Additional scrim for text area */}
+                  <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-black/90 to-transparent" />
                 </div>
-                <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-                  <h3 className="text-xl font-medium mb-1">{category.name}</h3>
-                  <p className="text-sm opacity-90">{category.description}</p>
-                  <div className={`mt-3 flex items-center text-sm font-medium transition-all duration-300 ${
+                <div className="absolute bottom-0 left-0 right-0 p-6">
+                  <h3 className="text-xl font-medium mb-1 text-white drop-shadow-lg">{category.name}</h3>
+                  <p className="text-sm text-white/95 drop-shadow">{category.description}</p>
+                  <div className={`mt-3 flex items-center text-sm font-medium text-white transition-all duration-300 ${
                     hoveredCategory === category.id ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'
                   }`}>
                     Shop Now <ArrowRight size={16} className="ml-2" />

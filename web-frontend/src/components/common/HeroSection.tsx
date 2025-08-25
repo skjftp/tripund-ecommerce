@@ -161,18 +161,19 @@ export default function HeroSection() {
             />
           </picture>
 
-          {/* Overlay Gradient */}
-          <div className={`absolute inset-0 bg-gradient-to-r ${slide.overlayColor || 'from-black/50 to-transparent'}`} />
+          {/* Enhanced Overlay Gradient for better text visibility */}
+          <div className="absolute inset-0 bg-black/40" />
+          <div className={`absolute inset-0 bg-gradient-to-r ${slide.overlayColor || 'from-black/60 to-transparent'}`} />
 
           {/* Content */}
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center text-white px-4 max-w-3xl mx-auto">
-              <h1 className={`text-3xl md:text-4xl lg:text-5xl font-light mb-3 tracking-wider transform transition-all duration-700 ${
+              <h1 className={`text-3xl md:text-4xl lg:text-5xl font-light mb-3 tracking-wider transform transition-all duration-700 drop-shadow-2xl ${
                 index === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'
               }`}>
                 {slide.title}
               </h1>
-              <p className={`text-base md:text-lg mb-6 font-light transform transition-all duration-700 delay-100 ${
+              <p className={`text-base md:text-lg mb-6 font-light transform transition-all duration-700 delay-100 drop-shadow-xl ${
                 index === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'
               }`}>
                 {slide.subtitle}
