@@ -5,6 +5,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'https://tripund-backend-6656850
 
 interface SubCategory {
   name: string;
+  slug?: string;
   product_count: number;
 }
 
