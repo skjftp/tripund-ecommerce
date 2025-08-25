@@ -558,10 +558,10 @@ export default function Settings() {
             </label>
             <input
               type="text"
-              value={settings.invoice.gstin}
+              value={settings.invoice?.gstin || ''}
               onChange={(e) => setSettings({
                 ...settings,
-                invoice: { ...settings.invoice, gstin: e.target.value.toUpperCase() }
+                invoice: { ...settings.invoice || {}, gstin: e.target.value.toUpperCase() }
               })}
               placeholder="27XXXXX0000X1ZX"
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -574,10 +574,10 @@ export default function Settings() {
             </label>
             <input
               type="text"
-              value={settings.invoice.pan}
+              value={settings.invoice?.pan || ''}
               onChange={(e) => setSettings({
                 ...settings,
-                invoice: { ...settings.invoice, pan: e.target.value.toUpperCase() }
+                invoice: { ...settings.invoice || {}, pan: e.target.value.toUpperCase() }
               })}
               placeholder="ABCDE1234F"
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -590,10 +590,10 @@ export default function Settings() {
             </label>
             <input
               type="text"
-              value={settings.invoice.registered_name}
+              value={settings.invoice?.registered_name || ''}
               onChange={(e) => setSettings({
                 ...settings,
-                invoice: { ...settings.invoice, registered_name: e.target.value }
+                invoice: { ...settings.invoice || {}, registered_name: e.target.value }
               })}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
@@ -604,7 +604,7 @@ export default function Settings() {
               Home State *
             </label>
             <select
-              value={settings.invoice.home_state}
+              value={settings.invoice?.home_state || ''}
               onChange={(e) => {
                 const stateCodes: {[key: string]: string} = {
                   'Maharashtra': '27', 'Karnataka': '29', 'Tamil Nadu': '33',
@@ -614,7 +614,7 @@ export default function Settings() {
                 setSettings({
                   ...settings,
                   invoice: { 
-                    ...settings.invoice, 
+                    ...settings.invoice || {}, 
                     home_state: e.target.value,
                     home_state_code: stateCodes[e.target.value] || ''
                   }
@@ -640,7 +640,7 @@ export default function Settings() {
             </label>
             <input
               type="text"
-              value={settings.invoice.home_state_code}
+              value={settings.invoice?.home_state_code || ''}
               readOnly
               className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500"
             />
@@ -651,10 +651,10 @@ export default function Settings() {
               Registered Address *
             </label>
             <textarea
-              value={settings.invoice.registered_address}
+              value={settings.invoice?.registered_address || ''}
               onChange={(e) => setSettings({
                 ...settings,
-                invoice: { ...settings.invoice, registered_address: e.target.value }
+                invoice: { ...settings.invoice || {}, registered_address: e.target.value }
               })}
               rows={3}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -667,10 +667,10 @@ export default function Settings() {
             </label>
             <input
               type="text"
-              value={settings.invoice.contact_person}
+              value={settings.invoice?.contact_person || ''}
               onChange={(e) => setSettings({
                 ...settings,
-                invoice: { ...settings.invoice, contact_person: e.target.value }
+                invoice: { ...settings.invoice || {}, contact_person: e.target.value }
               })}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
@@ -682,10 +682,10 @@ export default function Settings() {
             </label>
             <input
               type="text"
-              value={settings.invoice.place_of_supply}
+              value={settings.invoice?.place_of_supply || ''}
               onChange={(e) => setSettings({
                 ...settings,
-                invoice: { ...settings.invoice, place_of_supply: e.target.value }
+                invoice: { ...settings.invoice || {}, place_of_supply: e.target.value }
               })}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
@@ -703,10 +703,10 @@ export default function Settings() {
             </label>
             <input
               type="text"
-              value={settings.invoice.invoice_prefix}
+              value={settings.invoice?.invoice_prefix || ''}
               onChange={(e) => setSettings({
                 ...settings,
-                invoice: { ...settings.invoice, invoice_prefix: e.target.value.toUpperCase() }
+                invoice: { ...settings.invoice || {}, invoice_prefix: e.target.value.toUpperCase() }
               })}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
@@ -718,10 +718,10 @@ export default function Settings() {
             </label>
             <input
               type="number"
-              value={settings.invoice.invoice_start_number}
+              value={settings.invoice?.invoice_start_number || ''}
               onChange={(e) => setSettings({
                 ...settings,
-                invoice: { ...settings.invoice, invoice_start_number: parseInt(e.target.value) }
+                invoice: { ...settings.invoice || {}, invoice_start_number: parseInt(e.target.value) }
               })}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
@@ -733,10 +733,10 @@ export default function Settings() {
             </label>
             <input
               type="text"
-              value={settings.invoice.hsn_code}
+              value={settings.invoice?.hsn_code || ''}
               onChange={(e) => setSettings({
                 ...settings,
-                invoice: { ...settings.invoice, hsn_code: e.target.value }
+                invoice: { ...settings.invoice || {}, hsn_code: e.target.value }
               })}
               placeholder="67029900"
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -755,10 +755,10 @@ export default function Settings() {
             </label>
             <input
               type="text"
-              value={settings.invoice.bank_name}
+              value={settings.invoice?.bank_name || ''}
               onChange={(e) => setSettings({
                 ...settings,
-                invoice: { ...settings.invoice, bank_name: e.target.value }
+                invoice: { ...settings.invoice || {}, bank_name: e.target.value }
               })}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
@@ -770,10 +770,10 @@ export default function Settings() {
             </label>
             <input
               type="text"
-              value={settings.invoice.bank_account}
+              value={settings.invoice?.bank_account || ''}
               onChange={(e) => setSettings({
                 ...settings,
-                invoice: { ...settings.invoice, bank_account: e.target.value }
+                invoice: { ...settings.invoice || {}, bank_account: e.target.value }
               })}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
@@ -785,10 +785,10 @@ export default function Settings() {
             </label>
             <input
               type="text"
-              value={settings.invoice.bank_ifsc}
+              value={settings.invoice?.bank_ifsc || ''}
               onChange={(e) => setSettings({
                 ...settings,
-                invoice: { ...settings.invoice, bank_ifsc: e.target.value.toUpperCase() }
+                invoice: { ...settings.invoice || {}, bank_ifsc: e.target.value.toUpperCase() }
               })}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
@@ -800,10 +800,10 @@ export default function Settings() {
             </label>
             <input
               type="text"
-              value={settings.invoice.bank_branch}
+              value={settings.invoice?.bank_branch || ''}
               onChange={(e) => setSettings({
                 ...settings,
-                invoice: { ...settings.invoice, bank_branch: e.target.value }
+                invoice: { ...settings.invoice || {}, bank_branch: e.target.value }
               })}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
@@ -820,10 +820,10 @@ export default function Settings() {
               Terms & Conditions
             </label>
             <textarea
-              value={settings.invoice.terms_conditions}
+              value={settings.invoice?.terms_conditions || ''}
               onChange={(e) => setSettings({
                 ...settings,
-                invoice: { ...settings.invoice, terms_conditions: e.target.value }
+                invoice: { ...settings.invoice || {}, terms_conditions: e.target.value }
               })}
               rows={3}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -836,10 +836,10 @@ export default function Settings() {
             </label>
             <input
               type="text"
-              value={settings.invoice.footer_note}
+              value={settings.invoice?.footer_note || ''}
               onChange={(e) => setSettings({
                 ...settings,
-                invoice: { ...settings.invoice, footer_note: e.target.value }
+                invoice: { ...settings.invoice || {}, footer_note: e.target.value }
               })}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
