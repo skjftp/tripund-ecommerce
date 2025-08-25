@@ -46,7 +46,12 @@ export default function CheckoutPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [settings, setSettings] = useState<PublicSettings | null>(null);
   const [promoCode, setPromoCode] = useState('');
-  const [appliedPromo, setAppliedPromo] = useState<{code: string; discount: number; type: 'percentage' | 'fixed'} | null>(null);
+  const [appliedPromo, setAppliedPromo] = useState<{
+    code: string; 
+    discount: number; 
+    type: 'percentage' | 'fixed';
+    originalRate?: number;
+  } | null>(null);
   const [promoLoading, setPromoLoading] = useState(false);
 
   // Calculate values using dynamic settings
@@ -127,10 +132,16 @@ export default function CheckoutPage() {
         user_id: user?.id || null,
       });
 
-      const { valid, discount, type } = response.data;
+      const { valid, discount, type, promotion } = response.data;
       if (valid) {
-        setAppliedPromo({ code: codeToApply, discount, type });
-        toast.success(`Promo code applied! ${type === 'percentage' ? `${discount}% off` : `₹${discount} off`}`);
+        const originalRate = type === 'percentage' ? promotion.discount : discount;
+        setAppliedPromo({ 
+          code: codeToApply, 
+          discount, 
+          type,
+          originalRate 
+        });
+        toast.success(`Promo code applied! ${type === 'percentage' ? `${originalRate}% off` : `₹${discount} off`}`);
         
         // Mark promo as used for non-authenticated users
         if (!isAuthenticated) {
@@ -579,7 +590,7 @@ export default function CheckoutPage() {
                       <div className="flex items-center">
                         <span className="text-green-600 font-medium">{appliedPromo.code}</span>
                         <span className="text-green-600 text-sm ml-2">
-                          ({appliedPromo.type === 'percentage' ? `${appliedPromo.discount}% off` : `₹${appliedPromo.discount} off`})
+                          ({appliedPromo.type === 'percentage' ? `${appliedPromo.originalRate}% off` : `₹${appliedPromo.discount} off`})
                         </span>
                       </div>
                       <button
