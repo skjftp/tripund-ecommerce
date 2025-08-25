@@ -94,12 +94,12 @@ export default function Header() {
             </div>
 
             {/* Desktop Navigation - Center */}
-            <nav className="hidden lg:flex items-center space-x-8 flex-1 justify-center">
+            <nav className="hidden lg:flex items-center space-x-6 flex-1 justify-center">
               {categories.slice(0, 6).map((category) => (
                 <div key={category.id} className="relative group">
                   <Link
                     to={`/products?category=${category.slug}`}
-                    className="text-gray-700 hover:text-[#96865d] font-medium text-sm tracking-wider uppercase transition-colors duration-200"
+                    className="text-gray-700 hover:text-[#96865d] font-medium text-xs tracking-wider uppercase transition-colors duration-200 whitespace-nowrap"
                   >
                     {category.name}
                   </Link>
@@ -137,28 +137,17 @@ export default function Header() {
                 </div>
               ))}
               
-              <Link to="/about" className="text-gray-700 hover:text-[#96865d] font-medium text-sm tracking-wider uppercase transition-colors duration-200">
+              <Link to="/about" className="text-gray-700 hover:text-[#96865d] font-medium text-xs tracking-wider uppercase transition-colors duration-200 whitespace-nowrap">
                 About
               </Link>
             </nav>
 
             {/* Right Icons */}
             <div className="flex items-center space-x-4 flex-1 lg:flex-none justify-end">
-              {/* Search Bar for Desktop */}
-              <div className="hidden lg:block relative">
-                <input
-                  type="text"
-                  placeholder="Search..."
-                  className="w-64 px-4 py-2 border border-gray-300 rounded-full text-sm focus:outline-none focus:border-[#96865d] transition-colors"
-                  onFocus={() => navigate('/search')}
-                />
-                <Search className="absolute right-3 top-2.5 text-gray-400" size={18} />
-              </div>
-
-              {/* Mobile Search Icon */}
+              {/* Search Icon for both Desktop and Mobile */}
               <button 
                 onClick={() => navigate('/search')}
-                className="lg:hidden text-gray-700 hover:text-[#96865d] transition-colors"
+                className="text-gray-700 hover:text-[#96865d] transition-colors"
                 aria-label="Search"
               >
                 <Search size={22} />

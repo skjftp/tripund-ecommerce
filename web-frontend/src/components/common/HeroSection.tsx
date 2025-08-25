@@ -100,7 +100,7 @@ export default function HeroSection() {
   };
 
   return (
-    <div className="relative w-full h-[600px] lg:h-[700px] overflow-hidden bg-gray-100">
+    <div className="relative w-full h-[420px] lg:h-[490px] overflow-hidden bg-gray-100">
       {/* Slides */}
       {heroSlides.map((slide, index) => (
         <div
@@ -127,13 +127,13 @@ export default function HeroSection() {
 
           {/* Content */}
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="text-center text-white px-4 max-w-4xl mx-auto">
-              <h1 className={`text-4xl md:text-5xl lg:text-6xl font-light mb-4 tracking-wider transform transition-all duration-700 ${
+            <div className="text-center text-white px-4 max-w-3xl mx-auto">
+              <h1 className={`text-3xl md:text-4xl lg:text-5xl font-light mb-3 tracking-wider transform transition-all duration-700 ${
                 index === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'
               }`}>
                 {slide.title}
               </h1>
-              <p className={`text-lg md:text-xl mb-8 font-light transform transition-all duration-700 delay-100 ${
+              <p className={`text-base md:text-lg mb-6 font-light transform transition-all duration-700 delay-100 ${
                 index === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'
               }`}>
                 {slide.subtitle}

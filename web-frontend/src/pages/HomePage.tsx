@@ -6,6 +6,7 @@ import { RootState, AppDispatch } from '../store';
 import { fetchProducts } from '../store/slices/productSlice';
 import ProductGrid from '../components/product/ProductGrid';
 import HeroSection from '../components/common/HeroSection';
+import CategoryIcons from '../components/common/CategoryIcons';
 
 export default function HomePage() {
   const dispatch = useDispatch<AppDispatch>();
@@ -64,6 +65,9 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-white">
+      {/* Category Icons - Above Hero */}
+      <CategoryIcons />
+      
       {/* Hero Section */}
       <HeroSection />
 
