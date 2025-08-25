@@ -91,7 +91,7 @@ export default function HomePage() {
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-light text-gray-900 mb-4">Shop by Category</h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              Discover our curated collections of handcrafted Indian art and home décor
+              Discover our curated collections of authentic handcrafted Indian art and home décor
             </p>
           </div>
           
