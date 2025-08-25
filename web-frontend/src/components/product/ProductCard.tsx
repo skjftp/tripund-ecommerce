@@ -11,9 +11,10 @@ import toast from 'react-hot-toast';
 
 interface ProductCardProps {
   product: Product;
+  viewMode?: 'grid' | 'list';
 }
 
-export default function ProductCard({ product }: ProductCardProps) {
+export default function ProductCard({ product, viewMode = 'grid' }: ProductCardProps) {
   const dispatch = useDispatch();
   const wishlistItems = useSelector((state: RootState) => state.wishlist.items);
   const isInWishlist = Array.isArray(wishlistItems) ? wishlistItems.some((item) => item.id === product.id) : false;
@@ -44,6 +45,73 @@ export default function ProductCard({ product }: ProductCardProps) {
   const displayPrice = salePrice || price;
   const isInStock = product.stock_status === 'in_stock' && product.stock_quantity > 0;
 
+  // List view layout
+  if (viewMode === 'list') {
+    return (
+      <Link to={`/products/${product.id}`} className="group block">
+        <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow flex">
+          <div className="relative w-48 h-48 bg-gray-100 flex-shrink-0">
+            <ImageCarousel 
+              images={product.images || []} 
+              productName={product.name}
+              className="absolute inset-0 w-full h-full"
+            />
+            {discountPercentage > 0 && (
+              <div className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 text-sm rounded z-10">
+                -{discountPercentage}%
+              </div>
+            )}
+          </div>
+          
+          <div className="flex-1 p-4 flex flex-col justify-between">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-800 mb-1">
+                {toProperCase(product.name || '')}
+              </h3>
+              <p className="text-sm text-gray-500 mb-2 line-clamp-2">
+                {product.short_description || product.description}
+              </p>
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-xl font-bold text-primary-600">
+                  ₹{displayPrice ? displayPrice.toLocaleString() : '0'}
+                </span>
+                {salePrice && price > 0 && (
+                  <span className="ml-2 text-sm text-gray-500 line-through">
+                    ₹{price.toLocaleString()}
+                  </span>
+                )}
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleWishlistToggle}
+                  className="bg-white p-2 rounded-full shadow-md hover:shadow-lg transition-shadow"
+                >
+                  <Heart
+                    size={20}
+                    className={isInWishlist ? 'fill-red-500 text-red-500' : 'text-gray-600'}
+                  />
+                </button>
+                <button
+                  onClick={handleAddToCart}
+                  disabled={!isInStock}
+                  className="bg-primary-600 text-white py-2 px-4 rounded-md hover:bg-primary-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
+                >
+                  <ShoppingCart size={18} />
+                  <span>Add to Cart</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Link>
+    );
+  }
+
+  // Grid view layout (existing code)
   return (
     <Link to={`/products/${product.id}`} className="group h-full">
       <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow h-full flex flex-col">

@@ -21,7 +21,7 @@ const heroSlides: HeroSlide[] = [
     title: 'Divine Collections',
     subtitle: 'Bring spirituality home with our handcrafted idols',
     buttonText: 'Shop Now',
-    buttonLink: '/products?category=divine-collections',
+    buttonLink: '/category/divine-collections',
     overlayColor: 'from-black/50 to-black/20'
   },
   {
@@ -31,7 +31,7 @@ const heroSlides: HeroSlide[] = [
     title: 'Festival Décor',
     subtitle: 'Transform your space with traditional torans & decorations',
     buttonText: 'Explore',
-    buttonLink: '/products?category=festivals',
+    buttonLink: '/category/festivals',
     overlayColor: 'from-black/40 to-transparent'
   },
   {
@@ -41,7 +41,7 @@ const heroSlides: HeroSlide[] = [
     title: 'Wall Art & Décor',
     subtitle: 'Elevate your walls with artistic masterpieces',
     buttonText: 'View Collection',
-    buttonLink: '/products?category=wall-decor',
+    buttonLink: '/category/wall-decor',
     overlayColor: 'from-black/50 to-black/20'
   },
   {
@@ -51,7 +51,7 @@ const heroSlides: HeroSlide[] = [
     title: 'Home Accents',
     subtitle: 'Curated collection of premium home accessories',
     buttonText: 'Discover',
-    buttonLink: '/products?category=home-accent',
+    buttonLink: '/category/home-accent',
     overlayColor: 'from-black/40 to-transparent'
   }
 ];

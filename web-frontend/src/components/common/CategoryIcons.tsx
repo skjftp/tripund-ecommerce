@@ -56,7 +56,7 @@ export default function CategoryIcons() {
           {categoryIcons.map((category) => (
             <Link
               key={category.id}
-              to={`/products?category=${category.slug}`}
+              to={`/category/${category.slug}`}
               className="flex flex-col items-center justify-center min-w-[70px] p-2 rounded-lg hover:bg-gray-50 transition-colors"
             >
               <div className="w-12 h-12 bg-[#f8f5f0] rounded-full flex items-center justify-center text-[#96865d] mb-1">
@@ -74,7 +74,7 @@ export default function CategoryIcons() {
           {categoryIcons.map((category) => (
             <Link
               key={category.id}
-              to={`/products?category=${category.slug}`}
+              to={`/category/${category.slug}`}
               className="flex flex-col items-center justify-center p-2 rounded-lg hover:bg-gray-50 transition-all duration-200 group"
             >
               <div className="w-14 h-14 bg-[#f8f5f0] rounded-full flex items-center justify-center text-[#96865d] mb-2 group-hover:bg-[#96865d] group-hover:text-white transition-all duration-200">

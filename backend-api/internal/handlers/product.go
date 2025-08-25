@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"cloud.google.com/go/firestore"
@@ -22,56 +23,44 @@ func NewProductHandler(db *database.Firebase) *ProductHandler {
 
 func (h *ProductHandler) GetProducts(c *gin.Context) {
 	products := make([]models.Product, 0)
-	query := h.db.Client.Collection("products").Query
-
-	if category := c.Query("category"); category != "" {
-		query = query.Where("categories", "array-contains", category)
-	}
-
-	if featured := c.Query("featured"); featured == "true" {
-		query = query.Where("featured", "==", true)
-	}
-
-	status := c.Query("status")
-	if status == "all" {
-		// Don't filter by status - get all products
-		fmt.Printf("Fetching all products without status filter\n")
-	} else if status != "" {
-		// Filter by specific status
-		query = query.Where("status", "==", status)
-		fmt.Printf("Fetching products with status: %s\n", status)
-	} else {
-		// Default to active status only
-		query = query.Where("status", "==", "active")
-		fmt.Printf("Fetching products with default status: active\n")
-	}
-
-	limit := 20
-	if l := c.Query("limit"); l != "" {
-		if parsedLimit, err := strconv.Atoi(l); err == nil {
-			limit = parsedLimit
-		}
-	}
-
-	docs, err := query.Limit(limit).Documents(h.db.Context).GetAll()
+	
+	// Start with all products query
+	allDocs, err := h.db.Client.Collection("products").Documents(h.db.Context).GetAll()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch products"})
 		return
 	}
 
-	// Debug: log number of documents found
-	fmt.Printf("Found %d documents in Firestore\n", len(docs))
-
-	for _, doc := range docs {
+	// Parse and convert products
+	for _, doc := range allDocs {
 		var product models.Product
 		if err := doc.DataTo(&product); err != nil {
-			// Log the error to understand what's failing
 			fmt.Printf("Error parsing product %s: %v\n", doc.Ref.ID, err)
 			continue
 		}
 		product.ID = doc.Ref.ID
+		
+		// Apply filters
+		if !h.applyFilters(&product, c) {
+			continue
+		}
+		
 		products = append(products, product)
 	}
+
+	// Apply limit
+	limit := 100
+	if l := c.Query("limit"); l != "" {
+		if parsedLimit, err := strconv.Atoi(l); err == nil {
+			limit = parsedLimit
+		}
+	}
+	
+	if len(products) > limit {
+		products = products[:limit]
+	}
+
+	fmt.Printf("Returning %d products after filtering\n", len(products))
 
 	c.JSON(http.StatusOK, gin.H{
 		"products": products,
@@ -192,4 +181,87 @@ func (h *ProductHandler) SearchProducts(c *gin.Context) {
 		"count":    len(products),
 		"query":    searchQuery,
 	})
+}
+
+// applyFilters checks if a product matches all the filters
+func (h *ProductHandler) applyFilters(product *models.Product, c *gin.Context) bool {
+	// Category filter
+	if category := c.Query("category"); category != "" {
+		found := false
+		for _, cat := range product.Categories {
+			if cat == category {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+
+	// Featured filter
+	if featured := c.Query("featured"); featured == "true" {
+		if !product.Featured {
+			return false
+		}
+	}
+
+	// Status filter
+	status := c.Query("status")
+	if status != "" && status != "all" {
+		if product.Status != status {
+			return false
+		}
+	} else if status == "" {
+		// Default to active if no status specified
+		if product.Status != "active" {
+			return false
+		}
+	}
+
+	// Price range filter
+	if priceRange := c.Query("price"); priceRange != "" {
+		prices := strings.Split(priceRange, "-")
+		if len(prices) == 2 {
+			minPrice, _ := strconv.ParseFloat(prices[0], 64)
+			maxPrice := float64(999999)
+			if prices[1] != "" {
+				maxPrice, _ = strconv.ParseFloat(prices[1], 64)
+			}
+			if product.Price < minPrice || product.Price > maxPrice {
+				return false
+			}
+		}
+	}
+
+	// Attribute filters (material, type, color, etc.)
+	for key, values := range c.Request.URL.Query() {
+		// Skip known non-attribute parameters
+		if key == "category" || key == "featured" || key == "status" || 
+		   key == "price" || key == "limit" || key == "sort" || key == "view" {
+			continue
+		}
+		
+		// Check if product has this attribute
+		foundAttribute := false
+		for _, attr := range product.Attributes {
+			if strings.ToLower(attr.Name) == key {
+				// Check if the attribute value matches any of the filter values
+				filterValues := strings.Split(values[0], ",")
+				for _, filterValue := range filterValues {
+					if strings.ToLower(attr.Value) == strings.ToLower(filterValue) {
+						foundAttribute = true
+						break
+					}
+				}
+				break
+			}
+		}
+		
+		if !foundAttribute {
+			return false
+		}
+	}
+
+	return true
 }

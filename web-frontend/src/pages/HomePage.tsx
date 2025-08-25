@@ -85,7 +85,7 @@ export default function HomePage() {
             {categoryShowcase.map((category) => (
               <Link
                 key={category.id}
-                to={`/products?category=${category.slug}`}
+                to={`/category/${category.slug}`}
                 className="group relative overflow-hidden bg-white rounded-lg shadow-sm hover:shadow-xl transition-all duration-300"
                 onMouseEnter={() => setHoveredCategory(category.id)}
                 onMouseLeave={() => setHoveredCategory(null)}

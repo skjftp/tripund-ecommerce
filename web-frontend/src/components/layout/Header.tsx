@@ -98,7 +98,7 @@ export default function Header() {
               {categories.slice(0, 6).map((category) => (
                 <div key={category.id} className="relative group">
                   <Link
-                    to={`/products?category=${category.slug}`}
+                    to={`/category/${category.slug}`}
                     className="text-gray-700 hover:text-[#96865d] font-medium text-xs tracking-wider uppercase transition-colors duration-200 whitespace-nowrap"
                   >
                     {category.name}
@@ -124,7 +124,7 @@ export default function Header() {
                           </div>
                           <div className="mt-6 pt-4 border-t border-gray-200">
                             <Link
-                              to={`/products?category=${category.slug}`}
+                              to={`/category/${category.slug}`}
                               className="text-sm font-medium text-[#96865d] hover:text-[#f37a1f] transition-colors"
                             >
                               View All {category.name} →
