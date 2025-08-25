@@ -7,6 +7,7 @@ export interface Product {
   short_description: string;
   price: number;
   sale_price?: number | null;
+  discount_percentage?: number;
   manage_stock: boolean;
   stock_quantity: number;
   stock_status: string;
