@@ -21,37 +21,19 @@ export default function HomePage() {
     dispatch(fetchCategories());
   }, [dispatch]);
 
-  const { categories, loading: categoriesLoading, error: categoriesError } = useSelector((state: RootState) => state.categories);
-
-  // Debug logging
-  console.log('Categories state:', { categories, categoriesLoading, categoriesError });
-  console.log('Categories length:', categories.length);
-  console.log('Categories data:', categories);
-  
-  // Debug category images specifically
-  categories.forEach((cat, index) => {
-    console.log(`Category ${index}: ${cat.name} - Image: ${cat.image}`);
-  });
+  const { categories } = useSelector((state: RootState) => state.categories);
 
   // Memoize categoryShowcase to ensure proper re-rendering when categories change
   const categoryShowcase = useMemo(() => {
-    console.log('Recalculating categoryShowcase with categories.length:', categories.length);
-    
     if (categories.length > 0) {
-      return categories.slice(0, 6).map((category, index) => {
-        const showcase = {
-          id: category.id,
-          name: category.name,
-          image: category.image || `https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&h=600&fit=crop`,
-          description: category.description || `Discover beautiful ${category.name.toLowerCase()} products`,
-          slug: category.slug
-        };
-        console.log(`Showcase ${index}: ${showcase.name} - Using image: ${showcase.image}`);
-        return showcase;
-      });
+      return categories.slice(0, 6).map((category) => ({
+        id: category.id,
+        name: category.name,
+        image: category.image || `https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&h=600&fit=crop`,
+        description: category.description || `Discover beautiful ${category.name.toLowerCase()} products`,
+        slug: category.slug
+      }));
     }
-    
-    console.log('Using fallback categories');
     return [
         {
           id: 'divine-collections',
