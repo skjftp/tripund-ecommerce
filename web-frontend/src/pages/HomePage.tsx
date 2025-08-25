@@ -206,55 +206,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Story Section - Nestasia Style */}
-      <section className="py-20 bg-gradient-to-br from-[#f8f5f0] to-[#f0ebe4]">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div>
-              <h2 className="text-3xl md:text-4xl font-light text-gray-900 mb-6">
-                The TRIPUND Story
-              </h2>
-              <p className="text-gray-700 leading-relaxed mb-6">
-                We bridge the gap between traditional Indian artisans and modern homes. 
-                Each piece in our collection tells a story of heritage, skill, and passion 
-                passed down through generations.
-              </p>
-              <p className="text-gray-700 leading-relaxed mb-8">
-                From the intricate Madhubani paintings of Bihar to the divine brass idols 
-                of Tamil Nadu, we bring you authentic handcrafted treasures that transform 
-                your living spaces into galleries of cultural art.
-              </p>
-              <div className="grid grid-cols-3 gap-8">
-                <div>
-                  <div className="text-3xl font-light text-[#96865d] mb-2">500+</div>
-                  <div className="text-sm text-gray-600">Artisan Partners</div>
-                </div>
-                <div>
-                  <div className="text-3xl font-light text-[#96865d] mb-2">15</div>
-                  <div className="text-sm text-gray-600">Indian States</div>
-                </div>
-                <div>
-                  <div className="text-3xl font-light text-[#96865d] mb-2">100%</div>
-                  <div className="text-sm text-gray-600">Handcrafted</div>
-                </div>
-              </div>
-            </div>
-            <div className="relative">
-              <img
-                src="https://images.unsplash.com/photo-1604709265542-3402eabb8aa6?w=600&h=700&fit=crop"
-                alt="Indian Craftsmanship"
-                className="rounded-lg shadow-xl"
-              />
-              <div className="absolute -bottom-6 -left-6 bg-white p-6 rounded-lg shadow-xl max-w-xs">
-                <p className="text-sm italic text-gray-600">
-                  "Supporting 500+ artisan families across India, preserving traditional crafts for future generations"
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Newsletter Section - Nestasia Style */}
       <section className="py-16 bg-gray-900">
         <div className="max-w-4xl mx-auto px-4 text-center">
