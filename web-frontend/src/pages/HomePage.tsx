@@ -125,7 +125,7 @@ export default function HomePage() {
             {featuredProducts.slice(0, 8).map((product) => (
               <Link
                 key={product.id}
-                to={`/product/${product.id}`}
+                to={`/products/${product.id}`}
                 className="group"
               >
                 <div className="relative overflow-hidden bg-gray-100 rounded-lg">
