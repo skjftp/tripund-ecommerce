@@ -462,6 +462,17 @@ export default function CategoryPage() {
   const filters = category ? categoryFilters[category] || [] : [];
   let info = category ? categoryInfo[category] : null;
   
+  // Get actual category data from API for image
+  const actualCategory = categories.find(cat => cat.slug === category);
+  
+  // Use actual category image if available, fallback to hardcoded banner
+  if (info && actualCategory && actualCategory.image) {
+    info = {
+      ...info,
+      banner: actualCategory.image
+    };
+  }
+  
   // Get subcategory info if applicable
   let subcategoryInfo = null;
   if (subcategory && categories.length > 0) {
