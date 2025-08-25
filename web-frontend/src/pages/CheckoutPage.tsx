@@ -56,8 +56,7 @@ export default function CheckoutPage() {
 
   // Calculate values using dynamic settings
   const shipping = settings ? calculateShipping(total, settings) : 0;
-  const promoDiscount = appliedPromo ? 
-    (appliedPromo.type === 'percentage' ? Math.round((total * appliedPromo.discount) / 100) : appliedPromo.discount) : 0;
+  const promoDiscount = appliedPromo ? appliedPromo.discount : 0;
   const discountedTotal = total - promoDiscount;
   const tax = settings ? calculateTax(discountedTotal, settings) : 0;
   const grandTotal = discountedTotal + shipping + tax;
