@@ -47,14 +47,28 @@ export default function Products() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
-  const fetchProducts = async () => {
+  const fetchProducts = async (category?: string, status?: string) => {
     try {
       setLoading(true);
-      // Fetch all products regardless of status (admin should see all)
-      const response = await api.get('/products?limit=50&status=all');
+      // Build query parameters
+      let queryParams = 'limit=50';
+      
+      // Add status filter (default to 'all' for admin)
+      if (status && status !== 'all') {
+        queryParams += `&status=${status}`;
+      } else if (!status || status === 'all') {
+        queryParams += '&status=all';
+      }
+      
+      // Add category filter
+      if (category && category !== 'all') {
+        queryParams += `&category=${category}`;
+      }
+      
+      const response = await api.get(`/products?${queryParams}`);
       const fetchedProducts = response.data.products || [];
       setProducts(fetchedProducts);
-      console.log(`Loaded ${fetchedProducts.length} products`);
+      console.log(`Loaded ${fetchedProducts.length} products with filters - Category: ${category || 'all'}, Status: ${status || 'all'}`);
     } catch (error) {
       console.error('Error fetching products:', error);
       toast.error('Failed to load products');
@@ -64,16 +78,22 @@ export default function Products() {
     }
   };
 
+  // Fetch products when component mounts
   useEffect(() => {
-    fetchProducts();
+    fetchProducts(selectedCategory, selectedStatus);
   }, []);
 
+  // Fetch products when filters change
+  useEffect(() => {
+    fetchProducts(selectedCategory, selectedStatus);
+  }, [selectedCategory, selectedStatus]);
+
+  // Client-side filtering only for search (category and status are server-side)
   const filteredProducts = products.filter((product) => {
+    if (!searchQuery) return true;
     const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          product.sku.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory === 'all' || product.categories.includes(selectedCategory);
-    const matchesStatus = selectedStatus === 'all' || product.status === selectedStatus;
-    return matchesSearch && matchesCategory && matchesStatus;
+    return matchesSearch;
   });
 
   const handleDelete = async (id: string) => {
@@ -124,7 +144,7 @@ export default function Products() {
         toast.success('Product created successfully');
       }
       handleCloseModal();
-      fetchProducts(); // Refresh the list to get the latest data
+      fetchProducts(selectedCategory, selectedStatus); // Refresh the list to get the latest data
     } catch (error: any) {
       console.error('Error saving product:', error);
       if (error.response?.status === 401) {
@@ -163,7 +183,7 @@ export default function Products() {
         </div>
         <div className="flex items-center space-x-3">
           <button 
-            onClick={fetchProducts}
+            onClick={() => fetchProducts(selectedCategory, selectedStatus)}
             disabled={loading}
             className="flex items-center space-x-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
           >

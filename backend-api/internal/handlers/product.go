@@ -32,11 +32,18 @@ func (h *ProductHandler) GetProducts(c *gin.Context) {
 		query = query.Where("featured", "==", true)
 	}
 
-	if status := c.Query("status"); status != "" && status != "all" {
+	status := c.Query("status")
+	if status == "all" {
+		// Don't filter by status - get all products
+		fmt.Printf("Fetching all products without status filter\n")
+	} else if status != "" {
+		// Filter by specific status
 		query = query.Where("status", "==", status)
-	} else if status != "all" {
-		// Default to active status only if not explicitly requesting all
+		fmt.Printf("Fetching products with status: %s\n", status)
+	} else {
+		// Default to active status only
 		query = query.Where("status", "==", "active")
+		fmt.Printf("Fetching products with default status: active\n")
 	}
 
 	limit := 20
