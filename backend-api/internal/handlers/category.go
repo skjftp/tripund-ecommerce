@@ -53,6 +53,9 @@ func (h *CategoryHandler) GetCategories(c *gin.Context) {
 				if image, ok := data["image"].(string); ok {
 					category.Image = image
 				}
+				if landscapeImage, ok := data["landscape_image"].(string); ok {
+					category.LandscapeImage = landscapeImage
+				}
 				if order, ok := data["order"].(int64); ok {
 					category.Order = int(order)
 				}
@@ -155,6 +158,9 @@ func (h *CategoryHandler) GetCategory(c *gin.Context) {
 	}
 	if image, ok := data["image"].(string); ok {
 		category.Image = image
+	}
+	if landscapeImage, ok := data["landscape_image"].(string); ok {
+		category.LandscapeImage = landscapeImage
 	}
 	if order, ok := data["order"].(int64); ok {
 		category.Order = int(order)

@@ -16,6 +16,7 @@ interface Category {
   slug: string;
   description: string;
   image?: string;
+  landscape_image?: string;
   children: SubCategory[];
   order: number;
 }

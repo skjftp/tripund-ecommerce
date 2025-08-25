@@ -14,6 +14,7 @@ interface Category {
   slug: string;
   description: string;
   image?: string;
+  landscape_image?: string;
   children?: SubCategory[];
   order?: number;
   created_at?: string;
@@ -39,6 +40,7 @@ export default function CategoryForm({
     slug: '',
     description: '',
     image: '',
+    landscape_image: '',
     children: [],
     order: 0,
   });
@@ -46,12 +48,14 @@ export default function CategoryForm({
   const [subcategories, setSubcategories] = useState<string[]>([]);
   const [newSubcategory, setNewSubcategory] = useState('');
   const [categoryImages, setCategoryImages] = useState<string[]>([]);
+  const [landscapeImages, setLandscapeImages] = useState<string[]>([]);
 
   useEffect(() => {
     if (category) {
       setFormData(category);
       setSubcategories(category.children?.map(c => c.name) || []);
       setCategoryImages(category.image ? [category.image] : []);
+      setLandscapeImages(category.landscape_image ? [category.landscape_image] : []);
     } else {
       setFormData({
         sku: '',
@@ -59,11 +63,13 @@ export default function CategoryForm({
         slug: '',
         description: '',
         image: '',
+        landscape_image: '',
         children: [],
         order: 0,
       });
       setSubcategories([]);
       setCategoryImages([]);
+      setLandscapeImages([]);
     }
   }, [category]);
 
@@ -72,6 +78,7 @@ export default function CategoryForm({
     const categoryData = {
       ...formData,
       image: categoryImages[0] || '',
+      landscape_image: landscapeImages[0] || '',
       children: subcategories.map(name => ({ name, product_count: 0 })),
     };
     onSubmit(categoryData);
@@ -80,6 +87,11 @@ export default function CategoryForm({
   const handleImagesChange = (images: string[]) => {
     setCategoryImages(images);
     setFormData({ ...formData, image: images[0] || '' });
+  };
+
+  const handleLandscapeImagesChange = (images: string[]) => {
+    setLandscapeImages(images);
+    setFormData({ ...formData, landscape_image: images[0] || '' });
   };
 
   const handleAddSubcategory = () => {
@@ -183,8 +195,20 @@ export default function CategoryForm({
               images={categoryImages}
               onImagesChange={handleImagesChange}
               maxImages={1}
-              label="Category Image"
+              label="Category Image (Square - for tiles)"
             />
+          </div>
+
+          <div className="mb-4">
+            <ImageUpload
+              images={landscapeImages}
+              onImagesChange={handleLandscapeImagesChange}
+              maxImages={1}
+              label="Landscape Image (Wide - for carousel & banners)"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Optional: Used in hero carousel and category page headers on desktop. If not provided, square image will be used.
+            </p>
           </div>
 
           <div className="mb-4">

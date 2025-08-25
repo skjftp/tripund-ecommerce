@@ -83,7 +83,7 @@ export default function HeroSection() {
         .filter(Boolean)
         .map((category, index) => ({
           id: category!.id,
-          image: category!.image || fallbackSlides[index].image,
+          image: category!.landscape_image || category!.image || fallbackSlides[index].image,
           mobileImage: category!.image || fallbackSlides[index].mobileImage,
           title: category!.name,
           subtitle: categorySubtitles[category!.slug] || category!.description,
@@ -148,20 +148,18 @@ export default function HeroSection() {
             index === currentSlide ? 'opacity-100 z-10' : 'opacity-0 z-0'
           }`}
         >
-          {/* Background Image Container */}
-          <div className="absolute inset-0 bg-gradient-to-br from-primary-100 to-primary-200">
-            <picture>
-              <source
-                media="(max-width: 768px)"
-                srcSet={slide.mobileImage || slide.image}
-              />
-              <img
-                src={slide.image}
-                alt={slide.title}
-                className="w-full h-full object-contain md:object-cover object-center mix-blend-multiply opacity-90"
-              />
-            </picture>
-          </div>
+          {/* Background Image */}
+          <picture>
+            <source
+              media="(max-width: 768px)"
+              srcSet={slide.mobileImage || slide.image}
+            />
+            <img
+              src={slide.image}
+              alt={slide.title}
+              className="w-full h-full object-cover object-center"
+            />
+          </picture>
 
           {/* Overlay Gradient */}
           <div className={`absolute inset-0 bg-gradient-to-r ${slide.overlayColor || 'from-black/50 to-transparent'}`} />

@@ -465,11 +465,11 @@ export default function CategoryPage() {
   // Get actual category data from API for image
   const actualCategory = categories.find(cat => cat.slug === category);
   
-  // Use actual category image if available, fallback to hardcoded banner
-  if (info && actualCategory && actualCategory.image) {
+  // Use actual category landscape image if available, fallback to square image, then hardcoded banner
+  if (info && actualCategory) {
     info = {
       ...info,
-      banner: actualCategory.image
+      banner: actualCategory.landscape_image || actualCategory.image || info.banner
     };
   }
   
@@ -575,15 +575,13 @@ export default function CategoryPage() {
       </div>
       
       {/* Category Banner */}
-      <div className="relative h-64 lg:h-80 overflow-hidden bg-gradient-to-br from-primary-50 to-primary-100">
-        <div className="absolute inset-0">
-          <img
-            src={info.banner}
-            alt={info.name}
-            className="w-full h-full object-contain lg:object-cover object-center mix-blend-multiply opacity-80"
-          />
-        </div>
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/40 to-black/30 flex items-center justify-center">
+      <div className="relative h-64 lg:h-80 overflow-hidden">
+        <img
+          src={info.banner}
+          alt={info.name}
+          className="w-full h-full object-cover object-center"
+        />
+        <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
           <div className="text-center text-white px-4">
             <h1 className="text-3xl lg:text-4xl font-light mb-2">{info.name}</h1>
             <p className="text-lg max-w-2xl mx-auto">{info.description}</p>
