@@ -34,10 +34,63 @@ func (h *CategoryHandler) GetCategories(c *gin.Context) {
 		if err == nil && len(docs) > 0 {
 			for _, doc := range docs {
 				var category models.Category
-				if err := doc.DataTo(&category); err == nil {
-					category.ID = doc.Ref.ID
-					categories = append(categories, category)
+				data := doc.Data()
+				
+				// Manually map fields to handle type inconsistencies
+				category.ID = doc.Ref.ID
+				if sku, ok := data["sku"].(string); ok {
+					category.SKU = sku
 				}
+				if name, ok := data["name"].(string); ok {
+					category.Name = name
+				}
+				if slug, ok := data["slug"].(string); ok {
+					category.Slug = slug
+				}
+				if description, ok := data["description"].(string); ok {
+					category.Description = description
+				}
+				if image, ok := data["image"].(string); ok {
+					category.Image = image
+				}
+				if order, ok := data["order"].(int64); ok {
+					category.Order = int(order)
+				}
+				
+				// Handle children subcategories
+				if children, ok := data["children"].([]interface{}); ok {
+					for _, child := range children {
+						if childMap, ok := child.(map[string]interface{}); ok {
+							subCat := models.SubCategory{}
+							if name, ok := childMap["name"].(string); ok {
+								subCat.Name = name
+							}
+							if count, ok := childMap["product_count"].(int64); ok {
+								subCat.ProductCount = int(count)
+							}
+							category.Children = append(category.Children, subCat)
+						}
+					}
+				}
+				
+				// Handle timestamps - can be either string or time.Time
+				if createdAt, ok := data["created_at"].(time.Time); ok {
+					category.CreatedAt = createdAt
+				} else if createdAtStr, ok := data["created_at"].(string); ok {
+					if t, err := time.Parse(time.RFC3339, createdAtStr); err == nil {
+						category.CreatedAt = t
+					}
+				}
+				
+				if updatedAt, ok := data["updated_at"].(time.Time); ok {
+					category.UpdatedAt = updatedAt
+				} else if updatedAtStr, ok := data["updated_at"].(string); ok {
+					if t, err := time.Parse(time.RFC3339, updatedAtStr); err == nil {
+						category.UpdatedAt = t
+					}
+				}
+				
+				categories = append(categories, category)
 			}
 			
 			c.JSON(http.StatusOK, gin.H{
@@ -84,11 +137,61 @@ func (h *CategoryHandler) GetCategory(c *gin.Context) {
 	}
 
 	var category models.Category
-	if err := doc.DataTo(&category); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to parse category data"})
-		return
-	}
+	data := doc.Data()
+	
+	// Manually map fields to handle type inconsistencies
 	category.ID = doc.Ref.ID
+	if sku, ok := data["sku"].(string); ok {
+		category.SKU = sku
+	}
+	if name, ok := data["name"].(string); ok {
+		category.Name = name
+	}
+	if slug, ok := data["slug"].(string); ok {
+		category.Slug = slug
+	}
+	if description, ok := data["description"].(string); ok {
+		category.Description = description
+	}
+	if image, ok := data["image"].(string); ok {
+		category.Image = image
+	}
+	if order, ok := data["order"].(int64); ok {
+		category.Order = int(order)
+	}
+	
+	// Handle children subcategories
+	if children, ok := data["children"].([]interface{}); ok {
+		for _, child := range children {
+			if childMap, ok := child.(map[string]interface{}); ok {
+				subCat := models.SubCategory{}
+				if name, ok := childMap["name"].(string); ok {
+					subCat.Name = name
+				}
+				if count, ok := childMap["product_count"].(int64); ok {
+					subCat.ProductCount = int(count)
+				}
+				category.Children = append(category.Children, subCat)
+			}
+		}
+	}
+	
+	// Handle timestamps - can be either string or time.Time
+	if createdAt, ok := data["created_at"].(time.Time); ok {
+		category.CreatedAt = createdAt
+	} else if createdAtStr, ok := data["created_at"].(string); ok {
+		if t, err := time.Parse(time.RFC3339, createdAtStr); err == nil {
+			category.CreatedAt = t
+		}
+	}
+	
+	if updatedAt, ok := data["updated_at"].(time.Time); ok {
+		category.UpdatedAt = updatedAt
+	} else if updatedAtStr, ok := data["updated_at"].(string); ok {
+		if t, err := time.Parse(time.RFC3339, updatedAtStr); err == nil {
+			category.UpdatedAt = t
+		}
+	}
 
 	c.JSON(http.StatusOK, category)
 }

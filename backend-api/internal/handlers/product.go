@@ -244,17 +244,24 @@ func (h *ProductHandler) applyFilters(product *models.Product, c *gin.Context) b
 		
 		// Check if product has this attribute
 		foundAttribute := false
-		for _, attr := range product.Attributes {
-			if strings.ToLower(attr.Name) == key {
-				// Check if the attribute value matches any of the filter values
-				filterValues := strings.Split(values[0], ",")
-				for _, filterValue := range filterValues {
-					if strings.ToLower(attr.Value) == strings.ToLower(filterValue) {
-						foundAttribute = true
+		if product.Attributes != nil {
+			for _, attr := range product.Attributes {
+				if attrName, ok := attr["name"].(string); ok {
+					if strings.ToLower(attrName) == key {
+						// Check if the attribute value matches any of the filter values
+						filterValues := strings.Split(values[0], ",")
+						if attrValue, ok := attr["value"]; ok {
+							attrValueStr := fmt.Sprintf("%v", attrValue)
+							for _, filterValue := range filterValues {
+								if strings.ToLower(attrValueStr) == strings.ToLower(filterValue) {
+									foundAttribute = true
+									break
+								}
+							}
+						}
 						break
 					}
 				}
-				break
 			}
 		}
 		

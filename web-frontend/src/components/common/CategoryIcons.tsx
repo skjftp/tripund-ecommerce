@@ -1,5 +1,9 @@
 import { Link } from 'react-router-dom';
 import { Home, Palette, Sparkles, Lightbulb, Gift, Package } from 'lucide-react';
+import { useSelector, useDispatch } from 'react-redux';
+import { useEffect } from 'react';
+import { RootState, AppDispatch } from '../../store';
+import { fetchCategories } from '../../store/slices/categoriesSlice';
 
 interface CategoryIcon {
   id: string;
@@ -8,46 +12,75 @@ interface CategoryIcon {
   slug: string;
 }
 
-const categoryIcons: CategoryIcon[] = [
-  {
-    id: 'divine-collections',
-    name: 'Divine',
-    icon: <Sparkles size={24} />,
-    slug: 'divine-collections'
-  },
-  {
-    id: 'wall-decor',
-    name: 'Wall Art',
-    icon: <Palette size={24} />,
-    slug: 'wall-decor'
-  },
-  {
-    id: 'festivals',
-    name: 'Festivals',
-    icon: <Home size={24} />,
-    slug: 'festivals'
-  },
-  {
-    id: 'lighting',
-    name: 'Lighting',
-    icon: <Lightbulb size={24} />,
-    slug: 'lighting'
-  },
-  {
-    id: 'home-accent',
-    name: 'Home',
-    icon: <Package size={24} />,
-    slug: 'home-accent'
-  },
-  {
-    id: 'gifting',
-    name: 'Gifts',
-    icon: <Gift size={24} />,
-    slug: 'gifting'
-  }
-];
+// Icon mapping for categories
+const getIconForCategory = (slug: string) => {
+  const iconMap: { [key: string]: React.ReactNode } = {
+    'divine-collections': <Sparkles size={24} />,
+    'wall-decor': <Palette size={24} />,
+    'festivals': <Home size={24} />,
+    'lighting': <Lightbulb size={24} />,
+    'home-accent': <Package size={24} />,
+    'gifting': <Gift size={24} />
+  };
+  return iconMap[slug] || <Package size={24} />;
+};
 
 export default function CategoryIcons() {
+  const dispatch = useDispatch<AppDispatch>();
+  const { categories } = useSelector((state: RootState) => state.categories);
+
+  useEffect(() => {
+    if (categories.length === 0) {
+      dispatch(fetchCategories());
+    }
+  }, [dispatch, categories.length]);
+
+  // Map categories from API with fallback to hardcoded data
+  const categoryIcons: CategoryIcon[] = categories.length > 0 
+    ? categories.slice(0, 6).map(category => ({
+        id: category.id,
+        name: category.name.length > 8 ? category.name.split(' ')[0] : category.name,
+        icon: getIconForCategory(category.slug),
+        slug: category.slug
+      }))
+    : [
+        {
+          id: 'divine-collections',
+          name: 'Divine',
+          icon: <Sparkles size={24} />,
+          slug: 'divine-collections'
+        },
+        {
+          id: 'wall-decor',
+          name: 'Wall Art',
+          icon: <Palette size={24} />,
+          slug: 'wall-decor'
+        },
+        {
+          id: 'festivals',
+          name: 'Festivals',
+          icon: <Home size={24} />,
+          slug: 'festivals'
+        },
+        {
+          id: 'lighting',
+          name: 'Lighting',
+          icon: <Lightbulb size={24} />,
+          slug: 'lighting'
+        },
+        {
+          id: 'home-accent',
+          name: 'Home',
+          icon: <Package size={24} />,
+          slug: 'home-accent'
+        },
+        {
+          id: 'gifting',
+          name: 'Gifts',
+          icon: <Gift size={24} />,
+          slug: 'gifting'
+        }
+      ];
   return (
     <div className="bg-white border-b border-gray-100">
       {/* Mobile - Horizontal Scroll */}

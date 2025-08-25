@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { ArrowRight, Truck, Shield, Award, RefreshCw, Heart, ShoppingBag } from 'lucide-react';
 import { RootState, AppDispatch } from '../store';
 import { fetchProducts } from '../store/slices/productSlice';
+import { fetchCategories } from '../store/slices/categoriesSlice';
 import ProductGrid from '../components/product/ProductGrid';
 import HeroSection from '../components/common/HeroSection';
 import CategoryIcons from '../components/common/CategoryIcons';
@@ -16,52 +17,65 @@ export default function HomePage() {
   useEffect(() => {
     // Fetch all products initially
     dispatch(fetchProducts({ limit: 40 }));
+    // Fetch categories for showcase
+    dispatch(fetchCategories());
   }, [dispatch]);
 
-  const categoryShowcase = [
-    {
-      id: 'divine-collections',
-      name: 'Divine Collections',
-      image: 'https://images.unsplash.com/photo-1594736797933-d0501ba2fe65?w=600&h=600&fit=crop',
-      description: 'Sacred idols & spiritual décor',
-      slug: 'divine-collections'
-    },
-    {
-      id: 'wall-decor',
-      name: 'Wall Décor',
-      image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&h=600&fit=crop',
-      description: 'Artistic wall hangings & paintings',
-      slug: 'wall-decor'
-    },
-    {
-      id: 'festivals',
-      name: 'Festival Collection',
-      image: 'https://images.unsplash.com/photo-1596079890744-c1a0462d0975?w=600&h=600&fit=crop',
-      description: 'Traditional torans & decorations',
-      slug: 'festivals'
-    },
-    {
-      id: 'lighting',
-      name: 'Lighting',
-      image: 'https://images.unsplash.com/photo-1565636192335-5398080bf22f?w=600&h=600&fit=crop',
-      description: 'Diyas, candles & lanterns',
-      slug: 'lighting'
-    },
-    {
-      id: 'home-accent',
-      name: 'Home Accents',
-      image: 'https://images.unsplash.com/photo-1524634126442-357e0eac3c14?w=600&h=600&fit=crop',
-      description: 'Cushions, vases & showpieces',
-      slug: 'home-accent'
-    },
-    {
-      id: 'gifting',
-      name: 'Gifting',
-      image: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=600&h=600&fit=crop',
-      description: 'Curated gift sets & hampers',
-      slug: 'gifting'
-    }
-  ];
+  const { categories } = useSelector((state: RootState) => state.categories);
+
+  // Map categories to showcase format with fallback for empty categories
+  const categoryShowcase = categories.length > 0 
+    ? categories.slice(0, 6).map(category => ({
+        id: category.id,
+        name: category.name,
+        image: category.image || `https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&h=600&fit=crop`,
+        description: category.description || `Discover ${category.name.toLowerCase()} products`,
+        slug: category.slug
+      }))
+    : [
+        {
+          id: 'divine-collections',
+          name: 'Divine Collections',
+          image: 'https://images.unsplash.com/photo-1594736797933-d0501ba2fe65?w=600&h=600&fit=crop',
+          description: 'Sacred idols & spiritual décor',
+          slug: 'divine-collections'
+        },
+        {
+          id: 'wall-decor',
+          name: 'Wall Décor',
+          image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&h=600&fit=crop',
+          description: 'Artistic wall hangings & paintings',
+          slug: 'wall-decor'
+        },
+        {
+          id: 'festivals',
+          name: 'Festival Collection',
+          image: 'https://images.unsplash.com/photo-1596079890744-c1a0462d0975?w=600&h=600&fit=crop',
+          description: 'Traditional torans & decorations',
+          slug: 'festivals'
+        },
+        {
+          id: 'lighting',
+          name: 'Lighting',
+          image: 'https://images.unsplash.com/photo-1565636192335-5398080bf22f?w=600&h=600&fit=crop',
+          description: 'Diyas, candles & lanterns',
+          slug: 'lighting'
+        },
+        {
+          id: 'home-accent',
+          name: 'Home Accents',
+          image: 'https://images.unsplash.com/photo-1524634126442-357e0eac3c14?w=600&h=600&fit=crop',
+          description: 'Cushions, vases & showpieces',
+          slug: 'home-accent'
+        },
+        {
+          id: 'gifting',
+          name: 'Gifting',
+          image: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=600&h=600&fit=crop',
+          description: 'Curated gift sets & hampers',
+          slug: 'gifting'
+        }
+      ];
 
   return (
     <div className="min-h-screen bg-white">
