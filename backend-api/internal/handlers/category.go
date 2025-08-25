@@ -231,23 +231,90 @@ func (h *CategoryHandler) UpdateCategory(c *gin.Context) {
 		return
 	}
 
-	updates["updated_at"] = time.Now()
-
-	var firestoreUpdates []firestore.Update
-	for key, value := range updates {
-		firestoreUpdates = append(firestoreUpdates, firestore.Update{
-			Path:  key,
-			Value: value,
-		})
-	}
-
-	_, err := h.db.Client.Collection("categories").Doc(categoryID).Update(h.db.Context, firestoreUpdates)
+	// Check if category exists
+	doc, err := h.db.Client.Collection("categories").Doc(categoryID).Get(h.db.Context)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update category"})
+		c.JSON(http.StatusNotFound, gin.H{"error": "Category not found"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Category updated successfully"})
+	// Get existing data
+	existingData := doc.Data()
+
+	// Merge updates with existing data
+	for key, value := range updates {
+		// Skip fields that shouldn't be updated directly
+		if key == "id" || key == "created_at" {
+			continue
+		}
+		existingData[key] = value
+	}
+
+	// Always update the timestamp
+	existingData["updated_at"] = time.Now()
+
+	// Use Set with merge to update the document
+	_, err = h.db.Client.Collection("categories").Doc(categoryID).Set(h.db.Context, existingData)
+	if err != nil {
+		// Log the actual error for debugging
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to update category",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	// Fetch and return the updated category
+	updatedDoc, err := h.db.Client.Collection("categories").Doc(categoryID).Get(h.db.Context)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{"message": "Category updated successfully"})
+		return
+	}
+
+	var category models.Category
+	data := updatedDoc.Data()
+	
+	// Map the updated data
+	category.ID = updatedDoc.Ref.ID
+	if sku, ok := data["sku"].(string); ok {
+		category.SKU = sku
+	}
+	if name, ok := data["name"].(string); ok {
+		category.Name = name
+	}
+	if slug, ok := data["slug"].(string); ok {
+		category.Slug = slug
+	}
+	if description, ok := data["description"].(string); ok {
+		category.Description = description
+	}
+	if image, ok := data["image"].(string); ok {
+		category.Image = image
+	}
+	if landscapeImage, ok := data["landscape_image"].(string); ok {
+		category.LandscapeImage = landscapeImage
+	}
+	if order, ok := data["order"].(int64); ok {
+		category.Order = int(order)
+	}
+	
+	// Handle children subcategories
+	if children, ok := data["children"].([]interface{}); ok {
+		for _, child := range children {
+			if childMap, ok := child.(map[string]interface{}); ok {
+				subCat := models.SubCategory{}
+				if name, ok := childMap["name"].(string); ok {
+					subCat.Name = name
+				}
+				if count, ok := childMap["product_count"].(int64); ok {
+					subCat.ProductCount = int(count)
+				}
+				category.Children = append(category.Children, subCat)
+			}
+		}
+	}
+
+	c.JSON(http.StatusOK, category)
 }
 
 func (h *CategoryHandler) DeleteCategory(c *gin.Context) {
