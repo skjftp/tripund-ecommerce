@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { useParams, useSearchParams } from 'react-router-dom';
+import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { ChevronDown, ChevronUp, X, Filter, Grid, List } from 'lucide-react';
+import { ChevronDown, ChevronUp, X, Filter, Grid, List, ChevronRight } from 'lucide-react';
 import { RootState, AppDispatch } from '../store';
 import { fetchProducts } from '../store/slices/productSlice';
+import { fetchCategories } from '../store/slices/categoriesSlice';
 import ProductCard from '../components/product/ProductCard';
 
 interface FilterOption {
@@ -368,10 +369,11 @@ const categoryInfo: Record<string, { name: string; description: string; banner?:
 };
 
 export default function CategoryPage() {
-  const { category } = useParams<{ category: string }>();
+  const { category, subcategory } = useParams<{ category: string; subcategory?: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const dispatch = useDispatch<AppDispatch>();
   const { products, loading } = useSelector((state: RootState) => state.products);
+  const { categories } = useSelector((state: RootState) => state.categories);
   
   const [selectedFilters, setSelectedFilters] = useState<Record<string, string[]>>({});
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
@@ -380,10 +382,25 @@ export default function CategoryPage() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   useEffect(() => {
-    if (category) {
-      dispatch(fetchProducts({ category, limit: 100 }));
+    // Fetch categories if not loaded
+    if (categories.length === 0) {
+      dispatch(fetchCategories());
     }
-  }, [category, dispatch]);
+    
+    // Fetch products for category/subcategory
+    if (category) {
+      const filters: any = { category, limit: 100 };
+      
+      // If subcategory is specified, add it as a type filter
+      if (subcategory) {
+        // Convert subcategory slug back to readable format
+        const subcategoryName = subcategory.replace(/-/g, ' ');
+        filters.type = subcategoryName;
+      }
+      
+      dispatch(fetchProducts(filters));
+    }
+  }, [category, subcategory, dispatch, categories.length]);
 
   useEffect(() => {
     // Initialize filters from URL params
@@ -443,10 +460,46 @@ export default function CategoryPage() {
 
   // Get category-specific filters
   const filters = category ? categoryFilters[category] || [] : [];
-  const info = category ? categoryInfo[category] : null;
+  let info = category ? categoryInfo[category] : null;
+  
+  // Get subcategory info if applicable
+  let subcategoryInfo = null;
+  if (subcategory && categories.length > 0) {
+    const currentCategory = categories.find(cat => cat.slug === category);
+    if (currentCategory && currentCategory.children) {
+      const subcategoryName = subcategory.replace(/-/g, ' ');
+      subcategoryInfo = currentCategory.children.find(
+        sub => sub.name.toLowerCase() === subcategoryName.toLowerCase()
+      );
+    }
+    
+    // Modify info for subcategory
+    if (subcategoryInfo && info) {
+      info = {
+        ...info,
+        name: `${info.name} - ${subcategoryInfo.name}`,
+        description: `Browse our collection of ${subcategoryInfo.name.toLowerCase()} in ${info.name.toLowerCase()}`
+      };
+    }
+  }
 
   // Apply filters to products
   const filteredProducts = products.filter(product => {
+    // Filter by subcategory if present
+    if (subcategory) {
+      const subcategoryName = subcategory.replace(/-/g, ' ');
+      const productType = product.attributes?.find(attr => 
+        attr.name.toLowerCase() === 'type'
+      );
+      if (!productType || productType.value.toLowerCase() !== subcategoryName.toLowerCase()) {
+        // Check if subcategory matches any category tag
+        const hasSubcategory = product.tags?.some(tag => 
+          tag.toLowerCase() === subcategoryName.toLowerCase()
+        );
+        if (!hasSubcategory) return false;
+      }
+    }
+    
     // Apply selected filters
     for (const [filterKey, filterValues] of Object.entries(selectedFilters)) {
       // Price filter
@@ -489,6 +542,27 @@ export default function CategoryPage() {
 
   return (
     <div className="min-h-screen bg-white">
+      {/* Breadcrumbs */}
+      <div className="bg-gray-50 border-b">
+        <div className="max-w-7xl mx-auto px-4 py-3">
+          <div className="flex items-center gap-2 text-sm text-gray-600">
+            <Link to="/" className="hover:text-[#96865d]">Home</Link>
+            <ChevronRight size={16} />
+            {subcategory ? (
+              <>
+                <Link to={`/category/${category}`} className="hover:text-[#96865d]">
+                  {categoryInfo[category || '']?.name || category}
+                </Link>
+                <ChevronRight size={16} />
+                <span className="text-gray-900">{subcategoryInfo?.name || subcategory.replace(/-/g, ' ')}</span>
+              </>
+            ) : (
+              <span className="text-gray-900">{info?.name || category}</span>
+            )}
+          </div>
+        </div>
+      </div>
+      
       {/* Category Banner */}
       <div className="relative h-64 lg:h-80 overflow-hidden">
         <img

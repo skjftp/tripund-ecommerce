@@ -115,7 +115,7 @@ export default function Header() {
                             {category.children.map((subcat, index) => (
                               <Link
                                 key={index}
-                                to={`/products?category=${category.slug}&subcategory=${encodeURIComponent(subcat.name)}`}
+                                to={`/category/${category.slug}/${subcat.slug || encodeURIComponent(subcat.name.toLowerCase().replace(/\s+/g, '-'))}`}
                                 className="text-sm text-gray-600 hover:text-[#96865d] hover:underline transition-colors"
                               >
                                 {subcat.name}
@@ -291,7 +291,7 @@ export default function Header() {
                       {category.children.map((subcat, index) => (
                         <Link
                           key={index}
-                          to={`/products?category=${category.slug}&subcategory=${encodeURIComponent(subcat.name)}`}
+                          to={`/category/${category.slug}/${subcat.slug || encodeURIComponent(subcat.name.toLowerCase().replace(/\s+/g, '-'))}`}
                           className="block px-8 py-2 text-sm text-gray-600 hover:text-[#96865d] transition-colors"
                           onClick={() => setIsMenuOpen(false)}
                         >
