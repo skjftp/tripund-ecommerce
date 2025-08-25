@@ -29,7 +29,7 @@ export default function HomePage() {
         id: category.id,
         name: category.name,
         image: category.image || `https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&h=600&fit=crop`,
-        description: category.description || `Discover ${category.name.toLowerCase()} products`,
+        description: category.description || `Discover beautiful ${category.name.toLowerCase()} products`,
         slug: category.slug
       }))
     : [
