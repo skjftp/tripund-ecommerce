@@ -34,6 +34,11 @@ func main() {
 	settingsHandler := handlers.NewSettingsHandler(db)
 	notificationHandler := handlers.NewNotificationHandler(db)
 	contactHandler := handlers.NewContactHandler(db)
+	
+	uploadHandler, err := handlers.NewUploadHandler()
+	if err != nil {
+		log.Printf("Warning: Failed to initialize upload handler: %v", err)
+	}
 
 	api := r.Group("/api/v1")
 	{
@@ -157,6 +162,12 @@ func main() {
 			admin.GET("/contact-messages/:id", contactHandler.GetContactMessage)
 			admin.PUT("/contact-messages/:id", contactHandler.UpdateContactMessage)
 			admin.DELETE("/contact-messages/:id", contactHandler.DeleteContactMessage)
+			
+			// Image upload endpoints (admin only)
+			if uploadHandler != nil {
+				admin.POST("/upload/image", uploadHandler.UploadImage)
+				admin.DELETE("/upload/image/*path", uploadHandler.DeleteImage)
+			}
 		}
 
 		api.POST("/webhook/razorpay", paymentHandler.RazorpayWebhook)

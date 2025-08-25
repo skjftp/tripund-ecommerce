@@ -40,12 +40,32 @@ export default function ImageUpload({
       }
 
       try {
-        // Convert to base64 for preview (in production, you'd upload to cloud storage)
-        const base64 = await convertToBase64(file);
-        newImages.push(base64);
+        // Upload to GCS via backend API
+        const formData = new FormData();
+        formData.append('image', file);
+        formData.append('type', 'categories');
+
+        const token = localStorage.getItem('adminToken');
+        const headers: HeadersInit = {};
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+        
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/admin/upload/image`, {
+          method: 'POST',
+          headers,
+          body: formData
+        });
+
+        if (!response.ok) {
+          throw new Error('Upload failed');
+        }
+
+        const result = await response.json();
+        newImages.push(result.url);
       } catch (error) {
-        console.error('Error processing image:', error);
-        alert(`Failed to process ${file.name}`);
+        console.error('Error uploading image:', error);
+        alert(`Failed to upload ${file.name}`);
       }
     }
 
@@ -60,14 +80,6 @@ export default function ImageUpload({
     }
   };
 
-  const convertToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = error => reject(error);
-    });
-  };
 
   const handleRemoveImage = (index: number) => {
     const newImages = images.filter((_, i) => i !== index);
