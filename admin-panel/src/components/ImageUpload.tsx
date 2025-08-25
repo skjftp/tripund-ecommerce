@@ -66,34 +66,16 @@ export default function ImageUpload({
         const result = await response.json();
         console.log('Upload result:', result);
         
-        // Try CDN URL first, but test if it loads, otherwise use GCS URL
-        const cdnUrl = result.cdn_url;
+        // Use GCS URL directly since CDN is not configured
+        // Once CDN domain is properly set up, we can switch back
         const gcsUrl = result.url;
         
-        let imageUrl = gcsUrl; // Default to GCS URL which should always work
-        
-        // Test if CDN URL is available (with timeout)
-        if (cdnUrl) {
-          try {
-            const testResponse = await Promise.race([
-              fetch(cdnUrl, { method: 'HEAD' }),
-              new Promise((_, reject) => 
-                setTimeout(() => reject(new Error('CDN timeout')), 3000)
-              )
-            ]) as Response;
-            
-            if (testResponse.ok) {
-              imageUrl = cdnUrl;
-              console.log('Using CDN URL:', cdnUrl);
-            } else {
-              console.log('CDN not available, using GCS URL:', gcsUrl);
-            }
-          } catch (cdnError) {
-            console.log('CDN test failed, using GCS URL:', gcsUrl);
-          }
+        if (!gcsUrl) {
+          throw new Error('No URL returned from upload');
         }
         
-        newImages.push(imageUrl);
+        console.log('Using GCS URL:', gcsUrl);
+        newImages.push(gcsUrl);
       } catch (error) {
         console.error('Error uploading image:', error);
         alert(`Failed to upload ${file.name}`);
@@ -199,14 +181,7 @@ export default function ImageUpload({
                     className="w-full h-full object-cover"
                     onError={(e) => {
                       console.error('Image load error for URL:', image);
-                      const target = e.target as HTMLImageElement;
-                      // If CDN URL fails and we haven't already tried GCS, try GCS URL
-                      if (image.includes('images.tripundlifestyle.com') && !target.dataset.retried) {
-                        const gcsUrl = image.replace('https://images.tripundlifestyle.com/', 'https://storage.googleapis.com/tripund-product-images/');
-                        console.log('Retrying with GCS URL:', gcsUrl);
-                        target.src = gcsUrl;
-                        target.dataset.retried = 'true';
-                      }
+                      // Log the error but don't retry since we're already using GCS URLs
                     }}
                     onLoad={() => {
                       console.log('Image loaded successfully:', image);
