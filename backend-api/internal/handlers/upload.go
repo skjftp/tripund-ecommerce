@@ -89,26 +89,33 @@ func (h *UploadHandler) UploadImage(c *gin.Context) {
 	writer.CacheControl = "public, max-age=3600"
 
 	// Copy file to GCS
-	if _, err := io.Copy(writer, file); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upload image"})
+	bytesWritten, err := io.Copy(writer, file)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upload image", "details": err.Error()})
 		return
 	}
 
 	if err := writer.Close(); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save image"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save image", "details": err.Error()})
 		return
 	}
+
+	// Log successful upload
+	fmt.Printf("Successfully uploaded image: %s (size: %d bytes, written: %d bytes)\n", fileName, header.Size, bytesWritten)
 
 	// Generate URLs
 	gcsURL := fmt.Sprintf("https://storage.googleapis.com/%s/%s", h.bucketName, fileName)
 	cdnURL := fmt.Sprintf("https://images.tripundlifestyle.com/%s", fileName)
 
 	c.JSON(http.StatusOK, gin.H{
-		"url":     gcsURL,
-		"cdn_url": cdnURL,
-		"path":    fileName,
-		"size":    header.Size,
-		"type":    contentType,
+		"url":           gcsURL,
+		"cdn_url":       cdnURL,
+		"path":          fileName,
+		"size":          header.Size,
+		"bytes_written": bytesWritten,
+		"type":          contentType,
+		"filename":      header.Filename,
+		"message":       "Upload successful",
 	})
 }
 
