@@ -39,6 +39,8 @@ func main() {
 	if err != nil {
 		log.Printf("Warning: Failed to initialize upload handler: %v", err)
 	}
+	
+	promotionHandler := handlers.NewPromotionHandler(db)
 
 	api := r.Group("/api/v1")
 	{
@@ -78,6 +80,9 @@ func main() {
 		
 		// Contact form submission (public)
 		api.POST("/contact", contactHandler.SubmitContactMessage)
+		
+		// Promotion validation (public)
+		api.POST("/promotions/validate", promotionHandler.ValidatePromotion)
 
 		// Guest checkout endpoints (no authentication required)
 		api.POST("/guest/orders", orderHandler.CreateGuestOrder)
@@ -168,6 +173,13 @@ func main() {
 				admin.POST("/upload/image", uploadHandler.UploadImage)
 				admin.DELETE("/upload/image/*path", uploadHandler.DeleteImage)
 			}
+			
+			// Promotion management (admin only)
+			admin.GET("/promotions", promotionHandler.GetPromotions)
+			admin.POST("/promotions", promotionHandler.CreatePromotion)
+			admin.PUT("/promotions/:id", promotionHandler.UpdatePromotion)
+			admin.DELETE("/promotions/:id", promotionHandler.DeletePromotion)
+			admin.POST("/promotions/initialize", promotionHandler.InitializeDefaultPromotions)
 		}
 
 		api.POST("/webhook/razorpay", paymentHandler.RazorpayWebhook)

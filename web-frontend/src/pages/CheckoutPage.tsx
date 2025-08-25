@@ -45,11 +45,17 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [settings, setSettings] = useState<PublicSettings | null>(null);
+  const [promoCode, setPromoCode] = useState('');
+  const [appliedPromo, setAppliedPromo] = useState<{code: string; discount: number; type: 'percentage' | 'fixed'} | null>(null);
+  const [promoLoading, setPromoLoading] = useState(false);
 
   // Calculate values using dynamic settings
   const shipping = settings ? calculateShipping(total, settings) : 0;
-  const tax = settings ? calculateTax(total, settings) : 0;
-  const grandTotal = total + shipping + tax;
+  const promoDiscount = appliedPromo ? 
+    (appliedPromo.type === 'percentage' ? Math.round((total * appliedPromo.discount) / 100) : appliedPromo.discount) : 0;
+  const discountedTotal = total - promoDiscount;
+  const tax = settings ? calculateTax(discountedTotal, settings) : 0;
+  const grandTotal = discountedTotal + shipping + tax;
 
   const {
     register,
@@ -97,6 +103,54 @@ export default function CheckoutPage() {
       document.body.removeChild(script);
     };
   }, []);
+
+  // Auto-apply TRIPUND20 for first-time users
+  useEffect(() => {
+    if (!isAuthenticated && !appliedPromo && !localStorage.getItem('tripund_promo_used')) {
+      setPromoCode('TRIPUND20');
+      applyPromoCode('TRIPUND20');
+    }
+  }, [isAuthenticated, appliedPromo]);
+
+  const applyPromoCode = async (code?: string) => {
+    const codeToApply = code || promoCode;
+    if (!codeToApply.trim()) {
+      toast.error('Please enter a promo code');
+      return;
+    }
+
+    setPromoLoading(true);
+    try {
+      const response = await api.post('/promotions/validate', {
+        code: codeToApply,
+        order_total: total,
+        user_id: user?.id || null,
+      });
+
+      const { valid, discount, type } = response.data;
+      if (valid) {
+        setAppliedPromo({ code: codeToApply, discount, type });
+        toast.success(`Promo code applied! ${type === 'percentage' ? `${discount}% off` : `₹${discount} off`}`);
+        
+        // Mark promo as used for non-authenticated users
+        if (!isAuthenticated) {
+          localStorage.setItem('tripund_promo_used', 'true');
+        }
+      } else {
+        toast.error('Invalid or expired promo code');
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to apply promo code');
+    } finally {
+      setPromoLoading(false);
+    }
+  };
+
+  const removePromoCode = () => {
+    setAppliedPromo(null);
+    setPromoCode('');
+    toast.success('Promo code removed');
+  };
 
   const initiateRazorpayPayment = async (orderData: any) => {
     try {
@@ -497,13 +551,65 @@ export default function CheckoutPage() {
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Tax (GST 18%)</span>
+                    <span className="text-gray-600">
+                      Tax (GST {settings?.payment.tax_rate || 18}%)
+                    </span>
                     <span>₹{tax.toLocaleString()}</span>
                   </div>
+                  {appliedPromo && (
+                    <div className="flex justify-between">
+                      <span className="text-green-600">
+                        Discount ({appliedPromo.code})
+                      </span>
+                      <span className="text-green-600">-₹{promoDiscount.toLocaleString()}</span>
+                    </div>
+                  )}
                   {watch('paymentMethod') === 'cod' && (
                     <div className="flex justify-between">
                       <span className="text-gray-600">COD Charges</span>
                       <span>₹50</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Promo Code Section */}
+                <div className="border-t pt-4 mb-4">
+                  {appliedPromo ? (
+                    <div className="flex items-center justify-between bg-green-50 p-3 rounded-lg">
+                      <div className="flex items-center">
+                        <span className="text-green-600 font-medium">{appliedPromo.code}</span>
+                        <span className="text-green-600 text-sm ml-2">
+                          ({appliedPromo.type === 'percentage' ? `${appliedPromo.discount}% off` : `₹${appliedPromo.discount} off`})
+                        </span>
+                      </div>
+                      <button
+                        onClick={removePromoCode}
+                        className="text-red-600 text-sm hover:text-red-800"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <label className="block text-sm font-medium text-gray-700">
+                        Promo Code
+                      </label>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={promoCode}
+                          onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                          placeholder="Enter promo code"
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        />
+                        <button
+                          onClick={() => applyPromoCode()}
+                          disabled={promoLoading || !promoCode.trim()}
+                          className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                        >
+                          {promoLoading ? 'Applying...' : 'Apply'}
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>
