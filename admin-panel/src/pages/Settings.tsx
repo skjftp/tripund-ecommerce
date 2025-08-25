@@ -11,6 +11,7 @@ import {
   Smartphone,
   Save,
   AlertCircle,
+  FileText,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -57,12 +58,32 @@ export default function Settings() {
       max_login_attempts: 5,
       ip_whitelist: [],
     },
+    invoice: {
+      gstin: '',
+      registered_name: 'TRIPUND LIFESTYLE PRIVATE LIMITED',
+      home_state: 'Maharashtra',
+      home_state_code: '27',
+      registered_address: '123 Craft Street, Mumbai, Maharashtra 400001',
+      pan: '',
+      contact_person: '',
+      invoice_prefix: 'TLS',
+      invoice_start_number: 1000,
+      hsn_code: '67029900', // Default HSN for handicrafts
+      place_of_supply: 'Mumbai',
+      bank_name: '',
+      bank_account: '',
+      bank_ifsc: '',
+      bank_branch: '',
+      terms_conditions: 'Thank you for your business! Payment due within 30 days.',
+      footer_note: 'This is a computer generated invoice.',
+    },
   });
 
   const tabs = [
     { id: 'general', label: 'General', icon: Store },
     { id: 'payment', label: 'Payment', icon: CreditCard },
     { id: 'shipping', label: 'Shipping', icon: Truck },
+    { id: 'invoice', label: 'Invoice & GST', icon: FileText },
     { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'security', label: 'Security', icon: Shield },
   ];
@@ -515,6 +536,319 @@ export default function Settings() {
     </div>
   );
 
+  const renderInvoiceSettings = () => (
+    <div className="space-y-6">
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start">
+        <FileText className="text-blue-600 mr-3 mt-0.5" size={20} />
+        <div>
+          <h4 className="font-medium text-blue-800">GST Invoice Configuration</h4>
+          <p className="text-blue-700 text-sm mt-1">
+            Configure your GST details for compliant invoice generation as per Indian tax regulations.
+          </p>
+        </div>
+      </div>
+
+      {/* Company Details */}
+      <div>
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Company Details</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              GSTIN *
+            </label>
+            <input
+              type="text"
+              value={settings.invoice.gstin}
+              onChange={(e) => setSettings({
+                ...settings,
+                invoice: { ...settings.invoice, gstin: e.target.value.toUpperCase() }
+              })}
+              placeholder="27XXXXX0000X1ZX"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              PAN Number
+            </label>
+            <input
+              type="text"
+              value={settings.invoice.pan}
+              onChange={(e) => setSettings({
+                ...settings,
+                invoice: { ...settings.invoice, pan: e.target.value.toUpperCase() }
+              })}
+              placeholder="ABCDE1234F"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+            />
+          </div>
+          
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Registered Name *
+            </label>
+            <input
+              type="text"
+              value={settings.invoice.registered_name}
+              onChange={(e) => setSettings({
+                ...settings,
+                invoice: { ...settings.invoice, registered_name: e.target.value }
+              })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Home State *
+            </label>
+            <select
+              value={settings.invoice.home_state}
+              onChange={(e) => {
+                const stateCodes: {[key: string]: string} = {
+                  'Maharashtra': '27', 'Karnataka': '29', 'Tamil Nadu': '33',
+                  'Delhi': '07', 'West Bengal': '19', 'Gujarat': '24',
+                  'Rajasthan': '08', 'Uttar Pradesh': '09', 'Haryana': '06'
+                };
+                setSettings({
+                  ...settings,
+                  invoice: { 
+                    ...settings.invoice, 
+                    home_state: e.target.value,
+                    home_state_code: stateCodes[e.target.value] || ''
+                  }
+                })
+              }}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+            >
+              <option value="Maharashtra">Maharashtra (27)</option>
+              <option value="Karnataka">Karnataka (29)</option>
+              <option value="Tamil Nadu">Tamil Nadu (33)</option>
+              <option value="Delhi">Delhi (07)</option>
+              <option value="West Bengal">West Bengal (19)</option>
+              <option value="Gujarat">Gujarat (24)</option>
+              <option value="Rajasthan">Rajasthan (08)</option>
+              <option value="Uttar Pradesh">Uttar Pradesh (09)</option>
+              <option value="Haryana">Haryana (06)</option>
+            </select>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              State Code
+            </label>
+            <input
+              type="text"
+              value={settings.invoice.home_state_code}
+              readOnly
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500"
+            />
+          </div>
+          
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Registered Address *
+            </label>
+            <textarea
+              value={settings.invoice.registered_address}
+              onChange={(e) => setSettings({
+                ...settings,
+                invoice: { ...settings.invoice, registered_address: e.target.value }
+              })}
+              rows={3}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Contact Person
+            </label>
+            <input
+              type="text"
+              value={settings.invoice.contact_person}
+              onChange={(e) => setSettings({
+                ...settings,
+                invoice: { ...settings.invoice, contact_person: e.target.value }
+              })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Place of Supply
+            </label>
+            <input
+              type="text"
+              value={settings.invoice.place_of_supply}
+              onChange={(e) => setSettings({
+                ...settings,
+                invoice: { ...settings.invoice, place_of_supply: e.target.value }
+              })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Invoice Settings */}
+      <div>
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Invoice Settings</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Invoice Prefix
+            </label>
+            <input
+              type="text"
+              value={settings.invoice.invoice_prefix}
+              onChange={(e) => setSettings({
+                ...settings,
+                invoice: { ...settings.invoice, invoice_prefix: e.target.value.toUpperCase() }
+              })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Starting Number
+            </label>
+            <input
+              type="number"
+              value={settings.invoice.invoice_start_number}
+              onChange={(e) => setSettings({
+                ...settings,
+                invoice: { ...settings.invoice, invoice_start_number: parseInt(e.target.value) }
+              })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              HSN Code (Default)
+            </label>
+            <input
+              type="text"
+              value={settings.invoice.hsn_code}
+              onChange={(e) => setSettings({
+                ...settings,
+                invoice: { ...settings.invoice, hsn_code: e.target.value }
+              })}
+              placeholder="67029900"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Bank Details */}
+      <div>
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Bank Details</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Bank Name
+            </label>
+            <input
+              type="text"
+              value={settings.invoice.bank_name}
+              onChange={(e) => setSettings({
+                ...settings,
+                invoice: { ...settings.invoice, bank_name: e.target.value }
+              })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Account Number
+            </label>
+            <input
+              type="text"
+              value={settings.invoice.bank_account}
+              onChange={(e) => setSettings({
+                ...settings,
+                invoice: { ...settings.invoice, bank_account: e.target.value }
+              })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              IFSC Code
+            </label>
+            <input
+              type="text"
+              value={settings.invoice.bank_ifsc}
+              onChange={(e) => setSettings({
+                ...settings,
+                invoice: { ...settings.invoice, bank_ifsc: e.target.value.toUpperCase() }
+              })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Branch
+            </label>
+            <input
+              type="text"
+              value={settings.invoice.bank_branch}
+              onChange={(e) => setSettings({
+                ...settings,
+                invoice: { ...settings.invoice, bank_branch: e.target.value }
+              })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Terms & Notes */}
+      <div>
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Terms & Notes</h3>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Terms & Conditions
+            </label>
+            <textarea
+              value={settings.invoice.terms_conditions}
+              onChange={(e) => setSettings({
+                ...settings,
+                invoice: { ...settings.invoice, terms_conditions: e.target.value }
+              })}
+              rows={3}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Footer Note
+            </label>
+            <input
+              type="text"
+              value={settings.invoice.footer_note}
+              onChange={(e) => setSettings({
+                ...settings,
+                invoice: { ...settings.invoice, footer_note: e.target.value }
+              })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   const renderSecuritySettings = () => (
     <div className="space-y-6">
       <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-start">
@@ -633,6 +967,7 @@ export default function Settings() {
             {activeTab === 'general' && renderGeneralSettings()}
             {activeTab === 'payment' && renderPaymentSettings()}
             {activeTab === 'shipping' && renderShippingSettings()}
+            {activeTab === 'invoice' && renderInvoiceSettings()}
             {activeTab === 'notifications' && renderNotificationSettings()}
             {activeTab === 'security' && renderSecuritySettings()}
 

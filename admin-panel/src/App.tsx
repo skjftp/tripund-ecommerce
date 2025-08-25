@@ -15,6 +15,7 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Products from './pages/Products';
 import Orders from './pages/Orders';
+import Invoices from './pages/Invoices';
 import Customers from './pages/Customers';
 import Categories from './pages/Categories';
 import Promotions from './pages/Promotions';
@@ -80,6 +81,16 @@ function App() {
               <PrivateRoute>
                 <AdminLayout>
                   <Orders />
+                </AdminLayout>
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/invoices"
+            element={
+              <PrivateRoute>
+                <AdminLayout>
+                  <Invoices />
                 </AdminLayout>
               </PrivateRoute>
             }

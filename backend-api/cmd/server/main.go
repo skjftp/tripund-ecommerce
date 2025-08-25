@@ -41,6 +41,7 @@ func main() {
 	}
 	
 	promotionHandler := handlers.NewPromotionHandler(db)
+	invoiceHandler := handlers.NewInvoiceHandler(db)
 
 	api := r.Group("/api/v1")
 	{
@@ -103,6 +104,13 @@ func main() {
 				orders.POST("", orderHandler.CreateOrder)
 				orders.GET("", orderHandler.GetUserOrders)
 				orders.GET("/:id", orderHandler.GetOrder)
+			}
+			
+			// Invoice endpoints (for logged-in users)
+			invoices := protected.Group("/invoices")
+			{
+				invoices.GET("", invoiceHandler.ListInvoices)
+				invoices.GET("/:id", invoiceHandler.GetInvoice)
 			}
 
 			payment := protected.Group("/payment")
@@ -180,6 +188,15 @@ func main() {
 			admin.PUT("/promotions/:id", promotionHandler.UpdatePromotion)
 			admin.DELETE("/promotions/:id", promotionHandler.DeletePromotion)
 			admin.POST("/promotions/initialize", promotionHandler.InitializeDefaultPromotions)
+			
+			// Invoice management (admin only)
+			admin.GET("/invoices", invoiceHandler.ListInvoices)
+			admin.GET("/invoices/:id", invoiceHandler.GetInvoice)
+			admin.POST("/invoices/generate", invoiceHandler.GenerateInvoice)
+			admin.POST("/invoices/bulk-generate", invoiceHandler.BulkGenerateInvoices)
+			admin.PUT("/invoices/:id/status", invoiceHandler.UpdateInvoiceStatus)
+			admin.DELETE("/invoices/:id", invoiceHandler.DeleteInvoice)
+			admin.GET("/invoices/stats", invoiceHandler.GetInvoiceStats)
 		}
 
 		api.POST("/webhook/razorpay", paymentHandler.RazorpayWebhook)

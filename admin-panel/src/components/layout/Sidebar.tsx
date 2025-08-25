@@ -14,6 +14,7 @@ import {
   FileText,
   Shield,
   MessageSquare,
+  Receipt,
 } from 'lucide-react';
 import { useDispatch } from 'react-redux';
 import { logout } from '../../store/slices/authSlice';
@@ -30,6 +31,7 @@ export default function Sidebar({ isOpen = true, onClose }: SidebarProps) {
     { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
     { icon: Package, label: 'Products', path: '/products' },
     { icon: ShoppingCart, label: 'Orders', path: '/orders' },
+    { icon: Receipt, label: 'Invoices', path: '/invoices' },
     { icon: Users, label: 'Customers', path: '/customers' },
     { icon: MessageSquare, label: 'Messages', path: '/contact-messages' },
     { icon: FolderTree, label: 'Categories', path: '/categories' },

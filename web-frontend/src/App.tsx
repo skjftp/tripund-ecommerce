@@ -28,6 +28,8 @@ import TermsConditionsPage from './pages/TermsConditionsPage';
 import FAQPage from './pages/FAQPage';
 import ShippingPage from './pages/ShippingPage';
 import ReturnsPage from './pages/ReturnsPage';
+import InvoicesPage from './pages/InvoicesPage';
+import InvoiceDetailPage from './pages/InvoiceDetailPage';
 
 function App() {
   useEffect(() => {
@@ -56,6 +58,8 @@ function App() {
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/wishlist" element={<WishlistPage />} />
             <Route path="/orders" element={<OrdersPage />} />
+            <Route path="/invoices" element={<InvoicesPage />} />
+            <Route path="/invoices/:id" element={<InvoiceDetailPage />} />
             <Route path="/order-status/:orderId" element={<OrderStatusPage />} />
             <Route path="/order-confirmation/:orderId" element={<OrderConfirmationPage />} />
             <Route path="/about" element={<AboutPage />} />
