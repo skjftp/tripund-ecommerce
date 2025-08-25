@@ -119,11 +119,11 @@ export default function HomePage() {
                   {/* Additional scrim for text area */}
                   <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-black/90 to-transparent" />
                 </div>
-                <div className="absolute bottom-0 left-0 right-0 p-6">
+                <div className="absolute bottom-0 left-0 right-0 p-6 text-center">
                   <h3 className="text-xl font-medium mb-1 text-white drop-shadow-lg">{category.name}</h3>
                   <p className="text-sm text-white/95 drop-shadow">{category.description}</p>
-                  <div className={`mt-3 flex items-center text-sm font-medium text-white transition-all duration-300 ${
-                    hoveredCategory === category.id ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'
+                  <div className={`mt-3 inline-flex items-center text-sm font-medium text-white transition-all duration-300 ${
+                    hoveredCategory === category.id ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
                   }`}>
                     Shop Now <ArrowRight size={16} className="ml-2" />
                   </div>
