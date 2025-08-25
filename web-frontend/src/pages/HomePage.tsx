@@ -21,7 +21,12 @@ export default function HomePage() {
     dispatch(fetchCategories());
   }, [dispatch]);
 
-  const { categories } = useSelector((state: RootState) => state.categories);
+  const { categories, loading: categoriesLoading, error: categoriesError } = useSelector((state: RootState) => state.categories);
+
+  // Debug logging
+  console.log('Categories state:', { categories, categoriesLoading, categoriesError });
+  console.log('Categories length:', categories.length);
+  console.log('Categories data:', categories);
 
   // Map categories to showcase format with fallback for empty categories
   const categoryShowcase = categories.length > 0 

@@ -37,20 +37,15 @@ const initialState: CategoriesState = {
 export const fetchCategories = createAsyncThunk(
   'categories/fetchCategories',
   async () => {
-    try {
-      const response = await axios.get(`${API_URL}/categories`);
-      const data = response.data;
-      return {
-        categories: Array.isArray(data.categories) ? data.categories : [],
-        source: data.source || 'api'
-      };
-    } catch (error) {
-      console.error('Failed to fetch categories:', error);
-      return {
-        categories: [],
-        source: 'error'
-      };
-    }
+    console.log('Fetching categories from:', `${API_URL}/categories`);
+    const response = await axios.get(`${API_URL}/categories`);
+    const data = response.data;
+    console.log('Categories API response:', data);
+    
+    return {
+      categories: Array.isArray(data.categories) ? data.categories : [],
+      source: data.source || 'api'
+    };
   }
 );
 
