@@ -33,6 +33,25 @@ export default function ProductDetailPage() {
     if (product) {
       setDisplayImages(product.images || []);
       setSelectedImage(0);
+      
+      // If product has variants, auto-select the cheapest one
+      if (product.has_variants && product.variants && product.variants.length > 0) {
+        const availableVariants = product.variants.filter(v => v.available);
+        if (availableVariants.length > 0) {
+          // Find the cheapest variant
+          const cheapestVariant = availableVariants.reduce((min, variant) => {
+            const variantEffectivePrice = variant.sale_price || variant.price;
+            const minEffectivePrice = min.sale_price || min.price;
+            return variantEffectivePrice < minEffectivePrice ? variant : min;
+          });
+          
+          // Auto-select the cheapest variant
+          setSelectedVariant(cheapestVariant);
+          if (cheapestVariant.images && cheapestVariant.images.length > 0) {
+            setDisplayImages(cheapestVariant.images);
+          }
+        }
+      }
     }
   }, [product]);
 
@@ -195,6 +214,9 @@ export default function ProductDetailPage() {
               )}
 
               <div className="mb-6">
+                {product.has_variants && !selectedVariant && (
+                  <p className="text-sm text-gray-600 mb-2">Starting from</p>
+                )}
                 <span className="text-3xl font-bold text-primary-600">
                   ₹{(effectiveSalePrice || effectivePrice).toLocaleString()}
                 </span>

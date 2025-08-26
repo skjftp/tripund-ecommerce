@@ -50,9 +50,23 @@ export default function ProductVariantSelector({
   onVariantSelect,
   onImageChange
 }: VariantSelectorProps) {
-  const [selectedColor, setSelectedColor] = useState<string>('');
-  const [selectedSize, setSelectedSize] = useState<string>('');
-  const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
+  // Pre-select the cheapest variant's color and size
+  const getCheapestVariant = () => {
+    const availableVariants = variants.filter(v => v.available);
+    if (availableVariants.length > 0) {
+      return availableVariants.reduce((min, variant) => {
+        const variantEffectivePrice = variant.sale_price || variant.price;
+        const minEffectivePrice = min.sale_price || min.price;
+        return variantEffectivePrice < minEffectivePrice ? variant : min;
+      });
+    }
+    return null;
+  };
+  
+  const cheapestVariant = getCheapestVariant();
+  const [selectedColor, setSelectedColor] = useState<string>(cheapestVariant?.color || '');
+  const [selectedSize, setSelectedSize] = useState<string>(cheapestVariant?.size || '');
+  const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(cheapestVariant);
 
   useEffect(() => {
     // Find and select variant based on current selections

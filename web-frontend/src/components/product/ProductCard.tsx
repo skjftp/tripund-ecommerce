@@ -36,13 +36,35 @@ export default function ProductCard({ product, viewMode = 'grid' }: ProductCardP
     }
   };
 
-  const price = typeof product.price === 'number' ? product.price : 0;
-  const salePrice = typeof product.sale_price === 'number' ? product.sale_price : null;
+  // Calculate prices based on variants if available
+  let price = typeof product.price === 'number' ? product.price : 0;
+  let salePrice = typeof product.sale_price === 'number' ? product.sale_price : null;
+  
+  // If product has variants, show the cheapest variant price
+  if (product.has_variants && product.variants && product.variants.length > 0) {
+    // Find the cheapest available variant
+    const availableVariants = product.variants.filter(v => v.available);
+    if (availableVariants.length > 0) {
+      // Find minimum price considering both regular and sale prices
+      const minVariant = availableVariants.reduce((min, variant) => {
+        const variantEffectivePrice = variant.sale_price || variant.price;
+        const minEffectivePrice = min.sale_price || min.price;
+        return variantEffectivePrice < minEffectivePrice ? variant : min;
+      });
+      
+      price = minVariant.price;
+      salePrice = minVariant.sale_price || null;
+    }
+  }
   
   const discountPercentage = salePrice && price > 0 ? 
     Math.round(((price - salePrice) / price) * 100) : 0;
 
   const displayPrice = salePrice || price;
+  
+  // Show "From" prefix if product has multiple price points
+  const showFromPrefix = product.has_variants && product.variants && 
+    product.variants.some(v => v.available && (v.price !== price || v.sale_price !== salePrice));
   const isInStock = product.stock_status === 'in_stock' && product.stock_quantity > 0;
 
   // List view layout
@@ -76,7 +98,7 @@ export default function ProductCard({ product, viewMode = 'grid' }: ProductCardP
             <div className="flex items-center justify-between">
               <div>
                 <span className="text-xl font-bold text-primary-600">
-                  ₹{displayPrice ? displayPrice.toLocaleString() : '0'}
+                  {showFromPrefix && 'From '}₹{displayPrice ? displayPrice.toLocaleString() : '0'}
                 </span>
                 {salePrice && price > 0 && (
                   <span className="ml-2 text-sm text-gray-500 line-through">
@@ -158,7 +180,7 @@ export default function ProductCard({ product, viewMode = 'grid' }: ProductCardP
             <div className="flex items-center justify-between mb-3">
               <div>
                 <span className="text-xl font-bold text-primary-600">
-                  ₹{displayPrice ? displayPrice.toLocaleString() : '0'}
+                  {showFromPrefix && 'From '}₹{displayPrice ? displayPrice.toLocaleString() : '0'}
                 </span>
                 {salePrice && price > 0 && (
                   <span className="ml-2 text-sm text-gray-500 line-through">
