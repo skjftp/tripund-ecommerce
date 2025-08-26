@@ -57,7 +57,6 @@ func NewOAuth2EmailService() (*OAuth2EmailService, error) {
 	service, err := gmail.NewService(ctx, 
 		option.WithCredentialsJSON([]byte(credentialsJSON)),
 		option.WithScopes(gmail.GmailSendScope),
-		option.WithSubject(fromEmail), // This enables domain-wide delegation
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create Gmail service: %v", err)

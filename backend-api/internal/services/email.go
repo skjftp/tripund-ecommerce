@@ -6,7 +6,6 @@ import (
 	"html/template"
 	"net/smtp"
 	"os"
-	"strconv"
 	"time"
 
 	"tripund-api/internal/models"
