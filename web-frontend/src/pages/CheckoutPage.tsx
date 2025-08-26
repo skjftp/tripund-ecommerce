@@ -9,7 +9,8 @@ import { RootState } from '../store';
 import { clearCart } from '../store/slices/cartSlice';
 import toast from 'react-hot-toast';
 import api from '../services/api';
-import { getPublicSettings, calculateShipping, calculateTax, type PublicSettings } from '../services/settings';
+import { getPublicSettings, calculateShipping, type PublicSettings } from '../services/settings';
+import { calculateCartGSTBreakdown, formatPrice } from '../utils/pricing';
 
 const checkoutSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
@@ -58,8 +59,14 @@ export default function CheckoutPage() {
   const shipping = settings ? calculateShipping(total, settings) : 0;
   const promoDiscount = appliedPromo ? appliedPromo.discount : 0;
   const discountedTotal = total - promoDiscount;
-  const tax = settings ? calculateTax(discountedTotal, settings) : 0;
-  const grandTotal = discountedTotal + shipping + tax;
+  
+  // Calculate GST breakdown from GST-inclusive prices
+  const gstBreakdown = calculateCartGSTBreakdown(
+    items.map(item => ({ price: item.price, quantity: item.quantity })),
+    settings?.payment.tax_rate || 18
+  );
+  
+  const grandTotal = discountedTotal + shipping; // Total is already GST-inclusive
 
   const {
     register,
@@ -258,9 +265,9 @@ export default function CheckoutPage() {
         }),
       })),
       totals: {
-        subtotal: total,
+        subtotal: gstBreakdown.basePrice,
         shipping,
-        tax,
+        tax: gstBreakdown.gstAmount,
         total: grandTotal,
       },
       paymentMethod: data.paymentMethod,
@@ -550,8 +557,14 @@ export default function CheckoutPage() {
 
                 <div className="border-t pt-4 space-y-2">
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Subtotal</span>
-                    <span>₹{total.toLocaleString()}</span>
+                    <span className="text-gray-600">Subtotal (excl. GST)</span>
+                    <span>₹{formatPrice(gstBreakdown.basePrice)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">
+                      GST ({gstBreakdown.gstRate}%)
+                    </span>
+                    <span>₹{formatPrice(gstBreakdown.gstAmount)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Shipping</span>
@@ -562,15 +575,9 @@ export default function CheckoutPage() {
                           `(Order above ₹${settings.shipping.free_shipping_threshold})`}
                         </span>
                       ) : (
-                        `₹${shipping}`
+                        `₹${formatPrice(shipping)}`
                       )}
                     </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">
-                      Tax (GST {settings?.payment.tax_rate || 18}%)
-                    </span>
-                    <span>₹{tax.toLocaleString()}</span>
                   </div>
                   {appliedPromo && (
                     <div className="flex justify-between">
@@ -632,9 +639,9 @@ export default function CheckoutPage() {
 
                 <div className="border-t pt-4 mb-6">
                   <div className="flex justify-between text-lg font-semibold">
-                    <span>Total</span>
+                    <span>Total (incl. GST)</span>
                     <span>
-                      ₹{(grandTotal + (watch('paymentMethod') === 'cod' ? 50 : 0)).toLocaleString()}
+                      ₹{formatPrice(grandTotal + (watch('paymentMethod') === 'cod' ? 50 : 0))}
                     </span>
                   </div>
                 </div>

@@ -4,7 +4,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Trash2, Plus, Minus, ShoppingBag, ArrowRight } from 'lucide-react';
 import { RootState } from '../store';
 import { removeFromCart, updateQuantity } from '../store/slices/cartSlice';
-import { getPublicSettings, calculateShipping, calculateTax, type PublicSettings } from '../services/settings';
+import { getPublicSettings, calculateShipping, type PublicSettings } from '../services/settings';
+import { calculateCartGSTBreakdown, formatPrice } from '../utils/pricing';
 
 export default function CartPage() {
   const dispatch = useDispatch();
@@ -141,44 +142,47 @@ export default function CartPage() {
               )}
               
               <div className="space-y-2 mb-4">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Subtotal</span>
-                  <span>₹{total.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Shipping</span>
-                  <span>
-                    {settings ? (
-                      calculateShipping(total, settings) === 0 ? (
-                        <span className="text-green-600 font-medium">
-                          Free
+                {/* Calculate GST breakdown from inclusive prices */}
+                {(() => {
+                  const gstBreakdown = calculateCartGSTBreakdown(items, settings?.payment.tax_rate || 18);
+                  const shipping = settings ? calculateShipping(total, settings) : 0;
+                  const finalTotal = total + shipping; // Total is already GST-inclusive
+                  
+                  return (
+                    <>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Subtotal (excl. GST)</span>
+                        <span>₹{formatPrice(gstBreakdown.basePrice)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">GST ({gstBreakdown.gstRate}%)</span>
+                        <span>₹{formatPrice(gstBreakdown.gstAmount)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Shipping</span>
+                        <span>
+                          {settings ? (
+                            shipping === 0 ? (
+                              <span className="text-green-600 font-medium">
+                                Free
+                              </span>
+                            ) : (
+                              `₹${formatPrice(shipping)}`
+                            )
+                          ) : (
+                            'Calculating...'
+                          )}
                         </span>
-                      ) : (
-                        `₹${calculateShipping(total, settings)}`
-                      )
-                    ) : (
-                      'Calculating...'
-                    )}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Tax ({settings?.payment.tax_rate || 18}%)</span>
-                  <span>
-                    ₹{settings ? calculateTax(total, settings).toLocaleString() : Math.round(total * 0.18).toLocaleString()}
-                  </span>
-                </div>
-              </div>
-
-              <div className="border-t pt-4 mb-6">
-                <div className="flex justify-between text-lg font-semibold">
-                  <span>Total</span>
-                  <span>
-                    ₹{settings ? 
-                      (total + calculateShipping(total, settings) + calculateTax(total, settings)).toLocaleString() :
-                      (total + (total > 5000 ? 0 : 500) + Math.round(total * 0.18)).toLocaleString()
-                    }
-                  </span>
-                </div>
+                      </div>
+                      <div className="border-t pt-2 mt-2">
+                        <div className="flex justify-between text-lg font-semibold">
+                          <span>Total (incl. GST)</span>
+                          <span>₹{formatPrice(finalTotal)}</span>
+                        </div>
+                      </div>
+                    </>
+                  );
+                })()}
               </div>
 
               <button

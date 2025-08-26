@@ -169,9 +169,12 @@ export default function HomePage() {
                   </div>
                   
                   {/* Sale Badge */}
-                  {product.discount_percentage && product.discount_percentage > 0 && (
+                  {((product.sale_price && product.sale_price < product.price) || 
+                    (product.discount_percentage && product.discount_percentage > 0)) && (
                     <div className="absolute top-4 left-4 bg-red-500 text-white px-3 py-1 text-xs font-medium rounded">
-                      {product.discount_percentage}% OFF
+                      {product.discount_percentage ? 
+                        `${product.discount_percentage}% OFF` : 
+                        `SALE`}
                     </div>
                   )}
                 </div>
@@ -179,15 +182,24 @@ export default function HomePage() {
                 <div className="mt-4">
                   <h3 className="text-sm font-medium text-gray-900 line-clamp-2">{product.name}</h3>
                   <div className="mt-2 flex items-center gap-2">
-                    {product.discount_percentage ? (
+                    {product.sale_price && product.sale_price < product.price ? (
                       <>
                         <span className="text-lg font-medium text-gray-900">
-                          ₹{Math.round(product.price * (1 - product.discount_percentage / 100))}
+                          ₹{product.sale_price.toLocaleString('en-IN')}
                         </span>
-                        <span className="text-sm text-gray-500 line-through">₹{product.price}</span>
+                        <span className="text-sm text-gray-500 line-through">
+                          ₹{product.price.toLocaleString('en-IN')}
+                        </span>
+                        {product.discount_percentage && product.discount_percentage > 0 && (
+                          <span className="text-xs text-green-600 font-medium">
+                            {product.discount_percentage}% OFF
+                          </span>
+                        )}
                       </>
                     ) : (
-                      <span className="text-lg font-medium text-gray-900">₹{product.price}</span>
+                      <span className="text-lg font-medium text-gray-900">
+                        ₹{product.price.toLocaleString('en-IN')}
+                      </span>
                     )}
                   </div>
                 </div>
