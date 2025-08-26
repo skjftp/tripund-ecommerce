@@ -53,8 +53,8 @@ export const INDIAN_STATES = [
   { code: 'PY', name: 'Puducherry' }
 ];
 
-// Business state - Karnataka (where Tripund is registered)
-const BUSINESS_STATE = 'KA';
+// Business state - Uttar Pradesh (where Tripund is registered)
+const BUSINESS_STATE = 'UP';
 
 /**
  * Calculate GST breakdown based on state

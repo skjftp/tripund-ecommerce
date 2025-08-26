@@ -152,8 +152,8 @@ export default function CartPage() {
                 
                 {/* Calculate GST breakdown from inclusive prices */}
                 {(() => {
-                  // Using Karnataka as default for cart display (will be accurate at checkout)
-                  const gstBreakdown = calculateCartStateBasedGST(items, 'KA', settings?.payment.tax_rate || 18);
+                  // Using Uttar Pradesh as default for cart display (will be accurate at checkout)
+                  const gstBreakdown = calculateCartStateBasedGST(items, 'UP', settings?.payment.tax_rate || 18);
                   const shipping = settings ? calculateShipping(total, settings) : 0;
                   const finalTotal = total + shipping; // Total is already GST-inclusive
                   
