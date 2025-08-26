@@ -8,7 +8,6 @@ import (
 
 	"cloud.google.com/go/firestore"
 	"github.com/gin-gonic/gin"
-	"google.golang.org/api/iterator"
 	"tripund-api/internal/database"
 	"tripund-api/internal/models"
 )
@@ -372,7 +371,7 @@ func (h *InvoiceHandler) createInvoiceFromOrder(order *models.Order, settings ma
 	}
 
 	// Create seller address
-	sellerAddress := models.Address{
+	sellerAddress := models.InvoiceAddress{
 		Line1:      getString(invoiceSettings, "address_line1", "TRIPUND LIFESTYLE PRIVATE LIMITED"),
 		Line2:      getString(invoiceSettings, "address_line2", ""),
 		City:       getString(invoiceSettings, "city", "Mumbai"),
@@ -383,7 +382,7 @@ func (h *InvoiceHandler) createInvoiceFromOrder(order *models.Order, settings ma
 	}
 
 	// Create buyer details
-	buyerAddress := models.Address{
+	buyerAddress := models.InvoiceAddress{
 		Line1:      order.ShippingAddress.Line1,
 		Line2:      order.ShippingAddress.Line2,
 		City:       order.ShippingAddress.City,
@@ -394,9 +393,9 @@ func (h *InvoiceHandler) createInvoiceFromOrder(order *models.Order, settings ma
 	}
 
 	buyerDetails := models.BillingEntity{
-		Name:    order.ShippingAddress.FirstName + " " + order.ShippingAddress.LastName,
-		Email:   order.UserEmail,
-		Phone:   order.ShippingAddress.PhoneNumber,
+		Name:    order.GuestName, // Use GuestName from order
+		Email:   order.GuestEmail,
+		Phone:   order.GuestPhone, // Use GuestPhone from order
 		Address: buyerAddress,
 		IsB2B:   false, // Default to B2C unless GSTIN provided
 	}
@@ -421,7 +420,7 @@ func (h *InvoiceHandler) createInvoiceFromOrder(order *models.Order, settings ma
 		lineItem := models.InvoiceLineItem{
 			ID:          fmt.Sprintf("item_%d", i+1),
 			ProductID:   item.ProductID,
-			ProductName: item.Name,
+			ProductName: item.ProductName,
 			HSNCode:     "9403", // Default HSN code for handicrafts
 			Quantity:    float64(item.Quantity),
 			UnitPrice:   item.Price,

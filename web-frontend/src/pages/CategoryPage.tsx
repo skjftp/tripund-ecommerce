@@ -499,16 +499,11 @@ export default function CategoryPage() {
     // Filter by subcategory if present
     if (subcategory) {
       const subcategoryName = subcategory.replace(/-/g, ' ');
-      const productType = product.attributes?.find(attr => 
-        attr.name.toLowerCase() === 'type'
+      // Check if product has this subcategory
+      const hasSubcategory = product.subcategories?.some(subcat => 
+        subcat.toLowerCase() === subcategoryName.toLowerCase()
       );
-      if (!productType || productType.value.toLowerCase() !== subcategoryName.toLowerCase()) {
-        // Check if subcategory matches any category tag
-        const hasSubcategory = product.tags?.some(tag => 
-          tag.toLowerCase() === subcategoryName.toLowerCase()
-        );
-        if (!hasSubcategory) return false;
-      }
+      if (!hasSubcategory) return false;
     }
     
     // Apply selected filters

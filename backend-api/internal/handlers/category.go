@@ -2,9 +2,9 @@ package handlers
 
 import (
 	"net/http"
+	"sort"
 	"time"
 
-	"cloud.google.com/go/firestore"
 	"github.com/gin-gonic/gin"
 	"tripund-api/internal/database"
 	"tripund-api/internal/models"
@@ -28,7 +28,6 @@ func (h *CategoryHandler) GetCategories(c *gin.Context) {
 	// First try to fetch from Firestore
 	if h.db != nil && h.db.Client != nil {
 		docs, err := h.db.Client.Collection("categories").
-			OrderBy("order", firestore.Asc).
 			Documents(h.db.Context).GetAll()
 		
 		if err == nil && len(docs) > 0 {
@@ -95,6 +94,11 @@ func (h *CategoryHandler) GetCategories(c *gin.Context) {
 				
 				categories = append(categories, category)
 			}
+			
+			// Sort categories by order field
+			sort.Slice(categories, func(i, j int) bool {
+				return categories[i].Order < categories[j].Order
+			})
 			
 			c.JSON(http.StatusOK, gin.H{
 				"categories": categories,

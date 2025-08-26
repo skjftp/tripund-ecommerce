@@ -16,6 +16,7 @@ type Product struct {
 	Status           string                 `json:"status" firestore:"status"`
 	Images           []string               `json:"images" firestore:"images"`
 	Categories       []string               `json:"categories" firestore:"categories"`
+	Subcategories    []string               `json:"subcategories" firestore:"subcategories"` // Added to support subcategory filtering
 	Tags             []string               `json:"tags" firestore:"tags"`
 	Attributes       []map[string]interface{} `json:"attributes" firestore:"attributes"`
 	Dimensions       map[string]interface{}   `json:"dimensions" firestore:"dimensions"`

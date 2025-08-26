@@ -41,7 +41,7 @@ type InvoiceLineItem struct {
 	TotalAmount float64 `json:"total_amount" firestore:"total_amount"`
 }
 
-type Address struct {
+type InvoiceAddress struct {
 	Line1      string `json:"line1" firestore:"line1"`
 	Line2      string `json:"line2,omitempty" firestore:"line2"`
 	City       string `json:"city" firestore:"city"`
@@ -52,13 +52,13 @@ type Address struct {
 }
 
 type BillingEntity struct {
-	Name       string   `json:"name" firestore:"name"`
-	GSTIN      string   `json:"gstin,omitempty" firestore:"gstin"`
-	PAN        string   `json:"pan,omitempty" firestore:"pan"`
-	Email      string   `json:"email,omitempty" firestore:"email"`
-	Phone      string   `json:"phone,omitempty" firestore:"phone"`
-	Address    Address  `json:"address" firestore:"address"`
-	IsB2B      bool     `json:"is_b2b" firestore:"is_b2b"`
+	Name       string         `json:"name" firestore:"name"`
+	GSTIN      string         `json:"gstin,omitempty" firestore:"gstin"`
+	PAN        string         `json:"pan,omitempty" firestore:"pan"`
+	Email      string         `json:"email,omitempty" firestore:"email"`
+	Phone      string         `json:"phone,omitempty" firestore:"phone"`
+	Address    InvoiceAddress `json:"address" firestore:"address"`
+	IsB2B      bool           `json:"is_b2b" firestore:"is_b2b"`
 }
 
 type BankDetails struct {
@@ -93,13 +93,13 @@ type Invoice struct {
 	SellerName        string             `json:"seller_name" firestore:"seller_name"`
 	SellerGSTIN       string             `json:"seller_gstin" firestore:"seller_gstin"`
 	SellerPAN         string             `json:"seller_pan" firestore:"seller_pan"`
-	SellerAddress     Address            `json:"seller_address" firestore:"seller_address"`
+	SellerAddress     InvoiceAddress     `json:"seller_address" firestore:"seller_address"`
 	SellerEmail       string             `json:"seller_email" firestore:"seller_email"`
 	SellerPhone       string             `json:"seller_phone" firestore:"seller_phone"`
 	
 	// Customer Details (Buyer)
 	BuyerDetails      BillingEntity      `json:"buyer_details" firestore:"buyer_details"`
-	ShippingAddress   Address            `json:"shipping_address" firestore:"shipping_address"`
+	ShippingAddress   InvoiceAddress     `json:"shipping_address" firestore:"shipping_address"`
 	
 	// Invoice Details
 	IssueDate         time.Time          `json:"issue_date" firestore:"issue_date"`

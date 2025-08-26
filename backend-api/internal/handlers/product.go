@@ -24,15 +24,61 @@ func NewProductHandler(db *database.Firebase) *ProductHandler {
 func (h *ProductHandler) GetProducts(c *gin.Context) {
 	products := make([]models.Product, 0)
 	
-	// Start with all products query
-	allDocs, err := h.db.Client.Collection("products").Documents(h.db.Context).GetAll()
+	// Build Firestore query based on filters
+	query := h.db.Client.Collection("products").Query
+	
+	// Get filter parameters
+	category := c.Query("category")
+	subcategory := c.Query("subcategory")
+	if subcategory == "" {
+		subcategory = c.Query("type")
+	}
+	
+	// Firestore only allows one array-contains per query
+	// So we'll filter by category in Firestore and subcategory in memory
+	if category != "" {
+		query = query.Where("categories", "array-contains", category)
+	}
+	
+	// Status filter
+	status := c.Query("status")
+	if status != "" && status != "all" {
+		query = query.Where("status", "==", status)
+	} else if status == "" {
+		// Default to active if no status specified
+		query = query.Where("status", "==", "active")
+	}
+	
+	// Featured filter
+	if featured := c.Query("featured"); featured == "true" {
+		query = query.Where("featured", "==", true)
+	}
+	
+	// Get limit for final result
+	limit := 100
+	if l := c.Query("limit"); l != "" {
+		if parsedLimit, err := strconv.Atoi(l); err == nil && parsedLimit > 0 {
+			limit = parsedLimit
+		}
+	}
+	
+	// If we need to filter by subcategory in memory, fetch more results
+	queryLimit := limit
+	if subcategory != "" {
+		queryLimit = 500 // Fetch more to ensure we have enough after filtering
+	}
+	query = query.Limit(queryLimit)
+	
+	// Execute query
+	docs, err := query.Documents(h.db.Context).GetAll()
 	if err != nil {
+		fmt.Printf("Firestore query error: %v\n", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch products"})
 		return
 	}
 
-	// Parse and convert products
-	for _, doc := range allDocs {
+	// Parse and filter products
+	for _, doc := range docs {
 		var product models.Product
 		if err := doc.DataTo(&product); err != nil {
 			fmt.Printf("Error parsing product %s: %v\n", doc.Ref.ID, err)
@@ -40,22 +86,38 @@ func (h *ProductHandler) GetProducts(c *gin.Context) {
 		}
 		product.ID = doc.Ref.ID
 		
-		// Apply filters
-		if !h.applyFilters(&product, c) {
-			continue
+		// Apply subcategory filter in memory if needed
+		if subcategory != "" {
+			found := false
+			for _, subcat := range product.Subcategories {
+				// Simple case-insensitive comparison
+				if strings.EqualFold(strings.TrimSpace(subcat), strings.TrimSpace(subcategory)) {
+					found = true
+					break
+				}
+				// Also try with spaces replacing dashes/underscores
+				normalizedQuery := strings.ReplaceAll(subcategory, "-", " ")
+				normalizedQuery = strings.ReplaceAll(normalizedQuery, "_", " ")
+				normalizedQuery = strings.ReplaceAll(normalizedQuery, "+", " ")
+				if strings.EqualFold(strings.TrimSpace(subcat), strings.TrimSpace(normalizedQuery)) {
+					found = true
+					break
+				}
+			}
+			if !found {
+				continue
+			}
 		}
 		
 		products = append(products, product)
-	}
-
-	// Apply limit
-	limit := 100
-	if l := c.Query("limit"); l != "" {
-		if parsedLimit, err := strconv.Atoi(l); err == nil {
-			limit = parsedLimit
+		
+		// Stop if we have enough products
+		if len(products) >= limit {
+			break
 		}
 	}
-	
+
+	// Ensure we don't exceed the requested limit
 	if len(products) > limit {
 		products = products[:limit]
 	}
@@ -183,92 +245,3 @@ func (h *ProductHandler) SearchProducts(c *gin.Context) {
 	})
 }
 
-// applyFilters checks if a product matches all the filters
-func (h *ProductHandler) applyFilters(product *models.Product, c *gin.Context) bool {
-	// Category filter
-	if category := c.Query("category"); category != "" {
-		found := false
-		for _, cat := range product.Categories {
-			if cat == category {
-				found = true
-				break
-			}
-		}
-		if !found {
-			return false
-		}
-	}
-
-	// Featured filter
-	if featured := c.Query("featured"); featured == "true" {
-		if !product.Featured {
-			return false
-		}
-	}
-
-	// Status filter
-	status := c.Query("status")
-	if status != "" && status != "all" {
-		if product.Status != status {
-			return false
-		}
-	} else if status == "" {
-		// Default to active if no status specified
-		if product.Status != "active" {
-			return false
-		}
-	}
-
-	// Price range filter
-	if priceRange := c.Query("price"); priceRange != "" {
-		prices := strings.Split(priceRange, "-")
-		if len(prices) == 2 {
-			minPrice, _ := strconv.ParseFloat(prices[0], 64)
-			maxPrice := float64(999999)
-			if prices[1] != "" {
-				maxPrice, _ = strconv.ParseFloat(prices[1], 64)
-			}
-			if product.Price < minPrice || product.Price > maxPrice {
-				return false
-			}
-		}
-	}
-
-	// Attribute filters (material, type, color, etc.)
-	for key, values := range c.Request.URL.Query() {
-		// Skip known non-attribute parameters
-		if key == "category" || key == "featured" || key == "status" || 
-		   key == "price" || key == "limit" || key == "sort" || key == "view" {
-			continue
-		}
-		
-		// Check if product has this attribute
-		foundAttribute := false
-		if product.Attributes != nil {
-			for _, attr := range product.Attributes {
-				if attrName, ok := attr["name"].(string); ok {
-					if strings.ToLower(attrName) == key {
-						// Check if the attribute value matches any of the filter values
-						filterValues := strings.Split(values[0], ",")
-						if attrValue, ok := attr["value"]; ok {
-							attrValueStr := fmt.Sprintf("%v", attrValue)
-							for _, filterValue := range filterValues {
-								if strings.ToLower(attrValueStr) == strings.ToLower(filterValue) {
-									foundAttribute = true
-									break
-								}
-							}
-						}
-						break
-					}
-				}
-			}
-		}
-		
-		if !foundAttribute {
-			return false
-		}
-	}
-
-	return true
-}

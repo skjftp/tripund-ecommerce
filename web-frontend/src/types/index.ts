@@ -15,6 +15,7 @@ export interface Product {
   status: string;
   images: string[];
   categories: string[];
+  subcategories?: string[];
   tags: string[];
   attributes: Array<{
     name: string;
