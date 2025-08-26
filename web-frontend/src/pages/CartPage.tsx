@@ -5,7 +5,8 @@ import { Trash2, Plus, Minus, ShoppingBag, ArrowRight } from 'lucide-react';
 import { RootState } from '../store';
 import { removeFromCart, updateQuantity } from '../store/slices/cartSlice';
 import { getPublicSettings, calculateShipping, type PublicSettings } from '../services/settings';
-import { calculateCartGSTBreakdown, formatPrice } from '../utils/pricing';
+import { formatPrice } from '../utils/pricing';
+import { calculateCartStateBasedGST, INDIAN_STATES } from '../utils/gst';
 
 export default function CartPage() {
   const dispatch = useDispatch();
@@ -142,9 +143,17 @@ export default function CartPage() {
               )}
               
               <div className="space-y-2 mb-4">
+                {/* Note about state selection */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                  <p className="text-sm text-blue-800">
+                    GST will be calculated based on your delivery state at checkout
+                  </p>
+                </div>
+                
                 {/* Calculate GST breakdown from inclusive prices */}
                 {(() => {
-                  const gstBreakdown = calculateCartGSTBreakdown(items, settings?.payment.tax_rate || 18);
+                  // Using Karnataka as default for cart display (will be accurate at checkout)
+                  const gstBreakdown = calculateCartStateBasedGST(items, 'KA', settings?.payment.tax_rate || 18);
                   const shipping = settings ? calculateShipping(total, settings) : 0;
                   const finalTotal = total + shipping; // Total is already GST-inclusive
                   
@@ -156,7 +165,7 @@ export default function CartPage() {
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">GST ({gstBreakdown.gstRate}%)</span>
-                        <span>₹{formatPrice(gstBreakdown.gstAmount)}</span>
+                        <span>₹{formatPrice(gstBreakdown.totalGST)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">Shipping</span>

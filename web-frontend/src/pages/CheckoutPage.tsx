@@ -10,7 +10,8 @@ import { clearCart } from '../store/slices/cartSlice';
 import toast from 'react-hot-toast';
 import api from '../services/api';
 import { getPublicSettings, calculateShipping, type PublicSettings } from '../services/settings';
-import { calculateCartGSTBreakdown, formatPrice } from '../utils/pricing';
+import { formatPrice } from '../utils/pricing';
+import { calculateCartStateBasedGST, INDIAN_STATES, type GSTBreakdown } from '../utils/gst';
 
 const checkoutSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
@@ -55,19 +56,6 @@ export default function CheckoutPage() {
   } | null>(null);
   const [promoLoading, setPromoLoading] = useState(false);
 
-  // Calculate values using dynamic settings
-  const shipping = settings ? calculateShipping(total, settings) : 0;
-  const promoDiscount = appliedPromo ? appliedPromo.discount : 0;
-  const discountedTotal = total - promoDiscount;
-  
-  // Calculate GST breakdown from GST-inclusive prices
-  const gstBreakdown = calculateCartGSTBreakdown(
-    items.map(item => ({ price: item.price, quantity: item.quantity })),
-    settings?.payment.tax_rate || 18
-  );
-  
-  const grandTotal = discountedTotal + shipping; // Total is already GST-inclusive
-
   const {
     register,
     handleSubmit,
@@ -84,6 +72,32 @@ export default function CheckoutPage() {
       },
     },
   });
+
+  // Watch the state field to calculate GST dynamically
+  const selectedState = watch('address.state');
+  
+  // Calculate values using dynamic settings
+  const shipping = settings ? calculateShipping(total, settings) : 0;
+  const promoDiscount = appliedPromo ? appliedPromo.discount : 0;
+  const discountedTotal = total - promoDiscount;
+  
+  // Calculate GST breakdown from GST-inclusive prices based on selected state
+  const gstBreakdown: GSTBreakdown = selectedState ? 
+    calculateCartStateBasedGST(
+      items.map(item => ({ price: item.price, quantity: item.quantity })),
+      selectedState,
+      settings?.payment.tax_rate || 18
+    ) : {
+      basePrice: Math.round((discountedTotal * 100) / 118),
+      cgst: 0,
+      sgst: 0,
+      igst: 0,
+      totalGST: discountedTotal - Math.round((discountedTotal * 100) / 118),
+      gstRate: 18,
+      isInterstate: false
+    };
+  
+  const grandTotal = discountedTotal + shipping; // Total is already GST-inclusive
 
   useEffect(() => {
     if (items.length === 0) {
@@ -267,7 +281,10 @@ export default function CheckoutPage() {
       totals: {
         subtotal: gstBreakdown.basePrice,
         shipping,
-        tax: gstBreakdown.gstAmount,
+        tax: gstBreakdown.totalGST,
+        cgst: gstBreakdown.cgst,
+        sgst: gstBreakdown.sgst,
+        igst: gstBreakdown.igst,
         total: grandTotal,
       },
       paymentMethod: data.paymentMethod,
@@ -439,10 +456,17 @@ export default function CheckoutPage() {
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         State
                       </label>
-                      <input
+                      <select
                         {...register('address.state')}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                      />
+                      >
+                        <option value="">Select State</option>
+                        {INDIAN_STATES.map((state) => (
+                          <option key={state.code} value={state.code}>
+                            {state.name}
+                          </option>
+                        ))}
+                      </select>
                       {errors.address?.state && (
                         <p className="text-red-500 text-sm mt-1">{errors.address.state.message}</p>
                       )}
@@ -560,12 +584,41 @@ export default function CheckoutPage() {
                     <span className="text-gray-600">Subtotal (excl. GST)</span>
                     <span>₹{formatPrice(gstBreakdown.basePrice)}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">
-                      GST ({gstBreakdown.gstRate}%)
-                    </span>
-                    <span>₹{formatPrice(gstBreakdown.gstAmount)}</span>
-                  </div>
+                  {selectedState && (
+                    <>
+                      {gstBreakdown.isInterstate ? (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">
+                            IGST ({gstBreakdown.gstRate}%)
+                          </span>
+                          <span>₹{formatPrice(gstBreakdown.igst)}</span>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">
+                              CGST ({gstBreakdown.gstRate / 2}%)
+                            </span>
+                            <span>₹{formatPrice(gstBreakdown.cgst)}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">
+                              SGST ({gstBreakdown.gstRate / 2}%)
+                            </span>
+                            <span>₹{formatPrice(gstBreakdown.sgst)}</span>
+                          </div>
+                        </>
+                      )}
+                    </>
+                  )}
+                  {!selectedState && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">
+                        GST ({gstBreakdown.gstRate}%)
+                      </span>
+                      <span>₹{formatPrice(gstBreakdown.totalGST)}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between">
                     <span className="text-gray-600">Shipping</span>
                     <span>

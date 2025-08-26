@@ -293,19 +293,35 @@ func getOrderConfirmationTemplate() string {
         
         <table class="items-table">
             <tr>
-                <td colspan="4"><strong>Subtotal:</strong></td>
+                <td colspan="4"><strong>Subtotal (excl. GST):</strong></td>
                 <td><strong>₹{{printf "%.2f" .Totals.Subtotal}}</strong></td>
             </tr>
+            {{if gt .Totals.CGST 0.0}}
+            <tr>
+                <td colspan="4"><strong>CGST (9%):</strong></td>
+                <td><strong>₹{{printf "%.2f" .Totals.CGST}}</strong></td>
+            </tr>
+            <tr>
+                <td colspan="4"><strong>SGST (9%):</strong></td>
+                <td><strong>₹{{printf "%.2f" .Totals.SGST}}</strong></td>
+            </tr>
+            {{else if gt .Totals.IGST 0.0}}
+            <tr>
+                <td colspan="4"><strong>IGST (18%):</strong></td>
+                <td><strong>₹{{printf "%.2f" .Totals.IGST}}</strong></td>
+            </tr>
+            {{else}}
+            <tr>
+                <td colspan="4"><strong>GST (18%):</strong></td>
+                <td><strong>₹{{printf "%.2f" .Totals.Tax}}</strong></td>
+            </tr>
+            {{end}}
             <tr>
                 <td colspan="4"><strong>Shipping:</strong></td>
                 <td><strong>₹{{printf "%.2f" .Totals.Shipping}}</strong></td>
             </tr>
-            <tr>
-                <td colspan="4"><strong>Tax:</strong></td>
-                <td><strong>₹{{printf "%.2f" .Totals.Tax}}</strong></td>
-            </tr>
             <tr class="total-row">
-                <td colspan="4"><strong>Total:</strong></td>
+                <td colspan="4"><strong>Total (incl. GST):</strong></td>
                 <td><strong>₹{{printf "%.2f" .Totals.Total}}</strong></td>
             </tr>
         </table>

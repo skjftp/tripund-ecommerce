@@ -52,6 +52,9 @@ type OrderTotals struct {
 	Subtotal     float64 `json:"subtotal" firestore:"subtotal"`
 	Discount     float64 `json:"discount" firestore:"discount"`
 	Tax          float64 `json:"tax" firestore:"tax"`
+	CGST         float64 `json:"cgst" firestore:"cgst"`
+	SGST         float64 `json:"sgst" firestore:"sgst"`
+	IGST         float64 `json:"igst" firestore:"igst"`
 	Shipping     float64 `json:"shipping" firestore:"shipping"`
 	Total        float64 `json:"total" firestore:"total"`
 	CouponCode   string  `json:"coupon_code" firestore:"coupon_code"`
