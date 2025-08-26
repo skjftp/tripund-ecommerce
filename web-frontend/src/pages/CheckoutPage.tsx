@@ -250,6 +250,12 @@ export default function CheckoutPage() {
         product_id: item.product_id,
         quantity: item.quantity,
         price: item.price,
+        // Include variant information if present
+        ...(item.product.variant_info && {
+          variant_id: item.product.variant_info.variant_id,
+          variant_color: item.product.variant_info.color,
+          variant_size: item.product.variant_info.size,
+        }),
       })),
       totals: {
         subtotal: total,

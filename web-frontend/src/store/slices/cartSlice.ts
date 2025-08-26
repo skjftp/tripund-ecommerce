@@ -41,7 +41,24 @@ const cartSlice = createSlice({
   reducers: {
     addToCart: (state, action: PayloadAction<{ product: Product; quantity: number }>) => {
       const { product, quantity } = action.payload;
-      const existingItem = state.items.find((item) => item.product_id === product.id);
+      
+      // Create a unique key for variant products
+      const itemKey = product.variant_info 
+        ? `${product.id}_${product.variant_info.variant_id}`
+        : product.id;
+      
+      const existingItem = state.items.find((item) => {
+        // Check if it's the same product and same variant (if applicable)
+        if (item.product_id !== product.id) return false;
+        
+        // If product has variant info, compare variant IDs
+        if (product.variant_info && item.product.variant_info) {
+          return item.product.variant_info.variant_id === product.variant_info.variant_id;
+        }
+        
+        // If neither has variant info, it's the same product
+        return !item.product.variant_info;
+      });
 
       if (existingItem) {
         existingItem.quantity += quantity;
@@ -60,8 +77,22 @@ const cartSlice = createSlice({
       state.itemCount = totals.itemCount;
       localStorage.setItem('cart', JSON.stringify(state.items));
     },
-    removeFromCart: (state, action: PayloadAction<string>) => {
-      state.items = state.items.filter((item) => item.product_id !== action.payload);
+    removeFromCart: (state, action: PayloadAction<string | { productId: string; variantId?: string }>) => {
+      // Handle both string (product ID) and object (product ID with variant ID)
+      if (typeof action.payload === 'string') {
+        // Legacy: remove by product ID only
+        state.items = state.items.filter((item) => item.product_id !== action.payload);
+      } else {
+        // New: remove specific variant
+        const { productId, variantId } = action.payload;
+        state.items = state.items.filter((item) => {
+          if (item.product_id !== productId) return true;
+          if (variantId && item.product.variant_info) {
+            return item.product.variant_info.variant_id !== variantId;
+          }
+          return false;
+        });
+      }
       const totals = calculateTotals(state.items);
       state.total = totals.total;
       state.itemCount = totals.itemCount;

@@ -22,14 +22,18 @@ type Order struct {
 }
 
 type OrderItem struct {
-	ProductID   string  `json:"product_id" firestore:"product_id"`
-	ProductName string  `json:"product_name" firestore:"product_name"`
-	ProductImage string `json:"product_image" firestore:"product_image"`
-	SKU         string  `json:"sku" firestore:"sku"`
-	Quantity    int     `json:"quantity" firestore:"quantity"`
-	Price       float64 `json:"price" firestore:"price"`
-	Discount    float64 `json:"discount" firestore:"discount"`
-	Total       float64 `json:"total" firestore:"total"`
+	ProductID    string  `json:"product_id" firestore:"product_id"`
+	ProductName  string  `json:"product_name" firestore:"product_name"`
+	ProductImage string  `json:"product_image" firestore:"product_image"`
+	SKU          string  `json:"sku" firestore:"sku"`
+	Quantity     int     `json:"quantity" firestore:"quantity"`
+	Price        float64 `json:"price" firestore:"price"`
+	Discount     float64 `json:"discount" firestore:"discount"`
+	Total        float64 `json:"total" firestore:"total"`
+	// Variant information if applicable
+	VariantID    string  `json:"variant_id,omitempty" firestore:"variant_id,omitempty"`
+	VariantColor string  `json:"variant_color,omitempty" firestore:"variant_color,omitempty"`
+	VariantSize  string  `json:"variant_size,omitempty" firestore:"variant_size,omitempty"`
 }
 
 type Payment struct {

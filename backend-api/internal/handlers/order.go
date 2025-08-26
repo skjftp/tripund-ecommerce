@@ -40,9 +40,12 @@ type CreateOrderRequest struct {
 }
 
 type OrderItemRequest struct {
-	ProductID string  `json:"product_id" validate:"required"`
-	Quantity  int     `json:"quantity" validate:"required,min=1"`
-	Price     float64 `json:"price" validate:"required,min=0"`
+	ProductID    string  `json:"product_id" validate:"required"`
+	Quantity     int     `json:"quantity" validate:"required,min=1"`
+	Price        float64 `json:"price" validate:"required,min=0"`
+	VariantID    string  `json:"variant_id,omitempty"`
+	VariantColor string  `json:"variant_color,omitempty"`
+	VariantSize  string  `json:"variant_size,omitempty"`
 }
 
 func (h *OrderHandler) CreateOrder(c *gin.Context) {
@@ -73,20 +76,35 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 			return
 		}
 
+		// If variant is specified, use variant SKU
+		sku := product.SKU
+		if item.VariantID != "" {
+			// Find the variant and use its SKU
+			for _, v := range product.Variants {
+				if v.ID == item.VariantID {
+					sku = v.SKU
+					break
+				}
+			}
+		}
+
 		orderItem := models.OrderItem{
-			ProductID:   item.ProductID,
-			ProductName: product.Name,
+			ProductID:    item.ProductID,
+			ProductName:  product.Name,
 			ProductImage: func() string {
 				if len(product.Images) > 0 {
 					return product.Images[0]
 				}
 				return ""
 			}(),
-			SKU:      product.SKU,
-			Quantity: item.Quantity,
-			Price:    item.Price,
-			Discount: 0,
-			Total:    item.Price * float64(item.Quantity),
+			SKU:          sku,
+			Quantity:     item.Quantity,
+			Price:        item.Price,
+			Discount:     0,
+			Total:        item.Price * float64(item.Quantity),
+			VariantID:    item.VariantID,
+			VariantColor: item.VariantColor,
+			VariantSize:  item.VariantSize,
 		}
 		orderItems = append(orderItems, orderItem)
 	}
@@ -292,7 +310,7 @@ func (h *OrderHandler) UpdateOrderStatus(c *gin.Context) {
 		return
 	}
 
-	// If changing status to "shipped", decrement product stock
+	// If changing status to "shipped", decrement product/variant stock
 	if req.Status == "shipped" && order.Status != "shipped" {
 		// Iterate through order items and decrement stock
 		for _, item := range order.Items {
@@ -311,22 +329,61 @@ func (h *OrderHandler) UpdateOrderStatus(c *gin.Context) {
 				continue
 			}
 
-			// Calculate new stock
-			newStock := product.StockQuantity - item.Quantity
-			if newStock < 0 {
-				newStock = 0 // Prevent negative stock
-			}
-
-			// Update product stock
-			_, err = productRef.Update(h.db.Context, []firestore.Update{
-				{Path: "stock_quantity", Value: newStock},
-				{Path: "updated_at", Value: time.Now()},
-			})
-
-			if err != nil {
-				log.Printf("Failed to update stock for product %s: %v", item.ProductID, err)
+			// Check if this is a variant order
+			if item.VariantID != "" && product.HasVariants {
+				// Update variant stock
+				variantUpdated := false
+				for i, variant := range product.Variants {
+					if variant.ID == item.VariantID {
+						// Decrement variant stock
+						newStock := variant.StockQuantity - item.Quantity
+						if newStock < 0 {
+							newStock = 0
+						}
+						product.Variants[i].StockQuantity = newStock
+						
+						// Update availability
+						if newStock == 0 {
+							product.Variants[i].Available = false
+						}
+						
+						variantUpdated = true
+						log.Printf("Updated variant stock for product %s, variant %s (color: %s, size: %s): %d -> %d", 
+							item.ProductID, item.VariantID, item.VariantColor, item.VariantSize, 
+							variant.StockQuantity, newStock)
+						break
+					}
+				}
+				
+				if variantUpdated {
+					// Update the entire product document with modified variants
+					_, err = productRef.Update(h.db.Context, []firestore.Update{
+						{Path: "variants", Value: product.Variants},
+						{Path: "updated_at", Value: time.Now()},
+					})
+					
+					if err != nil {
+						log.Printf("Failed to update variant stock for product %s: %v", item.ProductID, err)
+					}
+				}
 			} else {
-				log.Printf("Updated stock for product %s: %d -> %d", item.ProductID, product.StockQuantity, newStock)
+				// Regular product without variants - update main stock
+				newStock := product.StockQuantity - item.Quantity
+				if newStock < 0 {
+					newStock = 0 // Prevent negative stock
+				}
+
+				// Update product stock
+				_, err = productRef.Update(h.db.Context, []firestore.Update{
+					{Path: "stock_quantity", Value: newStock},
+					{Path: "updated_at", Value: time.Now()},
+				})
+
+				if err != nil {
+					log.Printf("Failed to update stock for product %s: %v", item.ProductID, err)
+				} else {
+					log.Printf("Updated stock for product %s: %d -> %d", item.ProductID, product.StockQuantity, newStock)
+				}
 			}
 		}
 	}
@@ -372,20 +429,35 @@ func (h *OrderHandler) CreateGuestOrder(c *gin.Context) {
 			return
 		}
 
+		// If variant is specified, use variant SKU
+		sku := product.SKU
+		if item.VariantID != "" {
+			// Find the variant and use its SKU
+			for _, v := range product.Variants {
+				if v.ID == item.VariantID {
+					sku = v.SKU
+					break
+				}
+			}
+		}
+
 		orderItem := models.OrderItem{
-			ProductID:   item.ProductID,
-			ProductName: product.Name,
+			ProductID:    item.ProductID,
+			ProductName:  product.Name,
 			ProductImage: func() string {
 				if len(product.Images) > 0 {
 					return product.Images[0]
 				}
 				return ""
 			}(),
-			SKU:      product.SKU,
-			Quantity: item.Quantity,
-			Price:    item.Price,
-			Discount: 0,
-			Total:    item.Price * float64(item.Quantity),
+			SKU:          sku,
+			Quantity:     item.Quantity,
+			Price:        item.Price,
+			Discount:     0,
+			Total:        item.Price * float64(item.Quantity),
+			VariantID:    item.VariantID,
+			VariantColor: item.VariantColor,
+			VariantSize:  item.VariantSize,
 		}
 		orderItems = append(orderItems, orderItem)
 	}

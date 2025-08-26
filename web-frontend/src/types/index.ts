@@ -59,6 +59,13 @@ export interface Product {
     quantity: number;
     sku: string;
   };
+  
+  // Variant info when added to cart
+  variant_info?: {
+    variant_id: string;
+    color: string;
+    size: string;
+  };
 }
 
 export interface User {

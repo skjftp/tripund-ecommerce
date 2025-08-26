@@ -23,8 +23,12 @@ export default function CartPage() {
     }
   };
 
-  const handleRemove = (productId: string) => {
-    dispatch(removeFromCart(productId));
+  const handleRemove = (productId: string, variantId?: string) => {
+    if (variantId) {
+      dispatch(removeFromCart({ productId, variantId }));
+    } else {
+      dispatch(removeFromCart(productId));
+    }
   };
 
   if (!Array.isArray(items) || items.length === 0) {
@@ -74,9 +78,17 @@ export default function CartPage() {
                     >
                       {item.product.name || item.product.title}
                     </Link>
-                    <p className="text-gray-600 text-sm mt-1">
-                      {/* Artisan info removed */}
-                    </p>
+                    {item.product.variant_info ? (
+                      <p className="text-gray-600 text-sm mt-1">
+                        {item.product.variant_info.color && `Color: ${item.product.variant_info.color}`}
+                        {item.product.variant_info.color && item.product.variant_info.size && ' | '}
+                        {item.product.variant_info.size && `Size: ${item.product.variant_info.size}`}
+                      </p>
+                    ) : (
+                      <p className="text-gray-600 text-sm mt-1">
+                        {/* No variant info */}
+                      </p>
+                    )}
                     <p className="text-primary-600 font-semibold mt-2">
                       ₹{item.price.toLocaleString()}
                     </p>
@@ -103,7 +115,7 @@ export default function CartPage() {
                       ₹{(item.price * item.quantity).toLocaleString()}
                     </p>
                     <button
-                      onClick={() => handleRemove(item.product_id)}
+                      onClick={() => handleRemove(item.product_id, item.product.variant_info?.variant_id)}
                       className="text-red-500 hover:text-red-700 mt-2"
                     >
                       <Trash2 size={18} />
