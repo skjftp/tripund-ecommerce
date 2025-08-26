@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Plus, X, Trash2, Upload } from 'lucide-react';
 
 interface ProductVariant {
@@ -70,29 +70,33 @@ export default function ProductVariantManager({
     }
   }, [initialVariants]);
 
-  // Generate variants when colors or sizes change
-  useEffect(() => {
-    if (selectedColors.length > 0 || selectedSizes.length > 0) {
-      generateVariants();
-    } else {
-      setVariants([]);
-    }
-  }, [selectedColors, selectedSizes, bulkPriceMode, bulkPrice]);
+  // Memoize variants to prevent unnecessary re-creation
+  const variantMap = useMemo(() => {
+    const map = new Map<string, ProductVariant>();
+    variants.forEach(v => {
+      const key = `${v.color}-${v.size}`;
+      map.set(key, v);
+    });
+    return map;
+  }, [variants]);
 
-  const generateVariants = () => {
+  // Generate variants when colors or sizes change
+  const generateVariants = useCallback(() => {
     const newVariants: ProductVariant[] = [];
     
     // If only colors selected (no sizes)
     if (selectedColors.length > 0 && selectedSizes.length === 0) {
       selectedColors.forEach(color => {
-        const existingVariant = variants.find(v => v.color === color && !v.size);
+        const key = `${color}-`;
+        const existingVariant = variantMap.get(key);
+        const variantId = `${baseSKU}-${color.toLowerCase().replace(/\s+/g, '-')}`;
         newVariants.push({
-          id: existingVariant?.id || `${baseSKU}-${color.toLowerCase().replace(/\s+/g, '-')}`,
+          id: existingVariant?.id || variantId,
           color,
           size: '',
-          price: existingVariant?.price || (bulkPriceMode === 'same' ? bulkPrice : basePrice),
+          price: existingVariant?.price !== undefined ? existingVariant.price : (bulkPriceMode === 'same' ? bulkPrice : basePrice),
           sale_price: existingVariant?.sale_price,
-          sku: existingVariant?.sku || `${baseSKU}-${color.toLowerCase().replace(/\s+/g, '-')}`,
+          sku: existingVariant?.sku || variantId,
           stock_quantity: existingVariant?.stock_quantity || 0,
           images: existingVariant?.images || [],
           available: existingVariant?.available !== undefined ? existingVariant.available : true
@@ -102,14 +106,16 @@ export default function ProductVariantManager({
     // If only sizes selected (no colors)
     else if (selectedSizes.length > 0 && selectedColors.length === 0) {
       selectedSizes.forEach(size => {
-        const existingVariant = variants.find(v => v.size === size && !v.color);
+        const key = `-${size}`;
+        const existingVariant = variantMap.get(key);
+        const variantId = `${baseSKU}-${size.toLowerCase().replace(/\s+/g, '-')}`;
         newVariants.push({
-          id: existingVariant?.id || `${baseSKU}-${size.toLowerCase().replace(/\s+/g, '-')}`,
+          id: existingVariant?.id || variantId,
           color: '',
           size,
-          price: existingVariant?.price || (bulkPriceMode === 'same' ? bulkPrice : basePrice),
+          price: existingVariant?.price !== undefined ? existingVariant.price : (bulkPriceMode === 'same' ? bulkPrice : basePrice),
           sale_price: existingVariant?.sale_price,
-          sku: existingVariant?.sku || `${baseSKU}-${size.toLowerCase().replace(/\s+/g, '-')}`,
+          sku: existingVariant?.sku || variantId,
           stock_quantity: existingVariant?.stock_quantity || 0,
           images: existingVariant?.images || [],
           available: existingVariant?.available !== undefined ? existingVariant.available : true
@@ -120,13 +126,14 @@ export default function ProductVariantManager({
     else {
       selectedColors.forEach(color => {
         selectedSizes.forEach(size => {
-          const existingVariant = variants.find(v => v.color === color && v.size === size);
+          const key = `${color}-${size}`;
+          const existingVariant = variantMap.get(key);
           const variantId = `${baseSKU}-${color.toLowerCase().replace(/\s+/g, '-')}-${size.toLowerCase().replace(/\s+/g, '-')}`;
           newVariants.push({
             id: existingVariant?.id || variantId,
             color,
             size,
-            price: existingVariant?.price || (bulkPriceMode === 'same' ? bulkPrice : basePrice),
+            price: existingVariant?.price !== undefined ? existingVariant.price : (bulkPriceMode === 'same' ? bulkPrice : basePrice),
             sale_price: existingVariant?.sale_price,
             sku: existingVariant?.sku || variantId,
             stock_quantity: existingVariant?.stock_quantity || 0,
@@ -139,7 +146,16 @@ export default function ProductVariantManager({
     
     setVariants(newVariants);
     onChange(newVariants, selectedColors, selectedSizes);
-  };
+  }, [selectedColors, selectedSizes, bulkPriceMode, bulkPrice, baseSKU, basePrice, onChange, variantMap]);
+
+  useEffect(() => {
+    if (selectedColors.length > 0 || selectedSizes.length > 0) {
+      generateVariants();
+    } else {
+      setVariants([]);
+      onChange([], [], []);
+    }
+  }, [selectedColors, selectedSizes, bulkPriceMode, bulkPrice, generateVariants]);
 
   const addColor = (color: string) => {
     if (color && !selectedColors.includes(color)) {
@@ -211,6 +227,8 @@ export default function ProductVariantManager({
           <div className="flex gap-2">
             <input
               type="text"
+              id="custom-color-input"
+              name="customColor"
               placeholder="Add custom color..."
               value={customColor}
               onChange={(e) => setCustomColor(e.target.value)}
@@ -291,6 +309,8 @@ export default function ProductVariantManager({
           <div className="flex gap-2">
             <input
               type="text"
+              id="custom-size-input"
+              name="customSize"
               placeholder="Add custom size..."
               value={customSize}
               onChange={(e) => setCustomSize(e.target.value)}
@@ -374,6 +394,8 @@ export default function ProductVariantManager({
               <label className="text-sm">Price for all variants:</label>
               <input
                 type="number"
+                id="bulk-price-input"
+                name="bulkPrice"
                 value={bulkPrice}
                 onChange={(e) => setBulkPrice(parseFloat(e.target.value) || 0)}
                 className="w-32 px-3 py-1 text-sm border rounded-lg"
@@ -424,6 +446,8 @@ export default function ProductVariantManager({
                     <td className="px-3 py-2">
                       <input
                         type="text"
+                        id={`variant-sku-${index}`}
+                        name={`variant-sku-${index}`}
                         value={variant.sku}
                         onChange={(e) => updateVariant(index, 'sku', e.target.value)}
                         className="w-full px-2 py-1 text-sm border rounded"
@@ -432,6 +456,8 @@ export default function ProductVariantManager({
                     <td className="px-3 py-2">
                       <input
                         type="number"
+                        id={`variant-price-${index}`}
+                        name={`variant-price-${index}`}
                         value={variant.price}
                         onChange={(e) => updateVariant(index, 'price', parseFloat(e.target.value) || 0)}
                         className="w-20 px-2 py-1 text-sm border rounded"
@@ -443,6 +469,8 @@ export default function ProductVariantManager({
                     <td className="px-3 py-2">
                       <input
                         type="number"
+                        id={`variant-sale-price-${index}`}
+                        name={`variant-sale-price-${index}`}
                         value={variant.sale_price || ''}
                         onChange={(e) => updateVariant(index, 'sale_price', e.target.value ? parseFloat(e.target.value) : undefined)}
                         className="w-20 px-2 py-1 text-sm border rounded"
@@ -454,6 +482,8 @@ export default function ProductVariantManager({
                     <td className="px-3 py-2">
                       <input
                         type="number"
+                        id={`variant-stock-${index}`}
+                        name={`variant-stock-${index}`}
                         value={variant.stock_quantity}
                         onChange={(e) => updateVariant(index, 'stock_quantity', parseInt(e.target.value) || 0)}
                         className="w-20 px-2 py-1 text-sm border rounded"
@@ -463,6 +493,8 @@ export default function ProductVariantManager({
                     <td className="px-3 py-2">
                       <input
                         type="checkbox"
+                        id={`variant-available-${index}`}
+                        name={`variant-available-${index}`}
                         checked={variant.available}
                         onChange={(e) => updateVariant(index, 'available', e.target.checked)}
                         className="rounded text-blue-500"
