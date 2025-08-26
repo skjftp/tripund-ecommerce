@@ -43,13 +43,17 @@ func NewOAuth2EmailService() (*OAuth2EmailService, error) {
 	if credentialsJSON == "" {
 		return nil, fmt.Errorf("GOOGLE_SERVICE_ACCOUNT_KEY environment variable not set")
 	}
+	
+	log.Printf("OAuth2: Service account key found, length: %d", len(credentialsJSON))
 
 	fromEmail := os.Getenv("EMAIL_FROM")
 	if fromEmail == "" {
 		fromEmail = "orders@tripundlifestyle.com"
 	}
+	log.Printf("OAuth2: Will send emails from: %s", fromEmail)
 
 	// Create Gmail service with service account credentials
+	log.Printf("OAuth2: Creating Gmail service with domain-wide delegation...")
 	service, err := gmail.NewService(ctx, 
 		option.WithCredentialsJSON([]byte(credentialsJSON)),
 		option.WithScopes(gmail.GmailSendScope),
@@ -59,6 +63,7 @@ func NewOAuth2EmailService() (*OAuth2EmailService, error) {
 		return nil, fmt.Errorf("failed to create Gmail service: %v", err)
 	}
 
+	log.Printf("OAuth2: Gmail service created successfully")
 	return &OAuth2EmailService{
 		FromEmail: fromEmail,
 		service:   service,
@@ -145,6 +150,8 @@ func (e *OAuth2EmailService) SendShippingConfirmation(order models.Order) error 
 }
 
 func (e *OAuth2EmailService) sendEmail(to, subject, body string) error {
+	log.Printf("OAuth2: Attempting to send email to %s with subject: %s", to, subject)
+	
 	// Create the email message
 	message := &gmail.Message{}
 	
@@ -158,14 +165,17 @@ func (e *OAuth2EmailService) sendEmail(to, subject, body string) error {
 
 	// Encode the message
 	message.Raw = base64.URLEncoding.EncodeToString([]byte(emailBody))
+	log.Printf("OAuth2: Email message created, size: %d bytes", len(message.Raw))
 
 	// Send the email
-	_, err := e.service.Users.Messages.Send("me", message).Do()
+	log.Printf("OAuth2: Calling Gmail API to send email...")
+	result, err := e.service.Users.Messages.Send("me", message).Do()
 	if err != nil {
+		log.Printf("OAuth2 ERROR: Gmail API error: %v", err)
 		return fmt.Errorf("failed to send email via Gmail API: %v", err)
 	}
 
-	log.Printf("Email sent successfully to %s via Gmail API", to)
+	log.Printf("OAuth2 SUCCESS: Email sent successfully to %s via Gmail API. Message ID: %s", to, result.Id)
 	return nil
 }
 
