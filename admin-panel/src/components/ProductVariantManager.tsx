@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Plus, X, Trash2, Upload } from 'lucide-react';
 
 interface ProductVariant {
@@ -52,145 +52,144 @@ export default function ProductVariantManager({
   variants: initialVariants, 
   onChange 
 }: VariantManagerProps) {
-  const [variants, setVariants] = useState<ProductVariant[]>(initialVariants || []);
+  // Use refs to store variant data to prevent recreating objects
+  const variantDataRef = useRef<Map<string, Partial<ProductVariant>>>(new Map());
+  
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
   const [customColor, setCustomColor] = useState('');
   const [customSize, setCustomSize] = useState('');
   const [bulkPriceMode, setBulkPriceMode] = useState<'same' | 'different'>('same');
   const [bulkPrice, setBulkPrice] = useState(basePrice);
+  const [updateTrigger, setUpdateTrigger] = useState(0);
 
-  // Initialize selected colors and sizes from existing variants
+  // Initialize from existing variants
   useEffect(() => {
     if (initialVariants && initialVariants.length > 0) {
-      const colors = [...new Set(initialVariants.map(v => v.color))];
-      const sizes = [...new Set(initialVariants.map(v => v.size))];
+      const colors = [...new Set(initialVariants.map(v => v.color).filter(Boolean))];
+      const sizes = [...new Set(initialVariants.map(v => v.size).filter(Boolean))];
+      
+      // Store existing variant data
+      initialVariants.forEach(variant => {
+        const key = `${variant.color || ''}-${variant.size || ''}`;
+        variantDataRef.current.set(key, {
+          price: variant.price,
+          sale_price: variant.sale_price,
+          sku: variant.sku,
+          stock_quantity: variant.stock_quantity,
+          images: variant.images,
+          available: variant.available
+        });
+      });
+      
       setSelectedColors(colors);
       setSelectedSizes(sizes);
     }
-  }, [initialVariants]);
+  }, []);
 
-  // Memoize variants to prevent unnecessary re-creation
-  const variantMap = useMemo(() => {
-    const map = new Map<string, ProductVariant>();
-    variants.forEach(v => {
-      const key = `${v.color}-${v.size}`;
-      map.set(key, v);
-    });
-    return map;
-  }, [variants]);
-
-  // Generate variants when colors or sizes change
-  const generateVariants = useCallback(() => {
-    const newVariants: ProductVariant[] = [];
+  // Generate variant combinations
+  const generateVariantCombinations = () => {
+    const combinations: Array<{ color: string; size: string }> = [];
     
-    // If only colors selected (no sizes)
     if (selectedColors.length > 0 && selectedSizes.length === 0) {
       selectedColors.forEach(color => {
-        const key = `${color}-`;
-        const existingVariant = variantMap.get(key);
-        const variantId = `${baseSKU}-${color.toLowerCase().replace(/\s+/g, '-')}`;
-        newVariants.push({
-          id: existingVariant?.id || variantId,
-          color,
-          size: '',
-          price: existingVariant?.price !== undefined ? existingVariant.price : (bulkPriceMode === 'same' ? bulkPrice : basePrice),
-          sale_price: existingVariant?.sale_price,
-          sku: existingVariant?.sku || variantId,
-          stock_quantity: existingVariant?.stock_quantity || 0,
-          images: existingVariant?.images || [],
-          available: existingVariant?.available !== undefined ? existingVariant.available : true
-        });
+        combinations.push({ color, size: '' });
       });
-    }
-    // If only sizes selected (no colors)
-    else if (selectedSizes.length > 0 && selectedColors.length === 0) {
+    } else if (selectedSizes.length > 0 && selectedColors.length === 0) {
       selectedSizes.forEach(size => {
-        const key = `-${size}`;
-        const existingVariant = variantMap.get(key);
-        const variantId = `${baseSKU}-${size.toLowerCase().replace(/\s+/g, '-')}`;
-        newVariants.push({
-          id: existingVariant?.id || variantId,
-          color: '',
-          size,
-          price: existingVariant?.price !== undefined ? existingVariant.price : (bulkPriceMode === 'same' ? bulkPrice : basePrice),
-          sale_price: existingVariant?.sale_price,
-          sku: existingVariant?.sku || variantId,
-          stock_quantity: existingVariant?.stock_quantity || 0,
-          images: existingVariant?.images || [],
-          available: existingVariant?.available !== undefined ? existingVariant.available : true
-        });
+        combinations.push({ color: '', size });
       });
-    }
-    // If both colors and sizes selected
-    else {
+    } else if (selectedColors.length > 0 && selectedSizes.length > 0) {
       selectedColors.forEach(color => {
         selectedSizes.forEach(size => {
-          const key = `${color}-${size}`;
-          const existingVariant = variantMap.get(key);
-          const variantId = `${baseSKU}-${color.toLowerCase().replace(/\s+/g, '-')}-${size.toLowerCase().replace(/\s+/g, '-')}`;
-          newVariants.push({
-            id: existingVariant?.id || variantId,
-            color,
-            size,
-            price: existingVariant?.price !== undefined ? existingVariant.price : (bulkPriceMode === 'same' ? bulkPrice : basePrice),
-            sale_price: existingVariant?.sale_price,
-            sku: existingVariant?.sku || variantId,
-            stock_quantity: existingVariant?.stock_quantity || 0,
-            images: existingVariant?.images || [],
-            available: existingVariant?.available !== undefined ? existingVariant.available : true
-          });
+          combinations.push({ color, size });
         });
       });
     }
     
-    setVariants(newVariants);
-    onChange(newVariants, selectedColors, selectedSizes);
-  }, [selectedColors, selectedSizes, bulkPriceMode, bulkPrice, baseSKU, basePrice, onChange, variantMap]);
+    return combinations;
+  };
 
+  // Build variants from combinations
+  const buildVariants = (): ProductVariant[] => {
+    const combinations = generateVariantCombinations();
+    
+    return combinations.map(({ color, size }) => {
+      const key = `${color}-${size}`;
+      const existingData = variantDataRef.current.get(key) || {};
+      const variantId = baseSKU + 
+        (color ? `-${color.toLowerCase().replace(/\s+/g, '-')}` : '') +
+        (size ? `-${size.toLowerCase().replace(/\s+/g, '-')}` : '');
+      
+      return {
+        id: variantId,
+        color,
+        size,
+        price: existingData.price ?? (bulkPriceMode === 'same' ? bulkPrice : basePrice),
+        sale_price: existingData.sale_price,
+        sku: existingData.sku || variantId,
+        stock_quantity: existingData.stock_quantity || 0,
+        images: existingData.images || [],
+        available: existingData.available !== undefined ? existingData.available : true
+      };
+    });
+  };
+
+  // Update parent when colors/sizes change
   useEffect(() => {
-    if (selectedColors.length > 0 || selectedSizes.length > 0) {
-      generateVariants();
-    } else {
-      setVariants([]);
-      onChange([], [], []);
-    }
-  }, [selectedColors, selectedSizes, bulkPriceMode, bulkPrice, generateVariants]);
+    const newVariants = buildVariants();
+    onChange(newVariants, selectedColors, selectedSizes);
+  }, [selectedColors, selectedSizes, bulkPriceMode, bulkPrice, updateTrigger]);
 
   const addColor = (color: string) => {
     if (color && !selectedColors.includes(color)) {
-      setSelectedColors([...selectedColors, color]);
+      setSelectedColors(prev => [...prev, color]);
     }
   };
 
   const removeColor = (color: string) => {
-    setSelectedColors(selectedColors.filter(c => c !== color));
+    setSelectedColors(prev => prev.filter(c => c !== color));
+    // Clean up variant data for removed color
+    variantDataRef.current.forEach((_, key) => {
+      if (key.startsWith(`${color}-`)) {
+        variantDataRef.current.delete(key);
+      }
+    });
   };
 
   const addSize = (size: string) => {
     if (size && !selectedSizes.includes(size)) {
-      setSelectedSizes([...selectedSizes, size]);
+      setSelectedSizes(prev => [...prev, size]);
     }
   };
 
   const removeSize = (size: string) => {
-    setSelectedSizes(selectedSizes.filter(s => s !== size));
+    setSelectedSizes(prev => prev.filter(s => s !== size));
+    // Clean up variant data for removed size
+    variantDataRef.current.forEach((_, key) => {
+      if (key.endsWith(`-${size}`)) {
+        variantDataRef.current.delete(key);
+      }
+    });
   };
 
-  const updateVariant = (index: number, field: string, value: any) => {
-    const updatedVariants = [...variants];
-    updatedVariants[index] = {
-      ...updatedVariants[index],
+  const updateVariantField = (color: string, size: string, field: string, value: any) => {
+    const key = `${color}-${size}`;
+    const existing = variantDataRef.current.get(key) || {};
+    variantDataRef.current.set(key, {
+      ...existing,
       [field]: value
-    };
-    setVariants(updatedVariants);
-    onChange(updatedVariants, selectedColors, selectedSizes);
+    });
+    // Trigger re-render
+    setUpdateTrigger(prev => prev + 1);
   };
 
   const getColorHex = (colorName: string) => {
     const color = PREDEFINED_COLORS.find(c => c.name === colorName);
     return color?.hex || '#CCCCCC';
   };
+
+  const currentVariants = buildVariants();
 
   return (
     <div className="space-y-6">
@@ -229,14 +228,17 @@ export default function ProductVariantManager({
               type="text"
               id="custom-color-input"
               name="customColor"
+              autoComplete="off"
               placeholder="Add custom color..."
               value={customColor}
               onChange={(e) => setCustomColor(e.target.value)}
               onKeyPress={(e) => {
                 if (e.key === 'Enter') {
                   e.preventDefault();
-                  addColor(customColor);
-                  setCustomColor('');
+                  if (customColor) {
+                    addColor(customColor);
+                    setCustomColor('');
+                  }
                 }
               }}
               className="flex-1 px-3 py-1 text-sm border rounded-lg"
@@ -244,8 +246,10 @@ export default function ProductVariantManager({
             <button
               type="button"
               onClick={() => {
-                addColor(customColor);
-                setCustomColor('');
+                if (customColor) {
+                  addColor(customColor);
+                  setCustomColor('');
+                }
               }}
               className="px-3 py-1 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600"
             >
@@ -311,14 +315,17 @@ export default function ProductVariantManager({
               type="text"
               id="custom-size-input"
               name="customSize"
+              autoComplete="off"
               placeholder="Add custom size..."
               value={customSize}
               onChange={(e) => setCustomSize(e.target.value)}
               onKeyPress={(e) => {
                 if (e.key === 'Enter') {
                   e.preventDefault();
-                  addSize(customSize);
-                  setCustomSize('');
+                  if (customSize) {
+                    addSize(customSize);
+                    setCustomSize('');
+                  }
                 }
               }}
               className="flex-1 px-3 py-1 text-sm border rounded-lg"
@@ -326,8 +333,10 @@ export default function ProductVariantManager({
             <button
               type="button"
               onClick={() => {
-                addSize(customSize);
-                setCustomSize('');
+                if (customSize) {
+                  addSize(customSize);
+                  setCustomSize('');
+                }
               }}
               className="px-3 py-1 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600"
             >
@@ -359,7 +368,7 @@ export default function ProductVariantManager({
       </div>
 
       {/* Pricing Mode */}
-      {variants.length > 0 && (
+      {currentVariants.length > 0 && (
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Pricing Mode
@@ -396,6 +405,7 @@ export default function ProductVariantManager({
                 type="number"
                 id="bulk-price-input"
                 name="bulkPrice"
+                autoComplete="off"
                 value={bulkPrice}
                 onChange={(e) => setBulkPrice(parseFloat(e.target.value) || 0)}
                 className="w-32 px-3 py-1 text-sm border rounded-lg"
@@ -408,10 +418,10 @@ export default function ProductVariantManager({
       )}
 
       {/* Variants Table */}
-      {variants.length > 0 && (
+      {currentVariants.length > 0 && (
         <div>
           <h4 className="text-sm font-medium text-gray-700 mb-2">
-            Variant Details ({variants.length} variants)
+            Variant Details ({currentVariants.length} variants)
           </h4>
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
@@ -426,82 +436,89 @@ export default function ProductVariantManager({
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {variants.map((variant, index) => (
-                  <tr key={variant.id}>
-                    <td className="px-3 py-2 text-sm">
-                      <div className="flex items-center gap-2">
-                        {variant.color && (
-                          <>
-                            <span 
-                              className="w-4 h-4 rounded-full border border-gray-300"
-                              style={{ backgroundColor: getColorHex(variant.color) }}
-                            />
-                            <span>{variant.color}</span>
-                          </>
-                        )}
-                        {variant.color && variant.size && <span>/</span>}
-                        {variant.size && <span>{variant.size}</span>}
-                      </div>
-                    </td>
-                    <td className="px-3 py-2">
-                      <input
-                        type="text"
-                        id={`variant-sku-${index}`}
-                        name={`variant-sku-${index}`}
-                        value={variant.sku}
-                        onChange={(e) => updateVariant(index, 'sku', e.target.value)}
-                        className="w-full px-2 py-1 text-sm border rounded"
-                      />
-                    </td>
-                    <td className="px-3 py-2">
-                      <input
-                        type="number"
-                        id={`variant-price-${index}`}
-                        name={`variant-price-${index}`}
-                        value={variant.price}
-                        onChange={(e) => updateVariant(index, 'price', parseFloat(e.target.value) || 0)}
-                        className="w-20 px-2 py-1 text-sm border rounded"
-                        min="0"
-                        step="0.01"
-                        disabled={bulkPriceMode === 'same'}
-                      />
-                    </td>
-                    <td className="px-3 py-2">
-                      <input
-                        type="number"
-                        id={`variant-sale-price-${index}`}
-                        name={`variant-sale-price-${index}`}
-                        value={variant.sale_price || ''}
-                        onChange={(e) => updateVariant(index, 'sale_price', e.target.value ? parseFloat(e.target.value) : undefined)}
-                        className="w-20 px-2 py-1 text-sm border rounded"
-                        min="0"
-                        step="0.01"
-                        placeholder="Optional"
-                      />
-                    </td>
-                    <td className="px-3 py-2">
-                      <input
-                        type="number"
-                        id={`variant-stock-${index}`}
-                        name={`variant-stock-${index}`}
-                        value={variant.stock_quantity}
-                        onChange={(e) => updateVariant(index, 'stock_quantity', parseInt(e.target.value) || 0)}
-                        className="w-20 px-2 py-1 text-sm border rounded"
-                        min="0"
-                      />
-                    </td>
-                    <td className="px-3 py-2">
-                      <input
-                        type="checkbox"
-                        id={`variant-available-${index}`}
-                        name={`variant-available-${index}`}
-                        checked={variant.available}
-                        onChange={(e) => updateVariant(index, 'available', e.target.checked)}
-                        className="rounded text-blue-500"
-                      />
-                    </td>
-                  </tr>
-                ))}
+                {currentVariants.map((variant, index) => {
+                  const variantKey = `${variant.color}-${variant.size}`;
+                  return (
+                    <tr key={variantKey}>
+                      <td className="px-3 py-2 text-sm">
+                        <div className="flex items-center gap-2">
+                          {variant.color && (
+                            <>
+                              <span 
+                                className="w-4 h-4 rounded-full border border-gray-300"
+                                style={{ backgroundColor: getColorHex(variant.color) }}
+                              />
+                              <span>{variant.color}</span>
+                            </>
+                          )}
+                          {variant.color && variant.size && <span>/</span>}
+                          {variant.size && <span>{variant.size}</span>}
+                        </div>
+                      </td>
+                      <td className="px-3 py-2">
+                        <input
+                          type="text"
+                          id={`variant-sku-${variantKey}`}
+                          name={`variant-sku-${variantKey}`}
+                          autoComplete="off"
+                          value={variant.sku}
+                          onChange={(e) => updateVariantField(variant.color, variant.size, 'sku', e.target.value)}
+                          className="w-full px-2 py-1 text-sm border rounded"
+                        />
+                      </td>
+                      <td className="px-3 py-2">
+                        <input
+                          type="number"
+                          id={`variant-price-${variantKey}`}
+                          name={`variant-price-${variantKey}`}
+                          autoComplete="off"
+                          value={variant.price}
+                          onChange={(e) => updateVariantField(variant.color, variant.size, 'price', parseFloat(e.target.value) || 0)}
+                          className="w-20 px-2 py-1 text-sm border rounded"
+                          min="0"
+                          step="0.01"
+                          disabled={bulkPriceMode === 'same'}
+                        />
+                      </td>
+                      <td className="px-3 py-2">
+                        <input
+                          type="number"
+                          id={`variant-sale-price-${variantKey}`}
+                          name={`variant-sale-price-${variantKey}`}
+                          autoComplete="off"
+                          value={variant.sale_price || ''}
+                          onChange={(e) => updateVariantField(variant.color, variant.size, 'sale_price', e.target.value ? parseFloat(e.target.value) : undefined)}
+                          className="w-20 px-2 py-1 text-sm border rounded"
+                          min="0"
+                          step="0.01"
+                          placeholder="Optional"
+                        />
+                      </td>
+                      <td className="px-3 py-2">
+                        <input
+                          type="number"
+                          id={`variant-stock-${variantKey}`}
+                          name={`variant-stock-${variantKey}`}
+                          autoComplete="off"
+                          value={variant.stock_quantity}
+                          onChange={(e) => updateVariantField(variant.color, variant.size, 'stock_quantity', parseInt(e.target.value) || 0)}
+                          className="w-20 px-2 py-1 text-sm border rounded"
+                          min="0"
+                        />
+                      </td>
+                      <td className="px-3 py-2">
+                        <input
+                          type="checkbox"
+                          id={`variant-available-${variantKey}`}
+                          name={`variant-available-${variantKey}`}
+                          checked={variant.available}
+                          onChange={(e) => updateVariantField(variant.color, variant.size, 'available', e.target.checked)}
+                          className="rounded text-blue-500"
+                        />
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
