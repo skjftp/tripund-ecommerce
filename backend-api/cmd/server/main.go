@@ -49,6 +49,23 @@ func main() {
 			c.JSON(200, gin.H{"status": "healthy"})
 		})
 
+		// App version endpoint for auto-update functionality
+		api.GET("/app/version", func(c *gin.Context) {
+			c.JSON(200, gin.H{
+				"version":       "1.0.1",
+				"build_number":  2,
+				"download_url":  "https://github.com/skjftp/tripund-ecommerce/releases/download/v1.0.1/app-release.apk",
+				"release_notes": "🎉 Complete Flutter app with all features!\n✅ Profile with login/register functionality\n✅ Full cart & wishlist functionality\n✅ API integration matching web version\n✅ Beautiful animations throughout",
+				"force_update":  false,
+				"min_version":   "1.0.0",
+			})
+		})
+		
+		// Simple test endpoint
+		api.GET("/test", func(c *gin.Context) {
+			c.JSON(200, gin.H{"message": "test endpoint working", "version": "1.0.1"})
+		})
+
 		auth := api.Group("/auth")
 		{
 			auth.POST("/register", authHandler.Register)
@@ -208,6 +225,9 @@ func main() {
 			admin.PUT("/invoices/:id/status", invoiceHandler.UpdateInvoiceStatus)
 			admin.DELETE("/invoices/:id", invoiceHandler.DeleteInvoice)
 			admin.GET("/invoices/stats", invoiceHandler.GetInvoiceStats)
+			
+			// App version management (admin only)
+			admin.PUT("/app/version", appHandler.UpdateVersion)
 		}
 
 		api.POST("/webhook/razorpay", paymentHandler.RazorpayWebhook)
