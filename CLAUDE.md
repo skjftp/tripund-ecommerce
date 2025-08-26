@@ -97,6 +97,8 @@ JWT_SECRET=your-secret-key
 RAZORPAY_KEY_ID=your-razorpay-key
 RAZORPAY_KEY_SECRET=your-razorpay-secret
 CORS_ORIGIN=http://localhost:3000
+EMAIL_FROM=orders@tripundlifestyle.com
+EMAIL_PASSWORD=your-google-app-password
 ```
 
 ### Frontend (.env)
@@ -334,6 +336,49 @@ git pull origin main
 - Use connection pooling
 - Enable gzip compression
 
+## Email System Setup
+
+### Google Workspace Configuration
+The platform uses `orders@tripundlifestyle.com` for automated email notifications.
+
+#### Setup Steps:
+1. **Generate Google App Password**:
+   - Go to Google Admin Console → Security → 2-Step Verification
+   - Enable 2-Step Verification for orders@tripundlifestyle.com
+   - Generate App Password for "Mail" application
+   - Copy the 16-character password
+
+2. **Update Environment Variables**:
+   ```bash
+   EMAIL_FROM=orders@tripundlifestyle.com
+   EMAIL_PASSWORD=your-16-character-app-password
+   ```
+
+3. **Deploy with Email Config**:
+   ```bash
+   gcloud run services update tripund-backend \
+     --set-env-vars EMAIL_FROM=orders@tripundlifestyle.com \
+     --set-env-vars EMAIL_PASSWORD=your-app-password \
+     --region=asia-south1
+   ```
+
+### Email Templates
+- **Order Confirmation**: Professional HTML template with order details, variant info, pricing
+- **Shipping Confirmation**: Tracking info, delivery timeline, shipped items
+- **Responsive Design**: Mobile-friendly templates with TRIPUND branding
+- **Variant Support**: Shows color/size information for products with variants
+
+### Email Flow
+1. **Order Created** → Automatic order confirmation email sent
+2. **Order Status → "Shipped"** → Automatic shipping confirmation email sent
+3. **Asynchronous Processing**: Emails sent in background, don't block order processing
+4. **Error Handling**: Failed email sends are logged but don't affect order processing
+
+### Monitoring
+Check Cloud Run logs for email status:
+- Success: `"Order confirmation email sent successfully for order XXX"`
+- Failure: `"Failed to send order confirmation email for order XXX: [error]"`
+
 ## Security Checklist
 - [ ] JWT tokens expire after 24 hours
 - [ ] Passwords hashed with bcrypt
@@ -523,6 +568,12 @@ Add this A record to your DNS provider:
 - Product filtering and search
 - Payment integration ready (Razorpay)
 - CORS configuration for multiple domains
+- **Email notifications system**:
+  - Order confirmation emails (HTML templates)
+  - Shipping confirmation emails with tracking
+  - Google Workspace integration (orders@tripundlifestyle.com)
+  - Variant-aware email content (color/size info)
+  - Asynchronous sending to avoid blocking
 
 ## Component Library
 

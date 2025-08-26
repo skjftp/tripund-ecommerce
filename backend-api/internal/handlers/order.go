@@ -12,18 +12,21 @@ import (
 	"google.golang.org/api/iterator"
 	"tripund-api/internal/database"
 	"tripund-api/internal/models"
+	"tripund-api/internal/services"
 	"tripund-api/internal/utils"
 )
 
 type OrderHandler struct {
 	db                   *database.Firebase
 	notificationHandler  *NotificationHandler
+	emailService         *services.EmailService
 }
 
 func NewOrderHandler(db *database.Firebase) *OrderHandler {
 	return &OrderHandler{
 		db:                  db,
 		notificationHandler: NewNotificationHandler(db),
+		emailService:        services.NewEmailService(),
 	}
 }
 
@@ -139,6 +142,15 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 
 	// Create notification for new order
 	h.notificationHandler.NotifyNewOrder(orderID, orderNumber, req.Totals.Total)
+
+	// Send order confirmation email
+	go func() {
+		if err := h.emailService.SendOrderConfirmation(order); err != nil {
+			log.Printf("Failed to send order confirmation email for order %s: %v", orderID, err)
+		} else {
+			log.Printf("Order confirmation email sent successfully for order %s", orderID)
+		}
+	}()
 
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "Order created successfully",
@@ -402,6 +414,15 @@ func (h *OrderHandler) UpdateOrderStatus(c *gin.Context) {
 	message := "Order status updated successfully"
 	if req.Status == "shipped" && order.Status != "shipped" {
 		message = "Order marked as shipped and product stock updated"
+		
+		// Send shipping confirmation email
+		go func() {
+			if err := h.emailService.SendShippingConfirmation(order); err != nil {
+				log.Printf("Failed to send shipping confirmation email for order %s: %v", orderID, err)
+			} else {
+				log.Printf("Shipping confirmation email sent successfully for order %s", orderID)
+			}
+		}()
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": message})
@@ -495,6 +516,15 @@ func (h *OrderHandler) CreateGuestOrder(c *gin.Context) {
 
 	// Create notification for new guest order
 	h.notificationHandler.NotifyNewOrder(orderID, orderNumber, req.Totals.Total)
+
+	// Send order confirmation email
+	go func() {
+		if err := h.emailService.SendOrderConfirmation(order); err != nil {
+			log.Printf("Failed to send guest order confirmation email for order %s: %v", orderID, err)
+		} else {
+			log.Printf("Guest order confirmation email sent successfully for order %s", orderID)
+		}
+	}()
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Order created successfully",
