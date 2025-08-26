@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { X, Plus, Minus } from 'lucide-react';
 import toast from 'react-hot-toast';
 import ImageUpload from './ImageUpload';
+import ProductVariantManager from './ProductVariantManager';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../store';
 import { fetchCategories } from '../store/slices/categoriesSlice';
@@ -16,6 +17,18 @@ interface ProductFormProps {
 interface ProductAttribute {
   name: string;
   value: string;
+}
+
+interface ProductVariant {
+  id: string;
+  color: string;
+  size: string;
+  price: number;
+  sale_price?: number;
+  sku: string;
+  stock_quantity: number;
+  images: string[];
+  available: boolean;
 }
 
 interface FormData {
@@ -38,6 +51,10 @@ interface FormData {
   attributes: ProductAttribute[];
   dimensions: { length: number; width: number; height: number; unit: string };
   weight: { value: number; unit: string };
+  has_variants: boolean;
+  variants: ProductVariant[];
+  available_colors: string[];
+  available_sizes: string[];
 }
 
 export default function ProductForm({ isOpen, onClose, product, onSubmit }: ProductFormProps) {
@@ -67,7 +84,11 @@ export default function ProductForm({ isOpen, onClose, product, onSubmit }: Prod
       { name: 'Handmade', value: 'Yes' }
     ],
     dimensions: { length: 0, width: 0, height: 0, unit: 'cm' },
-    weight: { value: 0, unit: 'g' }
+    weight: { value: 0, unit: 'g' },
+    has_variants: false,
+    variants: [],
+    available_colors: [],
+    available_sizes: []
   });
 
   const [formData, setFormData] = useState(getInitialFormData());
@@ -118,7 +139,11 @@ export default function ProductForm({ isOpen, onClose, product, onSubmit }: Prod
           { name: 'Handmade', value: 'Yes' }
         ],
         dimensions: product.dimensions || { length: 0, width: 0, height: 0, unit: 'cm' },
-        weight: product.weight || { value: 0, unit: 'g' }
+        weight: product.weight || { value: 0, unit: 'g' },
+        has_variants: product.has_variants || false,
+        variants: product.variants || [],
+        available_colors: product.available_colors || [],
+        available_sizes: product.available_sizes || []
       });
     } else if (isOpen && !product) {
       setFormData(getInitialFormData());
@@ -422,6 +447,38 @@ export default function ProductForm({ isOpen, onClose, product, onSubmit }: Prod
                 <option value="on_backorder">On Backorder</option>
               </select>
             </div>
+          </div>
+
+          {/* Product Variants */}
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-medium">Product Variants</h3>
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={formData.has_variants}
+                  onChange={(e) => handleInputChange('has_variants', e.target.checked)}
+                  className="rounded border-gray-300 text-primary-500 focus:ring-primary-500"
+                />
+                <span className="text-sm">Enable variants (colors/sizes)</span>
+              </label>
+            </div>
+            
+            {formData.has_variants && (
+              <ProductVariantManager
+                basePrice={formData.price}
+                baseSKU={formData.sku}
+                variants={formData.variants}
+                onChange={(variants, colors, sizes) => {
+                  setFormData(prev => ({
+                    ...prev,
+                    variants,
+                    available_colors: colors,
+                    available_sizes: sizes
+                  }));
+                }}
+              />
+            )}
           </div>
 
           {/* Categories */}

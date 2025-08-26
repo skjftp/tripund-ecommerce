@@ -35,6 +35,22 @@ export interface Product {
   updated_at: string;
   parsed_description?: any;
   
+  // Variant support
+  has_variants?: boolean;
+  variants?: Array<{
+    id: string;
+    color: string;
+    size: string;
+    price: number;
+    sale_price?: number;
+    sku: string;
+    stock_quantity: number;
+    images?: string[];
+    available: boolean;
+  }>;
+  available_colors?: string[];
+  available_sizes?: string[];
+  
   // Legacy fields for backward compatibility
   title?: string;
   category?: string;

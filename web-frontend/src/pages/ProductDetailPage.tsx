@@ -8,6 +8,7 @@ import { addToCart } from '../store/slices/cartSlice';
 import { addToWishlist, removeFromWishlist } from '../store/slices/wishlistSlice';
 import toast from 'react-hot-toast';
 import MetaTags from '../components/MetaTags';
+import ProductVariantSelector from '../components/product/ProductVariantSelector';
 
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -15,6 +16,8 @@ export default function ProductDetailPage() {
   const dispatch = useDispatch<AppDispatch>();
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [selectedVariant, setSelectedVariant] = useState<any>(null);
+  const [displayImages, setDisplayImages] = useState<string[]>([]);
 
   const { currentProduct: product, loading } = useSelector((state: RootState) => state.products);
   const wishlistItems = useSelector((state: RootState) => state.wishlist.items);
@@ -25,6 +28,13 @@ export default function ProductDetailPage() {
       dispatch(fetchProductById(id));
     }
   }, [dispatch, id]);
+
+  useEffect(() => {
+    if (product) {
+      setDisplayImages(product.images || []);
+      setSelectedImage(0);
+    }
+  }, [product]);
 
   if (loading) {
     return (
@@ -66,7 +76,25 @@ export default function ProductDetailPage() {
   }
 
   const handleAddToCart = () => {
-    dispatch(addToCart({ product, quantity }));
+    // If product has variants, ensure one is selected
+    if (product.has_variants && !selectedVariant) {
+      toast.error('Please select a variant');
+      return;
+    }
+    
+    const cartProduct = selectedVariant ? {
+      ...product,
+      price: selectedVariant.price,
+      sale_price: selectedVariant.sale_price,
+      sku: selectedVariant.sku,
+      variant_info: {
+        color: selectedVariant.color,
+        size: selectedVariant.size,
+        variant_id: selectedVariant.id
+      }
+    } : product;
+    
+    dispatch(addToCart({ product: cartProduct, quantity }));
     toast.success(`Added ${quantity} item(s) to cart!`);
   };
 
@@ -80,11 +108,13 @@ export default function ProductDetailPage() {
     }
   };
 
-  const allImages = product.images || [];
-  const price = typeof product.price === 'number' ? product.price : 0;
-  const salePrice = typeof product.sale_price === 'number' ? product.sale_price : null;
-  const discountPercentage = salePrice && price > 0 ? 
-    Math.round(((price - salePrice) / price) * 100) : 0;
+  const allImages = displayImages.length > 0 ? displayImages : (product.images || []);
+  const effectivePrice = selectedVariant ? selectedVariant.price : 
+    (typeof product.price === 'number' ? product.price : 0);
+  const effectiveSalePrice = selectedVariant ? selectedVariant.sale_price : 
+    (typeof product.sale_price === 'number' ? product.sale_price : null);
+  const discountPercentage = effectiveSalePrice && effectivePrice > 0 ? 
+    Math.round(((effectivePrice - effectiveSalePrice) / effectivePrice) * 100) : 0;
 
   return (
     <>
@@ -147,13 +177,30 @@ export default function ProductDetailPage() {
               
               {/* Artisan info removed - not in new structure */}
 
+              {/* Variant Selector */}
+              {product.has_variants && product.variants && product.variants.length > 0 && (
+                <div className="mb-6">
+                  <ProductVariantSelector
+                    variants={product.variants}
+                    availableColors={product.available_colors || []}
+                    availableSizes={product.available_sizes || []}
+                    basePrice={product.price}
+                    onVariantSelect={(variant) => setSelectedVariant(variant)}
+                    onImageChange={(images) => {
+                      setDisplayImages(images);
+                      setSelectedImage(0);
+                    }}
+                  />
+                </div>
+              )}
+
               <div className="mb-6">
                 <span className="text-3xl font-bold text-primary-600">
-                  ₹{(salePrice || price).toLocaleString()}
+                  ₹{(effectiveSalePrice || effectivePrice).toLocaleString()}
                 </span>
-                {salePrice && price > salePrice && (
+                {effectiveSalePrice && effectivePrice > effectiveSalePrice && (
                   <span className="ml-3 text-xl text-gray-500 line-through">
-                    ₹{price.toLocaleString()}
+                    ₹{effectivePrice.toLocaleString()}
                   </span>
                 )}
               </div>
