@@ -15,6 +15,7 @@ import {
   Shield,
   MessageSquare,
   Receipt,
+  Mail,
 } from 'lucide-react';
 import { useDispatch } from 'react-redux';
 import { logout } from '../../store/slices/authSlice';
@@ -39,6 +40,7 @@ export default function Sidebar({ isOpen = true, onClose }: SidebarProps) {
     { icon: Shield, label: 'Legal', path: '/legal' },
     { icon: Tag, label: 'Promotions', path: '/promotions' },
     { icon: CreditCard, label: 'Payments', path: '/payments' },
+    { icon: Mail, label: 'Email Templates', path: '/email-templates' },
     { icon: BarChart3, label: 'Analytics', path: '/analytics' },
     { icon: Bell, label: 'Notifications', path: '/notifications' },
     { icon: Settings, label: 'Settings', path: '/settings' },

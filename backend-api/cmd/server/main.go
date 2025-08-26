@@ -158,6 +158,17 @@ func main() {
 			// FAQ management
 			admin.PUT("/faqs", contentHandler.UpdateFAQs)
 			
+			// Email template management (admin only)
+			emailTemplateHandler := handlers.NewEmailTemplateHandler(db)
+			admin.GET("/email-templates", emailTemplateHandler.GetTemplates)
+			admin.GET("/email-templates/predefined", emailTemplateHandler.GetPredefinedTemplates)
+			admin.GET("/email-templates/:id", emailTemplateHandler.GetTemplate)
+			admin.POST("/email-templates", emailTemplateHandler.CreateTemplate)
+			admin.PUT("/email-templates/:id", emailTemplateHandler.UpdateTemplate)
+			admin.DELETE("/email-templates/:id", emailTemplateHandler.DeleteTemplate)
+			admin.POST("/email-templates/:id/set-default", emailTemplateHandler.SetDefaultTemplate)
+			admin.POST("/email-templates/test", emailTemplateHandler.TestTemplate)
+			
 			
 			// Settings management
 			admin.GET("/settings", settingsHandler.GetSettings)

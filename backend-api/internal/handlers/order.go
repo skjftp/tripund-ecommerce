@@ -19,19 +19,19 @@ import (
 type OrderHandler struct {
 	db                   *database.Firebase
 	notificationHandler  *NotificationHandler
-	emailService         *services.OAuth2EmailService
+	emailService         *services.FixedOAuth2EmailService
 }
 
 func NewOrderHandler(db *database.Firebase) *OrderHandler {
-	// Initialize OAuth2 email service
-	log.Printf("Initializing OAuth2 email service...")
-	emailService, err := services.NewOAuth2EmailService()
+	// Initialize Fixed OAuth2 email service with proper domain-wide delegation
+	log.Printf("Initializing Fixed OAuth2 email service with user impersonation...")
+	emailService, err := services.NewFixedOAuth2EmailService()
 	if err != nil {
-		log.Printf("ERROR: Failed to initialize OAuth2 email service: %v", err)
+		log.Printf("ERROR: Failed to initialize Fixed OAuth2 email service: %v", err)
 		log.Printf("Email sending will be disabled. Check GOOGLE_SERVICE_ACCOUNT_KEY and EMAIL_FROM environment variables.")
 		emailService = nil // Will disable email sending but not break the app
 	} else {
-		log.Printf("SUCCESS: OAuth2 email service initialized successfully")
+		log.Printf("SUCCESS: Fixed OAuth2 email service initialized successfully with user impersonation")
 	}
 	
 	return &OrderHandler{
