@@ -54,8 +54,8 @@ func main() {
 			c.JSON(200, gin.H{
 				"version":       "1.0.1",
 				"build_number":  2,
-				"download_url":  "https://github.com/skjftp/tripund-ecommerce/releases/download/v1.0.1/app-release.apk",
-				"release_notes": "🎉 Complete Flutter app with all features!\n✅ Profile with login/register functionality\n✅ Full cart & wishlist functionality\n✅ API integration matching web version\n✅ Beautiful animations throughout\n✅ Fixed carousel to use API category images\n✅ Category navigation properly working\n✅ Featured products loading from API\n✨ Mesmerizing staggered animations\n✨ Glassmorphic search bar\n✨ Parallax card effects",
+				"download_url":  "https://github.com/skjftp/tripund-ecommerce/releases/download/v1.0.1-build2/tripund-v1.0.1-build2.apk",
+				"release_notes": "🎉 All Critical Issues Fixed!\n✅ Fixed product loading for all categories\n✅ Fixed featured products display\n✅ Fixed update modal loop issue\n✅ Added TRIPUND logo on screens\n✨ Complete cart & wishlist functionality\n✨ User profile with login/register\n✨ API integration matching web\n✨ Beautiful animations throughout",
 				"force_update":  false,
 				"min_version":   "1.0.0",
 			})
