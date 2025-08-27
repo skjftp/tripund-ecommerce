@@ -44,12 +44,14 @@ class ProductProvider extends ChangeNotifier {
   }
 
   Future<void> loadProducts({bool refresh = false}) async {
+    print('🔄 loadProducts called - refresh: $refresh, isLoading: $_isLoading');
     if (_isLoading) return;
     
     if (refresh) {
       _currentOffset = 0;
       _hasMore = true;
       _products.clear();
+      print('🔄 Refreshing - cleared products');
     }
     
     _isLoading = true;
@@ -57,6 +59,7 @@ class ProductProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
+      print('🔄 Calling API with category: $_selectedCategory, search: $_searchQuery');
       final products = await _apiService.getProducts(
         limit: _limit,
         offset: _currentOffset,
@@ -64,20 +67,26 @@ class ProductProvider extends ChangeNotifier {
         search: _searchQuery,
       );
       
+      print('🔄 Provider received ${products.length} products');
       if (products.isEmpty) {
         _hasMore = false;
+        print('🔄 No products - setting hasMore to false');
       } else {
         if (refresh) {
           _products = products;
+          print('🔄 Set products to ${_products.length} items');
         } else {
           _products.addAll(products);
+          print('🔄 Added products - total now ${_products.length} items');
         }
         _currentOffset += _limit;
       }
     } catch (e) {
       _error = 'Failed to load products: $e';
+      print('💥 LoadProducts error: $e');
     } finally {
       _isLoading = false;
+      print('🔄 LoadProducts finished - products: ${_products.length}, loading: $_isLoading');
       notifyListeners();
     }
   }
@@ -92,11 +101,14 @@ class ProductProvider extends ChangeNotifier {
   }
 
   Future<void> loadFeaturedProducts() async {
+    print('⭐ LoadFeaturedProducts called');
     try {
-      _featuredProducts = await _apiService.getFeaturedProducts();
+      final featured = await _apiService.getFeaturedProducts();
+      _featuredProducts = featured;
+      print('⭐ Provider set ${_featuredProducts.length} featured products');
       notifyListeners();
     } catch (e) {
-      print('Error loading featured products: $e');
+      print('💥 Error loading featured products: $e');
     }
   }
 
