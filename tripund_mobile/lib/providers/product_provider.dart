@@ -32,19 +32,26 @@ class ProductProvider extends ChangeNotifier {
   String? get searchQuery => _searchQuery;
 
   ProductProvider() {
+    print('ProductProvider constructor called');
     loadInitialData();
   }
 
   Future<void> loadInitialData() async {
+    print('Loading initial data...');
     await Future.wait([
       loadProducts(),
       loadFeaturedProducts(),
       loadCategories(),
     ]);
+    print('Initial data loaded');
   }
 
   Future<void> loadProducts({bool refresh = false}) async {
-    if (_isLoading) return;
+    print('loadProducts called with refresh=$refresh');
+    if (_isLoading) {
+      print('Already loading, returning...');
+      return;
+    }
     
     if (refresh) {
       _currentOffset = 0;
@@ -57,6 +64,7 @@ class ProductProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
+      print('Calling API to get products...');
       final products = await _apiService.getProducts(
         limit: _limit,
         offset: _currentOffset,
@@ -64,8 +72,10 @@ class ProductProvider extends ChangeNotifier {
         search: _searchQuery,
       );
       
+      print('API returned ${products.length} products');
       if (products.isEmpty) {
         _hasMore = false;
+        print('No products returned, setting hasMore to false');
       } else {
         if (refresh) {
           _products = products;
@@ -77,9 +87,11 @@ class ProductProvider extends ChangeNotifier {
           }
         }
         _currentOffset += _limit;
+        print('Now have ${_products.length} products total');
       }
     } catch (e) {
       _error = 'Failed to load products: $e';
+      print('Error in loadProducts: $e');
     } finally {
       _isLoading = false;
       notifyListeners();

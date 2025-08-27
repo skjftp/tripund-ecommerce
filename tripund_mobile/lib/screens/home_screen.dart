@@ -56,10 +56,8 @@ class _HomeScreenState extends State<HomeScreen>
     _headerController.forward();
     _searchController.forward();
     
-    // Load products
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ProductProvider>().loadProducts();
-    });
+    // Products are already loaded in ProductProvider constructor
+    // No need to load again here
   }
 
   @override
