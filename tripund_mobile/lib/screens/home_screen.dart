@@ -91,19 +91,12 @@ class _HomeScreenState extends State<HomeScreen>
                     offset: Offset(0, 20 * (1 - _headerAnimation.value)),
                     child: Opacity(
                       opacity: _headerAnimation.value,
-                      child: Row(
-                        children: [
-                          Text(
-                            'TRIPUND',
-                            style: Theme.of(context)
-                                .textTheme
-                                .headlineMedium
-                                ?.copyWith(
-                                  color: AppTheme.primaryColor,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                          ),
-                        ],
+                      child: Container(
+                        height: 40,
+                        child: Image.asset(
+                          'assets/images/tripund-logo.png',
+                          fit: BoxFit.contain,
+                        ),
                       ),
                     ),
                   );

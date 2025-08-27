@@ -110,51 +110,11 @@ class _SplashScreenState extends State<SplashScreen>
               ScaleTransition(
                 scale: _logoAnimation,
                 child: Container(
-                  width: 150,
-                  height: 150,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: AppTheme.goldGradient,
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppTheme.accentColor.withOpacity(0.5),
-                        blurRadius: 30,
-                        spreadRadius: 10,
-                      ),
-                    ],
-                  ),
-                  child: Center(
-                    child: AnimatedBuilder(
-                      animation: _shimmerAnimation,
-                      builder: (context, child) {
-                        return ShaderMask(
-                          shaderCallback: (bounds) {
-                            return LinearGradient(
-                              colors: const [
-                                Colors.white,
-                                Colors.white70,
-                                Colors.white,
-                              ],
-                              stops: [
-                                _shimmerAnimation.value - 0.3,
-                                _shimmerAnimation.value,
-                                _shimmerAnimation.value + 0.3,
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ).createShader(bounds);
-                          },
-                          child: const Text(
-                            'T',
-                            style: TextStyle(
-                              fontSize: 80,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
+                  width: 200,
+                  height: 200,
+                  child: Image.asset(
+                    'assets/images/tripund-logo.png',
+                    fit: BoxFit.contain,
                   ),
                 ),
               ),

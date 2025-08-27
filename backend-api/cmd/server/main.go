@@ -55,7 +55,7 @@ func main() {
 				"version":       "1.0.1",
 				"build_number":  2,
 				"download_url":  "https://github.com/skjftp/tripund-ecommerce/releases/download/v1.0.1/app-release.apk",
-				"release_notes": "🎉 Complete Flutter app with all features!\n✅ Profile with login/register functionality\n✅ Full cart & wishlist functionality\n✅ API integration matching web version\n✅ Beautiful animations throughout",
+				"release_notes": "🎉 Complete Flutter app with all features!\n✅ Profile with login/register functionality\n✅ Full cart & wishlist functionality\n✅ API integration matching web version\n✅ Beautiful animations throughout\n✅ Fixed carousel to use API category images\n✅ Category navigation properly working\n✅ Featured products loading from API\n✨ Mesmerizing staggered animations\n✨ Glassmorphic search bar\n✨ Parallax card effects",
 				"force_update":  false,
 				"min_version":   "1.0.0",
 			})
@@ -225,9 +225,6 @@ func main() {
 			admin.PUT("/invoices/:id/status", invoiceHandler.UpdateInvoiceStatus)
 			admin.DELETE("/invoices/:id", invoiceHandler.DeleteInvoice)
 			admin.GET("/invoices/stats", invoiceHandler.GetInvoiceStats)
-			
-			// App version management (admin only)
-			admin.PUT("/app/version", appHandler.UpdateVersion)
 		}
 
 		api.POST("/webhook/razorpay", paymentHandler.RazorpayWebhook)

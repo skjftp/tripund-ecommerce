@@ -37,7 +37,7 @@ class Product {
       images: List<String>.from(json['images'] ?? []),
       categories: List<String>.from(json['categories'] ?? []),
       sku: json['sku'] ?? '',
-      stock: json['stock'] ?? 0,
+      stock: json['stock_quantity'] ?? json['stock'] ?? 0,
       attributes: json['attributes'],
       rating: json['rating']?.toDouble(),
       reviewCount: json['review_count'],
