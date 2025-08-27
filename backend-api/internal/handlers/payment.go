@@ -94,6 +94,7 @@ func (h *PaymentHandler) CreateRazorpayOrder(c *gin.Context) {
 		"order_id": order["id"],
 		"amount":   order["amount"],
 		"currency": order["currency"],
+		"key_id":   h.keyID,
 	})
 }
 

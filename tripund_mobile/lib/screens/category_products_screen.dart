@@ -4,6 +4,7 @@ import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import '../providers/product_provider.dart';
 import '../models/category.dart';
 import '../widgets/parallax_card.dart';
+import '../widgets/cart_icon_button.dart';
 import '../utils/theme.dart';
 import 'product_detail_screen.dart';
 
@@ -35,6 +36,10 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
       appBar: AppBar(
         title: Text(widget.category.name),
         backgroundColor: AppTheme.backgroundColor,
+        actions: const [
+          CartIconButton(iconColor: Colors.black),
+          SizedBox(width: 8),
+        ],
       ),
       body: Consumer<ProductProvider>(
         builder: (context, provider, child) {

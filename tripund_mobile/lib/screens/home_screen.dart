@@ -6,6 +6,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:provider/provider.dart';
 import '../utils/theme.dart';
 import '../widgets/parallax_card.dart';
+import '../widgets/cart_icon_button.dart';
 import '../providers/product_provider.dart';
 import '../models/category.dart';
 import 'product_detail_screen.dart';
@@ -102,6 +103,7 @@ class _HomeScreenState extends State<HomeScreen>
               ),
             ),
             actions: [
+              const CartIconButton(iconColor: Colors.black),
               ScaleTransition(
                 scale: _headerAnimation,
                 child: IconButton(

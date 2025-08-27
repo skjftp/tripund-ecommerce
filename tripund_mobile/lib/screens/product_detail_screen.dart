@@ -7,6 +7,7 @@ import '../utils/theme.dart';
 import '../utils/constants.dart';
 import '../providers/cart_provider.dart';
 import '../providers/wishlist_provider.dart';
+import '../widgets/cart_icon_button.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final Product product;
@@ -49,6 +50,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           ),
         ),
         actions: [
+          const CartIconButton(iconColor: Colors.black),
           Consumer<WishlistProvider>(
             builder: (context, wishlistProvider, child) {
               final isInWishlist = wishlistProvider.isInWishlist(widget.product.id);

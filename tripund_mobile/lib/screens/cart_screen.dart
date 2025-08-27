@@ -6,6 +6,8 @@ import '../providers/cart_provider.dart';
 import '../utils/theme.dart';
 import '../utils/constants.dart';
 import '../utils/navigation_helper.dart';
+import 'checkout_screen_v2.dart';
+import 'shop_screen.dart';
 
 class CartScreen extends StatelessWidget {
   const CartScreen({super.key});
@@ -46,7 +48,12 @@ class CartScreen extends StatelessWidget {
                   const SizedBox(height: 30),
                   ElevatedButton(
                     onPressed: () {
-                      NavigationHelper.goToHome();
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ShopScreen(),
+                        ),
+                      );
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.primaryColor,
@@ -59,7 +66,7 @@ class CartScreen extends StatelessWidget {
                       ),
                     ),
                     child: const Text(
-                      'Continue Shopping',
+                      'Start Shopping',
                       style: TextStyle(color: Colors.white),
                     ),
                   ),
@@ -243,10 +250,29 @@ class CartScreen extends StatelessWidget {
                                           ],
                                         ),
                                       ),
-                                      // Total Price
+                                      // Total Price and Delete
                                       Column(
                                         crossAxisAlignment: CrossAxisAlignment.end,
                                         children: [
+                                          IconButton(
+                                            icon: const Icon(
+                                              Icons.delete_outline,
+                                              color: Colors.red,
+                                              size: 20,
+                                            ),
+                                            onPressed: () {
+                                              cartProvider.removeItem(productId);
+                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                SnackBar(
+                                                  content: Text('${item.title} removed from cart'),
+                                                  duration: const Duration(seconds: 2),
+                                                ),
+                                              );
+                                            },
+                                            padding: EdgeInsets.zero,
+                                            constraints: const BoxConstraints(),
+                                          ),
+                                          const SizedBox(height: 8),
                                           const Text(
                                             'Total',
                                             style: TextStyle(
@@ -257,7 +283,7 @@ class CartScreen extends StatelessWidget {
                                           Text(
                                             '${Constants.currency}${(item.price * item.quantity).toStringAsFixed(0)}',
                                             style: const TextStyle(
-                                              fontSize: 20,
+                                              fontSize: 18,
                                               fontWeight: FontWeight.bold,
                                             ),
                                           ),
@@ -316,10 +342,10 @@ class CartScreen extends StatelessWidget {
                       height: 56,
                       child: ElevatedButton(
                         onPressed: () {
-                          // TODO: Navigate to checkout
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Checkout coming soon!'),
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const CheckoutScreenV2(),
                             ),
                           );
                         },

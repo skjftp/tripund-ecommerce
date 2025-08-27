@@ -26,22 +26,39 @@ class ApiService {
   // Initialize with token if available
   Future<void> init() async {
     final prefs = await SharedPreferences.getInstance();
-    _authToken = prefs.getString('auth_token');
+    _authToken = prefs.getString('token') ?? prefs.getString('auth_token');
     if (_authToken != null) {
       _dio.options.headers['Authorization'] = 'Bearer $_authToken';
+      print('🔐 ApiService initialized with auth token');
     }
   }
 
-  // Set auth token
-  void setAuthToken(String token) {
+  // Set auth token - called when user logs in
+  void setAuthToken(String? token) {
     _authToken = token;
-    _dio.options.headers['Authorization'] = 'Bearer $token';
+    if (token != null) {
+      _dio.options.headers['Authorization'] = 'Bearer $token';
+      print('🔐 Auth token set in ApiService');
+    } else {
+      _dio.options.headers.remove('Authorization');
+      print('🔓 Auth token removed from ApiService');
+    }
   }
 
   // Clear auth token
   void clearAuthToken() {
     _authToken = null;
     _dio.options.headers.remove('Authorization');
+  }
+
+  // Ensure auth token is current before each request
+  Future<void> _ensureAuthToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    final currentToken = prefs.getString('token') ?? prefs.getString('auth_token');
+    
+    if (currentToken != _authToken) {
+      setAuthToken(currentToken);
+    }
   }
 
   // Products
@@ -52,6 +69,8 @@ class ApiService {
     String? search,
   }) async {
     try {
+      await _ensureAuthToken();
+      
       final queryParams = {
         'limit': limit,
         if (offset > 0) 'offset': offset,
@@ -74,6 +93,7 @@ class ApiService {
 
   Future<Product?> getProduct(String id) async {
     try {
+      await _ensureAuthToken();
       final response = await _dio.get('/products/$id');
       
       if (response.statusCode == 200) {
@@ -88,6 +108,7 @@ class ApiService {
 
   Future<List<Product>> getFeaturedProducts() async {
     try {
+      await _ensureAuthToken();
       final response = await _dio.get('/products', queryParameters: {
         'featured': true,
         'limit': 8,
@@ -107,6 +128,7 @@ class ApiService {
   // Categories
   Future<List<Category>> getCategories() async {
     try {
+      await _ensureAuthToken();
       final response = await _dio.get('/categories');
       
       if (response.statusCode == 200) {
@@ -132,10 +154,11 @@ class ApiService {
         final token = response.data['token'];
         final user = response.data['user'];
         
-        // Save token
+        // Save token and update ApiService
         setAuthToken(token);
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('auth_token', token);
+        await prefs.setString('token', token);
+        await prefs.setString('auth_token', token); // Save with both keys for compatibility
         
         return {
           'token': token,
@@ -180,12 +203,14 @@ class ApiService {
     clearAuthToken();
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('auth_token');
+    await prefs.remove('token');
     await prefs.remove('user');
   }
 
   // Profile
   Future<User?> getProfile() async {
     try {
+      await _ensureAuthToken();
       final response = await _dio.get('/profile');
       
       if (response.statusCode == 200) {
@@ -200,6 +225,7 @@ class ApiService {
 
   Future<bool> updateProfile(Map<String, dynamic> data) async {
     try {
+      await _ensureAuthToken();
       final response = await _dio.put('/profile', data: data);
       return response.statusCode == 200;
     } catch (e) {
@@ -209,32 +235,117 @@ class ApiService {
   }
 
   // Cart & Orders
-  Future<Map<String, dynamic>?> createOrder({
+  Future<Map<String, dynamic>?> createGuestOrder({
     required List<Map<String, dynamic>> items,
     required Map<String, dynamic> address,
     required String paymentMethod,
+    required String firstName,
+    required String lastName,
+    required String email,
+    required String phone,
     Map<String, dynamic>? totals,
   }) async {
     try {
-      final response = await _dio.post('/orders', data: {
+      print('📦 Creating GUEST order at: ${_dio.options.baseUrl}/guest/orders');
+      
+      // For guest orders, we should NOT have auth header
+      final guestDio = Dio(
+        BaseOptions(
+          baseUrl: Constants.apiUrl,
+          connectTimeout: const Duration(seconds: 10),
+          receiveTimeout: const Duration(seconds: 10),
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        ),
+      );
+      
+      final response = await guestDio.post('/guest/orders', data: {
+        'firstName': firstName,
+        'lastName': lastName,
+        'email': email,
+        'phone': phone,
         'items': items,
         'address': address,
         'paymentMethod': paymentMethod,
         if (totals != null) 'totals': totals,
       });
       
-      if (response.statusCode == 200) {
+      print('📦 Guest order response status: ${response.statusCode}');
+      print('📦 Guest order response data: ${response.data}');
+      
+      // Backend returns 201 for successful creation
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        print('✅ Guest order created successfully');
         return response.data;
       }
+      print('❌ Unexpected status code: ${response.statusCode}');
       return null;
     } catch (e) {
-      print('Error creating order: $e');
+      print('❌ Error creating guest order: $e');
+      if (e is DioException) {
+        print('❌ Response status: ${e.response?.statusCode}');
+        print('❌ Response data: ${e.response?.data}');
+        print('❌ Request URL: ${e.requestOptions.uri}');
+        print('❌ Request data sent: ${e.requestOptions.data}');
+      }
+      return null;
+    }
+  }
+  
+  Future<Map<String, dynamic>?> createOrder({
+    required List<Map<String, dynamic>> items,
+    required Map<String, dynamic> address,
+    required String paymentMethod,
+    required String firstName,
+    required String lastName,
+    required String email,
+    required String phone,
+    Map<String, dynamic>? totals,
+  }) async {
+    try {
+      // Ensure we have the latest auth token
+      await _ensureAuthToken();
+      
+      print('📦 Creating AUTH order at: ${_dio.options.baseUrl}/orders');
+      print('📦 Auth header: ${_dio.options.headers['Authorization']}');
+      
+      final response = await _dio.post('/orders', data: {
+        'firstName': firstName,
+        'lastName': lastName,
+        'email': email,
+        'phone': phone,
+        'items': items,
+        'address': address,
+        'paymentMethod': paymentMethod,
+        if (totals != null) 'totals': totals,
+      });
+      
+      print('📦 Order response status: ${response.statusCode}');
+      print('📦 Order response data: ${response.data}');
+      
+      // Backend returns 201 for successful creation, not 200
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        print('✅ Auth order created successfully');
+        return response.data;
+      }
+      print('❌ Unexpected status code: ${response.statusCode}');
+      return null;
+    } catch (e) {
+      print('❌ Error creating auth order: $e');
+      if (e is DioException) {
+        print('❌ Response status: ${e.response?.statusCode}');
+        print('❌ Response data: ${e.response?.data}');
+        print('❌ Request URL: ${e.requestOptions.uri}');
+        print('❌ Request data sent: ${e.requestOptions.data}');
+      }
       return null;
     }
   }
 
   Future<List<dynamic>> getOrders() async {
     try {
+      await _ensureAuthToken();
       final response = await _dio.get('/orders');
       
       if (response.statusCode == 200) {
@@ -250,6 +361,7 @@ class ApiService {
   // Wishlist
   Future<List<Product>> getWishlist() async {
     try {
+      await _ensureAuthToken();
       final response = await _dio.get('/wishlist');
       
       if (response.statusCode == 200) {
@@ -265,6 +377,7 @@ class ApiService {
 
   Future<bool> addToWishlist(String productId) async {
     try {
+      await _ensureAuthToken();
       final response = await _dio.post('/wishlist/$productId');
       return response.statusCode == 200;
     } catch (e) {
@@ -275,11 +388,43 @@ class ApiService {
 
   Future<bool> removeFromWishlist(String productId) async {
     try {
+      await _ensureAuthToken();
       final response = await _dio.delete('/wishlist/$productId');
       return response.statusCode == 200;
     } catch (e) {
       print('Error removing from wishlist: $e');
       return false;
+    }
+  }
+
+  // Settings
+  Future<Map<String, dynamic>?> getPublicSettings() async {
+    try {
+      final response = await _dio.get('/settings/public');
+      
+      if (response.statusCode == 200) {
+        return response.data['settings'];
+      }
+      return null;
+    } catch (e) {
+      print('Error fetching public settings: $e');
+      // Return default settings if API fails
+      return {
+        'payment': {
+          'cod_enabled': false,  // Default to false for safety
+          'cod_limit': 10000.0,
+          'tax_rate': 18.0,
+          'prepaid_discount': 5.0,
+        },
+        'shipping': {
+          'free_shipping_threshold': 5000.0,
+          'standard_shipping_rate': 100.0,
+          'express_shipping_rate': 200.0,
+        },
+        'general': {
+          'currency': 'INR',
+        },
+      };
     }
   }
 

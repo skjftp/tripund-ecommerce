@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 import '../models/cart_item.dart';
 import '../models/product.dart';
 
 class CartProvider extends ChangeNotifier {
   final Map<String, CartItem> _items = {};
+  static const String _cartKey = 'cart_items';
+
+  CartProvider() {
+    _loadCart();
+  }
 
   Map<String, CartItem> get items => _items;
 
@@ -15,6 +22,60 @@ class CartProvider extends ChangeNotifier {
       total += item.price * item.quantity;
     });
     return total;
+  }
+
+  Future<void> _loadCart() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final cartData = prefs.getString(_cartKey);
+      
+      if (cartData != null && cartData.isNotEmpty) {
+        final Map<String, dynamic> decodedData = json.decode(cartData);
+        
+        _items.clear();
+        decodedData.forEach((key, value) {
+          _items[key] = CartItem(
+            id: value['id'],
+            productId: value['productId'],
+            title: value['title'],
+            price: value['price'].toDouble(),
+            imageUrl: value['imageUrl'],
+            quantity: value['quantity'],
+          );
+        });
+        
+        print('✅ Cart loaded: ${_items.length} items');
+        notifyListeners();
+      } else {
+        print('📭 No saved cart data found');
+      }
+    } catch (e) {
+      print('❌ Error loading cart: $e');
+    }
+  }
+
+  Future<void> _saveCart() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      
+      final Map<String, Map<String, dynamic>> cartData = {};
+      _items.forEach((key, item) {
+        cartData[key] = {
+          'id': item.id,
+          'productId': item.productId,
+          'title': item.title,
+          'price': item.price,
+          'imageUrl': item.imageUrl,
+          'quantity': item.quantity,
+        };
+      });
+      
+      final encodedData = json.encode(cartData);
+      await prefs.setString(_cartKey, encodedData);
+      print('💾 Cart saved: ${_items.length} items');
+    } catch (e) {
+      print('❌ Error saving cart: $e');
+    }
   }
 
   void addItem(Product product) {
@@ -43,11 +104,13 @@ class CartProvider extends ChangeNotifier {
         ),
       );
     }
+    _saveCart();
     notifyListeners();
   }
 
   void removeItem(String productId) {
     _items.remove(productId);
+    _saveCart();
     notifyListeners();
   }
 
@@ -69,12 +132,14 @@ class CartProvider extends ChangeNotifier {
           quantity: quantity,
         ),
       );
+      _saveCart();
       notifyListeners();
     }
   }
 
   void clear() {
     _items.clear();
+    _saveCart();
     notifyListeners();
   }
 

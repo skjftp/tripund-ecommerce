@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import '../providers/product_provider.dart';
 import '../widgets/parallax_card.dart';
+import '../widgets/cart_icon_button.dart';
 import '../utils/theme.dart';
 import 'product_detail_screen.dart';
 
@@ -52,6 +53,10 @@ class _AllProductsScreenState extends State<AllProductsScreen> {
         backgroundColor: Colors.white,
         elevation: 1,
         shadowColor: Colors.black.withOpacity(0.1),
+        actions: const [
+          CartIconButton(iconColor: Colors.black),
+          SizedBox(width: 8),
+        ],
       ),
       body: Consumer<ProductProvider>(
         builder: (context, provider, child) {

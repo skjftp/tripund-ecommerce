@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../models/user.dart';
 import '../utils/constants.dart';
+import '../services/api_service.dart';
 
 class AuthProvider extends ChangeNotifier {
   User? _user;
@@ -28,6 +29,8 @@ class AuthProvider extends ChangeNotifier {
       if (userJson != null) {
         _user = User.fromJson(json.decode(userJson));
       }
+      // Sync token with ApiService
+      ApiService().setAuthToken(_token);
     }
     notifyListeners();
   }
@@ -55,6 +58,9 @@ class AuthProvider extends ChangeNotifier {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('token', _token!);
         await prefs.setString('user', json.encode(data['user']));
+
+        // Sync token with ApiService
+        ApiService().setAuthToken(_token);
 
         _isLoading = false;
         notifyListeners();
@@ -108,6 +114,9 @@ class AuthProvider extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('token');
     await prefs.remove('user');
+
+    // Clear token from ApiService
+    ApiService().clearAuthToken();
 
     notifyListeners();
   }

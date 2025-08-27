@@ -18,7 +18,8 @@ TRIPUND is a full-stack e-commerce platform for Indian handicrafts with three ma
 tripund-ecommerce/
 ├── backend-api/        # Go backend with Gin framework
 ├── web-frontend/       # Customer-facing React app
-└── admin-panel/        # Admin dashboard React app
+├── admin-panel/        # Admin dashboard React app
+└── tripund_mobile/     # Flutter mobile app for Android/iOS
 ```
 
 ## Important Commands
@@ -75,6 +76,29 @@ npm run build
 
 # Preview production build
 npm run preview
+```
+
+### Flutter Mobile App Development
+```bash
+cd tripund_mobile
+
+# Get dependencies
+flutter pub get
+
+# Run on connected device
+flutter run
+
+# Build debug APK
+flutter build apk --debug
+
+# Build release APK
+flutter build apk --release
+
+# Install on connected device
+adb install -r build/app/outputs/flutter-apk/app-release.apk
+
+# Monitor logs
+adb logcat -s flutter
 ```
 
 ## Authentication Credentials
@@ -422,6 +446,38 @@ Add this A record to your DNS provider:
 
 ## Recent Development Work Completed
 
+### Flutter Mobile App Fixes (August 27, 2025)
+1. **Cart Persistence Implementation**:
+   - Added SharedPreferences to CartProvider for automatic cart saving/loading
+   - Cart items now persist between app sessions
+   - Automatic save on add/remove/update operations
+
+2. **Authentication & API Token Management**:
+   - Fixed auth token not being sent in API requests
+   - Added `_ensureAuthToken()` method to check token before each API call
+   - Proper token synchronization between AuthProvider and ApiService singleton
+   - Token now properly set on login and loaded on app startup
+
+3. **Dynamic Payment Settings**:
+   - Integrated backend `/api/v1/settings/public` endpoint
+   - COD (Cash on Delivery) option dynamically shown based on backend settings
+   - COD limit validation implemented
+   - Default to online payment when COD is disabled
+
+4. **Order Creation & Payment Flow Fixes**:
+   - **Critical Fix**: Backend returns HTTP 201 (Created) for orders, not 200
+   - Fixed field mappings: `product_id` (with underscore), `firstName`/`lastName` at root level
+   - Proper error handling and detailed logging throughout checkout flow
+   - GPS location integration for address with Geolocator package
+   - State-based GST calculation (CGST/SGST for UP, IGST for other states)
+
+5. **Checkout Screen Enhancements**:
+   - Complete rewrite of checkout_screen_v2.dart with proper state management
+   - Saved addresses integration - auto-populate from address book
+   - State dropdown with all Indian states
+   - GPS location button for automatic address filling
+   - Razorpay integration working with proper order and payment order creation
+
 ### UI/UX Improvements (August 2025)
 1. **Navigation System Overhaul**:
    - Replaced static navigation with dynamic category dropdowns
@@ -505,15 +561,20 @@ Add this A record to your DNS provider:
 1. **NEVER run or test anything on localhost - work directly in code**
 2. **NEVER implement temporary workarounds - always fix the root issue properly**
 3. **IMPORTANT: Both https://tripund-backend-665685012221.asia-south1.run.app and https://tripund-backend-rafqv5m7ga-el.a.run.app are aliases for the same Cloud Run service - DO NOT change between them**
-3. Check `.env` files exist before deployment
-4. Use `git status` before committing to verify changes
-5. Test API endpoints with curl after deployment
-6. Clear Netlify cache if builds show old content
-7. Check Cloud Run IAM settings if getting 403 errors
-8. Verify CORS configuration when adding new domains
-9. Always use Node.js v20+ for builds
-10. Use Tailwind CSS v3 (not v4) for compatibility
-11. Deploy directly to production for testing
+4. Check `.env` files exist before deployment
+5. Use `git status` before committing to verify changes
+6. Test API endpoints with curl after deployment
+7. Clear Netlify cache if builds show old content
+8. Check Cloud Run IAM settings if getting 403 errors
+9. Verify CORS configuration when adding new domains
+10. Always use Node.js v20+ for builds
+11. Use Tailwind CSS v3 (not v4) for compatibility
+12. Deploy directly to production for testing
+13. **Backend returns HTTP 201 for successful order creation, not 200**
+14. **Always build debug APKs when troubleshooting mobile app issues**
+15. **Cart persistence uses SharedPreferences with key 'cart_items'**
+16. **Auth token must be synchronized between AuthProvider and ApiService**
+17. **Payment settings (COD enabled/limit) fetched from /api/v1/settings/public**
 
 ## Quick Fixes
 

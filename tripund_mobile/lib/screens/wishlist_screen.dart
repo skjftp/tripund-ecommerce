@@ -8,6 +8,7 @@ import '../utils/theme.dart';
 import '../utils/constants.dart';
 import '../utils/navigation_helper.dart';
 import 'product_detail_screen.dart';
+import 'shop_screen.dart';
 
 class WishlistScreen extends StatelessWidget {
   const WishlistScreen({super.key});
@@ -88,7 +89,12 @@ class WishlistScreen extends StatelessWidget {
                   const SizedBox(height: 30),
                   ElevatedButton(
                     onPressed: () {
-                      NavigationHelper.goToHome();
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ShopScreen(),
+                        ),
+                      );
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.primaryColor,
