@@ -32,26 +32,19 @@ class ProductProvider extends ChangeNotifier {
   String? get searchQuery => _searchQuery;
 
   ProductProvider() {
-    print('ProductProvider constructor called');
     loadInitialData();
   }
 
   Future<void> loadInitialData() async {
-    print('Loading initial data...');
     await Future.wait([
       loadProducts(),
       loadFeaturedProducts(),
       loadCategories(),
     ]);
-    print('Initial data loaded');
   }
 
   Future<void> loadProducts({bool refresh = false}) async {
-    print('loadProducts called with refresh=$refresh');
-    if (_isLoading) {
-      print('Already loading, returning...');
-      return;
-    }
+    if (_isLoading) return;
     
     if (refresh) {
       _currentOffset = 0;
@@ -64,7 +57,6 @@ class ProductProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      print('Calling API to get products...');
       final products = await _apiService.getProducts(
         limit: _limit,
         offset: _currentOffset,
@@ -72,26 +64,18 @@ class ProductProvider extends ChangeNotifier {
         search: _searchQuery,
       );
       
-      print('API returned ${products.length} products');
       if (products.isEmpty) {
         _hasMore = false;
-        print('No products returned, setting hasMore to false');
       } else {
         if (refresh) {
           _products = products;
-          _featuredProducts = products.take(8).toList();
         } else {
           _products.addAll(products);
-          if (_featuredProducts.isEmpty) {
-            _featuredProducts = _products.take(8).toList();
-          }
         }
         _currentOffset += _limit;
-        print('Now have ${_products.length} products total');
       }
     } catch (e) {
       _error = 'Failed to load products: $e';
-      print('Error in loadProducts: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -113,11 +97,6 @@ class ProductProvider extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       print('Error loading featured products: $e');
-      // Fallback to using first 8 products if featured endpoint fails
-      if (_products.isNotEmpty) {
-        _featuredProducts = _products.take(8).toList();
-        notifyListeners();
-      }
     }
   }
 

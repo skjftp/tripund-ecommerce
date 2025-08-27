@@ -54,38 +54,20 @@ class ApiService {
     try {
       final queryParams = {
         'limit': limit,
-        'offset': offset,
-        if (category != null) 'category': category,
-        if (search != null) 'search': search,
+        if (offset > 0) 'offset': offset,
+        if (category != null && category.isNotEmpty) 'category': category,
+        if (search != null && search.isNotEmpty) 'search': search,
       };
 
-      print('Fetching products with params: $queryParams');
       final response = await _dio.get('/products', queryParameters: queryParams);
-      print('Response status: ${response.statusCode}');
-      print('Response data type: ${response.data.runtimeType}');
       
       if (response.statusCode == 200) {
-        final data = response.data;
-        print('Response has products field: ${data.containsKey('products')}');
-        final List<dynamic> products = data['products'] ?? [];
-        print('Found ${products.length} products');
-        
-        final List<Product> parsedProducts = [];
-        for (var json in products) {
-          try {
-            parsedProducts.add(Product.fromJson(json));
-          } catch (e) {
-            print('Error parsing product: $e');
-            print('Product JSON: $json');
-          }
-        }
-        print('Successfully parsed ${parsedProducts.length} products');
-        return parsedProducts;
+        final List<dynamic> products = response.data['products'] ?? [];
+        return products.map((json) => Product.fromJson(json)).toList();
       }
       return [];
     } catch (e) {
       print('Error fetching products: $e');
-      print('Error details: ${e.toString()}');
       return [];
     }
   }
@@ -106,34 +88,18 @@ class ApiService {
 
   Future<List<Product>> getFeaturedProducts() async {
     try {
-      print('Fetching featured products...');
       final response = await _dio.get('/products', queryParameters: {
         'featured': true,
         'limit': 8,
       });
       
-      print('Featured products response status: ${response.statusCode}');
       if (response.statusCode == 200) {
-        final data = response.data;
-        print('Featured response has products field: ${data.containsKey('products')}');
-        final List<dynamic> products = data['products'] ?? [];
-        print('Found ${products.length} featured products');
-        
-        final List<Product> parsedProducts = [];
-        for (var json in products) {
-          try {
-            parsedProducts.add(Product.fromJson(json));
-          } catch (e) {
-            print('Error parsing featured product: $e');
-          }
-        }
-        print('Successfully parsed ${parsedProducts.length} featured products');
-        return parsedProducts;
+        final List<dynamic> products = response.data['products'] ?? [];
+        return products.map((json) => Product.fromJson(json)).toList();
       }
       return [];
     } catch (e) {
       print('Error fetching featured products: $e');
-      print('Error details: ${e.toString()}');
       return [];
     }
   }
