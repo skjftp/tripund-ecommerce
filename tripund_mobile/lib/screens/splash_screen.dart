@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import '../utils/theme.dart';
+import '../utils/navigation_helper.dart';
 import 'main_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -67,7 +68,7 @@ class _SplashScreenState extends State<SplashScreen>
       Navigator.of(context).pushReplacement(
         PageRouteBuilder(
           pageBuilder: (context, animation, secondaryAnimation) =>
-              const MainScreen(),
+              MainScreen(key: NavigationHelper.mainScreenKey),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             return FadeTransition(
               opacity: animation,

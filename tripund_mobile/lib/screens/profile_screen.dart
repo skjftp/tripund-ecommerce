@@ -6,6 +6,11 @@ import '../providers/cart_provider.dart';
 import '../providers/wishlist_provider.dart';
 import '../utils/theme.dart';
 import 'login_screen.dart';
+import 'orders_screen.dart';
+import 'addresses_screen.dart';
+import 'payment_methods_screen.dart';
+import 'notifications_settings_screen.dart';
+import 'help_support_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -371,7 +376,10 @@ class ProfileScreen extends StatelessWidget {
             'Track your order history',
             Icons.receipt_long_outlined,
             AppTheme.primaryColor,
-            () => {},
+            () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const OrdersScreen()),
+            ),
           ),
           _buildDivider(),
           _buildMenuItem(
@@ -380,7 +388,10 @@ class ProfileScreen extends StatelessWidget {
             'Manage delivery addresses',
             Icons.location_on_outlined,
             Colors.blue,
-            () => {},
+            () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const AddressesScreen()),
+            ),
           ),
           _buildDivider(),
           _buildMenuItem(
@@ -389,7 +400,10 @@ class ProfileScreen extends StatelessWidget {
             'Manage payment options',
             Icons.payment_outlined,
             Colors.green,
-            () => {},
+            () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const PaymentMethodsScreen()),
+            ),
           ),
           _buildDivider(),
           _buildMenuItem(
@@ -398,7 +412,10 @@ class ProfileScreen extends StatelessWidget {
             'App notification settings',
             Icons.notifications_outlined,
             Colors.orange,
-            () => {},
+            () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const NotificationsSettingsScreen()),
+            ),
           ),
           _buildDivider(),
           _buildMenuItem(
@@ -407,7 +424,10 @@ class ProfileScreen extends StatelessWidget {
             'Get help and contact us',
             Icons.help_outline,
             Colors.purple,
-            () => {},
+            () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const HelpSupportScreen()),
+            ),
           ),
           _buildDivider(),
           _buildMenuItem(

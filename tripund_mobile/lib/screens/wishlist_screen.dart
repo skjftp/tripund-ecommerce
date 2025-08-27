@@ -6,6 +6,7 @@ import '../providers/wishlist_provider.dart';
 import '../providers/cart_provider.dart';
 import '../utils/theme.dart';
 import '../utils/constants.dart';
+import '../utils/navigation_helper.dart';
 import 'product_detail_screen.dart';
 
 class WishlistScreen extends StatelessWidget {
@@ -87,7 +88,7 @@ class WishlistScreen extends StatelessWidget {
                   const SizedBox(height: 30),
                   ElevatedButton(
                     onPressed: () {
-                      Navigator.of(context).popUntil((route) => route.isFirst);
+                      NavigationHelper.goToHome();
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.primaryColor,

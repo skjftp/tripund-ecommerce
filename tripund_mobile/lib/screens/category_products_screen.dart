@@ -23,9 +23,9 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
   @override
   void initState() {
     super.initState();
-    // Load products for this category
+    // Load products for this category using slug
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ProductProvider>().selectCategory(widget.category.id);
+      context.read<ProductProvider>().selectCategory(widget.category.slug);
     });
   }
 
@@ -38,10 +38,8 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
       ),
       body: Consumer<ProductProvider>(
         builder: (context, provider, child) {
-          final products = provider.products.where((p) => 
-            p.categories.contains(widget.category.id) ||
-            p.categories.contains(widget.category.name)
-          ).toList();
+          // Use the products from provider which are already filtered by category
+          final products = provider.products;
           
           if (provider.isLoading && products.isEmpty) {
             return const Center(

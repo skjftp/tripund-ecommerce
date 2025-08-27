@@ -5,6 +5,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../providers/cart_provider.dart';
 import '../utils/theme.dart';
 import '../utils/constants.dart';
+import '../utils/navigation_helper.dart';
 
 class CartScreen extends StatelessWidget {
   const CartScreen({super.key});
@@ -45,7 +46,7 @@ class CartScreen extends StatelessWidget {
                   const SizedBox(height: 30),
                   ElevatedButton(
                     onPressed: () {
-                      Navigator.of(context).popUntil((route) => route.isFirst);
+                      NavigationHelper.goToHome();
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.primaryColor,

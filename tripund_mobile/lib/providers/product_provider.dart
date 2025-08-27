@@ -38,6 +38,7 @@ class ProductProvider extends ChangeNotifier {
   Future<void> loadInitialData() async {
     await Future.wait([
       loadProducts(),
+      loadFeaturedProducts(),
       loadCategories(),
     ]);
   }
@@ -92,6 +93,20 @@ class ProductProvider extends ChangeNotifier {
 
   Future<void> refreshProducts() async {
     await loadProducts(refresh: true);
+  }
+
+  Future<void> loadFeaturedProducts() async {
+    try {
+      _featuredProducts = await _apiService.getFeaturedProducts();
+      notifyListeners();
+    } catch (e) {
+      print('Error loading featured products: $e');
+      // Fallback to using first 8 products if featured endpoint fails
+      if (_products.isNotEmpty) {
+        _featuredProducts = _products.take(8).toList();
+        notifyListeners();
+      }
+    }
   }
 
   Future<void> loadCategories() async {

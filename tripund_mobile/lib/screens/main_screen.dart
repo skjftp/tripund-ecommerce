@@ -13,10 +13,10 @@ class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
 
   @override
-  State<MainScreen> createState() => _MainScreenState();
+  State<MainScreen> createState() => MainScreenState();
 }
 
-class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
+class MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   int _currentIndex = 0;
   late PageController _pageController;
   late AnimationController _fabAnimationController;
@@ -70,6 +70,13 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     _pageController.dispose();
     _fabAnimationController.dispose();
     super.dispose();
+  }
+
+  void switchTab(int index) {
+    setState(() {
+      _currentIndex = index;
+      _pageController.jumpToPage(index);
+    });
   }
 
   @override

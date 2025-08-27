@@ -86,6 +86,24 @@ class ApiService {
     }
   }
 
+  Future<List<Product>> getFeaturedProducts() async {
+    try {
+      final response = await _dio.get('/products', queryParameters: {
+        'featured': true,
+        'limit': 8,
+      });
+      
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data['products'] ?? [];
+        return data.map((json) => Product.fromJson(json)).toList();
+      }
+      return [];
+    } catch (e) {
+      print('Error fetching featured products: $e');
+      return [];
+    }
+  }
+
   // Categories
   Future<List<Category>> getCategories() async {
     try {
