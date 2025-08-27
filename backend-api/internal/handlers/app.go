@@ -41,7 +41,7 @@ func (h *AppHandler) GetVersion(c *gin.Context) {
 	
 	downloadURL := os.Getenv("APP_DOWNLOAD_URL")
 	if downloadURL == "" {
-		downloadURL = "https://github.com/skjftp/tripund-ecommerce/releases/download/v" + version + "/app-release.apk"
+		downloadURL = "https://github.com/skjftp/tripund-ecommerce/releases/download/v" + version + "/tripund-v" + version + ".apk"
 	}
 	
 	releaseNotes := os.Getenv("APP_RELEASE_NOTES")
