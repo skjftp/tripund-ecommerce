@@ -18,12 +18,12 @@ import (
 
 type EmailTemplateHandler struct {
 	db           *database.Firebase
-	emailService *services.FixedOAuth2EmailService
+	emailService *services.SimpleEmailService
 }
 
 func NewEmailTemplateHandler(db *database.Firebase) *EmailTemplateHandler {
-	// Initialize email service for testing
-	emailService, _ := services.NewFixedOAuth2EmailService()
+	// Initialize simple email service for testing
+	emailService, _ := services.NewSimpleEmailService()
 	
 	return &EmailTemplateHandler{
 		db:           db,

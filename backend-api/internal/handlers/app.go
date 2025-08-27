@@ -25,20 +25,18 @@ func NewAppHandler() *AppHandler {
 func (h *AppHandler) GetVersion(c *gin.Context) {
 	// Current version information for TRIPUND Mobile
 	versionInfo := AppVersionResponse{
-		Version:     "1.0.1",
-		BuildNumber: 2,
-		DownloadURL: "https://github.com/skjftp/tripund-ecommerce/releases/download/v1.0.1/app-release.apk",
-		ReleaseNotes: "🎉 Complete Flutter app with all features!\n" +
-			"✅ Profile with login/register functionality\n" +
-			"✅ Full cart & wishlist functionality\n" +
-			"✅ API integration matching web version\n" +
-			"✅ Beautiful animations throughout\n" +
-			"✅ Fixed carousel to use API category images\n" +
-			"✅ Category navigation properly working\n" +
-			"✅ Featured products loading from API\n" +
-			"✨ Mesmerizing staggered animations\n" +
-			"✨ Glassmorphic search bar\n" +
-			"✨ Parallax card effects",
+		Version:     "1.0.21",
+		BuildNumber: 22,
+		DownloadURL: "https://github.com/skjftp/tripund-ecommerce/releases/download/v1.0.21/app-release.apk",
+		ReleaseNotes: "🎉 Major Update v1.0.21!\n" +
+			"✅ Complete cart persistence - never lose your items\n" +
+			"✅ Fixed authentication tokens for all API calls\n" +
+			"✅ Dynamic payment settings from backend\n" +
+			"✅ Cash on Delivery (COD) option with limits\n" +
+			"✅ GPS location for easy address filling\n" +
+			"✅ Fixed order creation flow\n" +
+			"✅ Improved checkout experience\n" +
+			"🔧 Fixed critical bugs in payment processing",
 		ForceUpdate: false,
 		MinVersion:  "1.0.0",
 	}
