@@ -8,6 +8,7 @@ import 'categories_screen.dart';
 import 'cart_screen.dart';
 import 'profile_screen.dart';
 import 'wishlist_screen.dart';
+import 'search_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -126,7 +127,12 @@ class MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
               scale: _fabAnimation,
               child: FloatingActionButton(
                 onPressed: () {
-                  // Open search
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const SearchScreen(),
+                    ),
+                  );
                 },
                 backgroundColor: AppTheme.secondaryColor,
                 elevation: 8,

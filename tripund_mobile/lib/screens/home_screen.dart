@@ -3,11 +3,9 @@ import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:glassmorphism/glassmorphism.dart';
 import 'package:provider/provider.dart';
 import '../utils/theme.dart';
 import '../widgets/parallax_card.dart';
-import '../widgets/category_chip.dart';
 import '../providers/product_provider.dart';
 import '../models/category.dart';
 import 'product_detail_screen.dart';
@@ -131,43 +129,73 @@ class _HomeScreenState extends State<HomeScreen>
             ],
           ),
           
-          // Search Bar
+          // Promo Code Banner
           SliverToBoxAdapter(
             child: SlideTransition(
               position: Tween<Offset>(
                 begin: const Offset(0, -1),
                 end: Offset.zero,
               ).animate(_searchAnimation),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                child: GlassmorphicContainer(
-                  width: double.infinity,
-                  height: 56,
-                  borderRadius: 28,
-                  blur: 10,
-                  alignment: Alignment.center,
-                  border: 1,
-                  linearGradient: LinearGradient(
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
                     colors: [
-                      Colors.white.withOpacity(0.8),
-                      Colors.white.withOpacity(0.4),
+                      AppTheme.primaryColor.withOpacity(0.9),
+                      AppTheme.secondaryColor.withOpacity(0.9),
                     ],
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
                   ),
-                  borderGradient: LinearGradient(
-                    colors: [
-                      AppTheme.primaryColor.withOpacity(0.2),
-                      AppTheme.secondaryColor.withOpacity(0.2),
-                    ],
-                  ),
-                  child: TextField(
-                    decoration: InputDecoration(
-                      hintText: 'Search for handicrafts...',
-                      hintStyle: TextStyle(color: AppTheme.textSecondary),
-                      prefixIcon: Icon(Icons.search, color: AppTheme.primaryColor),
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 20),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppTheme.primaryColor.withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
                     ),
-                  ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.local_offer,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Use code ',
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.9),
+                        fontSize: 14,
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        'TRIPUND10',
+                        style: TextStyle(
+                          color: AppTheme.primaryColor,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      ' for 10% off',
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.9),
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -369,10 +397,7 @@ class _HomeScreenState extends State<HomeScreen>
                               child: SlideAnimation(
                                 horizontalOffset: 50.0,
                                 child: FadeInAnimation(
-                                  child: CategoryChip(
-                                    name: category.name,
-                                    icon: category.icon,
-                                    index: index,
+                                  child: GestureDetector(
                                     onTap: () {
                                       Navigator.push(
                                         context,
@@ -383,6 +408,65 @@ class _HomeScreenState extends State<HomeScreen>
                                         ),
                                       );
                                     },
+                                    child: Container(
+                                      width: 85,
+                                      margin: const EdgeInsets.only(right: 16),
+                                      child: Column(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Container(
+                                            width: 65,
+                                            height: 65,
+                                            decoration: BoxDecoration(
+                                              color: Colors.white,
+                                              borderRadius: BorderRadius.circular(16),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: Colors.black.withOpacity(0.08),
+                                                  blurRadius: 10,
+                                                  offset: const Offset(0, 4),
+                                                ),
+                                              ],
+                                            ),
+                                            child: ClipRRect(
+                                              borderRadius: BorderRadius.circular(16),
+                                              child: CachedNetworkImage(
+                                                imageUrl: category.image ?? '',
+                                                fit: BoxFit.cover,
+                                                placeholder: (context, url) => Container(
+                                                  color: AppTheme.primaryColor.withOpacity(0.1),
+                                                  child: Icon(
+                                                    Icons.category_outlined,
+                                                    color: AppTheme.primaryColor,
+                                                    size: 24,
+                                                  ),
+                                                ),
+                                                errorWidget: (context, url, error) => Container(
+                                                  color: AppTheme.primaryColor.withOpacity(0.1),
+                                                  child: Icon(
+                                                    Icons.category_outlined,
+                                                    color: AppTheme.primaryColor,
+                                                    size: 24,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Text(
+                                            category.name,
+                                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                              fontWeight: FontWeight.w600,
+                                              color: AppTheme.textPrimary,
+                                              fontSize: 11,
+                                            ),
+                                            textAlign: TextAlign.center,
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ),
