@@ -52,10 +52,10 @@ func main() {
 		// App version endpoint for auto-update functionality
 		api.GET("/app/version", func(c *gin.Context) {
 			c.JSON(200, gin.H{
-				"version":       "1.0.1",
-				"build_number":  2,
-				"download_url":  "https://github.com/skjftp/tripund-ecommerce/releases/download/v1.0.1-build2/tripund-v1.0.1-build2.apk",
-				"release_notes": "🎉 All Critical Issues Fixed!\n✅ Fixed product loading for all categories\n✅ Fixed featured products display\n✅ Fixed update modal loop issue\n✅ Added TRIPUND logo on screens\n✨ Complete cart & wishlist functionality\n✨ User profile with login/register\n✨ API integration matching web\n✨ Beautiful animations throughout",
+				"version":       "1.0.2",
+				"build_number":  3,
+				"download_url":  "https://github.com/skjftp/tripund-ecommerce/releases/download/v1.0.2/tripund-v1.0.2.apk",
+				"release_notes": "🎉 Version 1.0.2 - All Issues Fixed!\n✅ Fixed product loading for all categories\n✅ Fixed featured products display\n✅ Fixed update modal loop issue\n✅ Added TRIPUND logo on screens\n✨ Complete cart & wishlist functionality\n✨ User profile with login/register\n✨ API integration matching web\n✨ Beautiful animations throughout",
 				"force_update":  false,
 				"min_version":   "1.0.0",
 			})
