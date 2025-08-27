@@ -6,6 +6,7 @@ import '../models/product.dart';
 import '../utils/theme.dart';
 import '../utils/constants.dart';
 import '../providers/wishlist_provider.dart';
+import '../providers/cart_provider.dart';
 
 class ParallaxCard extends StatefulWidget {
   final Product product;
@@ -140,6 +141,7 @@ class _ParallaxCardState extends State<ParallaxCard>
                                 ),
                               ),
                             ),
+                          // Wishlist button (top right)
                           Positioned(
                             top: 10,
                             right: 10,
@@ -173,6 +175,61 @@ class _ParallaxCardState extends State<ParallaxCard>
                                       isInWishlist ? Icons.favorite : Icons.favorite_border,
                                       size: 20,
                                       color: isInWishlist ? Colors.white : AppTheme.primaryColor,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                          // Add to Cart button (bottom right)
+                          Positioned(
+                            bottom: 10,
+                            right: 10,
+                            child: Consumer<CartProvider>(
+                              builder: (context, cartProvider, child) {
+                                final isInCart = cartProvider.items.containsKey(widget.product.id);
+                                return GestureDetector(
+                                  onTap: () {
+                                    if (isInCart) {
+                                      // Remove from cart
+                                      cartProvider.removeItem(widget.product.id);
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Text('${widget.product.name} removed from cart'),
+                                          duration: const Duration(seconds: 1),
+                                        ),
+                                      );
+                                    } else {
+                                      // Add to cart
+                                      cartProvider.addItem(widget.product);
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Text('${widget.product.name} added to cart'),
+                                          duration: const Duration(seconds: 1),
+                                        ),
+                                      );
+                                    }
+                                  },
+                                  child: AnimatedContainer(
+                                    duration: const Duration(milliseconds: 200),
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: isInCart 
+                                        ? Colors.green.withOpacity(0.9)
+                                        : Colors.white.withOpacity(0.9),
+                                      shape: BoxShape.circle,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.1),
+                                          blurRadius: 4,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Icon(
+                                      isInCart ? Icons.shopping_cart : Icons.shopping_cart_outlined,
+                                      size: 20,
+                                      color: isInCart ? Colors.white : AppTheme.primaryColor,
                                     ),
                                   ),
                                 );

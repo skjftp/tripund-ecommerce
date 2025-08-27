@@ -52,7 +52,7 @@ class Product {
       tags: List<String>.from(json['tags'] ?? []),
       sku: json['sku'] ?? '',
       stock: json['stock_quantity'] ?? json['stock'] ?? 0,
-      attributes: json['attributes'],
+      attributes: json['attributes'] is List ? null : json['attributes'],
       rating: json['rating']?.toDouble(),
       reviewCount: json['review_count'],
     );

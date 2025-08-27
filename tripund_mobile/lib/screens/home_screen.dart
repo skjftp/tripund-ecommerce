@@ -12,6 +12,8 @@ import '../providers/product_provider.dart';
 import '../models/category.dart';
 import 'product_detail_screen.dart';
 import 'category_products_screen.dart';
+import 'all_categories_screen.dart';
+import 'all_products_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -327,7 +329,14 @@ class _HomeScreenState extends State<HomeScreen>
                             ),
                       ),
                       TextButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const AllCategoriesScreen(),
+                            ),
+                          );
+                        },
                         child: Text(
                           'See All',
                           style: TextStyle(
@@ -403,7 +412,15 @@ class _HomeScreenState extends State<HomeScreen>
                   ),
                   TextButton(
                     onPressed: () {
-                      // TODO: Navigate to all products
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const AllProductsScreen(
+                            title: 'Featured Products',
+                            featuredOnly: true,
+                          ),
+                        ),
+                      );
                     },
                     child: Text(
                       'See All',

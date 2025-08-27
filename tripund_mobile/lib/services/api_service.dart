@@ -59,32 +59,12 @@ class ApiService {
         if (search != null && search.isNotEmpty) 'search': search,
       };
 
-      print('🔍 API Call: /products with params: $queryParams');
       final response = await _dio.get('/products', queryParameters: queryParams);
-      print('📡 Response status: ${response.statusCode}');
       
       if (response.statusCode == 200) {
-        final data = response.data;
-        print('📦 Response data keys: ${data.keys.toList()}');
-        final List<dynamic> products = data['products'] ?? [];
-        print('🛍️ Raw products count: ${products.length}');
-        
-        final List<Product> parsedProducts = [];
-        for (int i = 0; i < products.length; i++) {
-          try {
-            final product = Product.fromJson(products[i]);
-            parsedProducts.add(product);
-            if (i < 3) { // Log first 3 products
-              print('✅ Product ${i + 1}: ${product.name} - ₹${product.price}');
-            }
-          } catch (e) {
-            print('❌ Error parsing product $i: $e');
-          }
-        }
-        print('✨ Final parsed products count: ${parsedProducts.length}');
-        return parsedProducts;
+        final List<dynamic> products = response.data['products'] ?? [];
+        return products.map((json) => Product.fromJson(json)).toList();
       }
-      print('❌ Bad response status: ${response.statusCode}');
       return [];
     } catch (e) {
       print('💥 Error fetching products: $e');
@@ -108,23 +88,18 @@ class ApiService {
 
   Future<List<Product>> getFeaturedProducts() async {
     try {
-      print('⭐ Fetching featured products...');
       final response = await _dio.get('/products', queryParameters: {
         'featured': true,
         'limit': 8,
       });
-      print('⭐ Featured response status: ${response.statusCode}');
       
       if (response.statusCode == 200) {
         final List<dynamic> products = response.data['products'] ?? [];
-        print('⭐ Featured products count: ${products.length}');
-        final parsed = products.map((json) => Product.fromJson(json)).toList();
-        print('⭐ Featured parsed count: ${parsed.length}');
-        return parsed;
+        return products.map((json) => Product.fromJson(json)).toList();
       }
       return [];
     } catch (e) {
-      print('💥 Error fetching featured products: $e');
+      print('Error fetching featured products: $e');
       return [];
     }
   }
