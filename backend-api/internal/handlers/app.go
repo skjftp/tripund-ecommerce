@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"net/http"
+	"os"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -23,12 +25,28 @@ func NewAppHandler() *AppHandler {
 
 // GetVersion returns the current app version information for auto-update
 func (h *AppHandler) GetVersion(c *gin.Context) {
-	// Current version information for TRIPUND Mobile
-	versionInfo := AppVersionResponse{
-		Version:     "1.0.21",
-		BuildNumber: 22,
-		DownloadURL: "https://github.com/skjftp/tripund-ecommerce/releases/download/v1.0.21/app-release.apk",
-		ReleaseNotes: "🎉 Major Update v1.0.21!\n" +
+	// Get version info from environment variables with defaults
+	version := os.Getenv("APP_VERSION")
+	if version == "" {
+		version = "1.0.21"
+	}
+	
+	buildNumberStr := os.Getenv("APP_BUILD_NUMBER")
+	buildNumber := 22
+	if buildNumberStr != "" {
+		if num, err := strconv.Atoi(buildNumberStr); err == nil {
+			buildNumber = num
+		}
+	}
+	
+	downloadURL := os.Getenv("APP_DOWNLOAD_URL")
+	if downloadURL == "" {
+		downloadURL = "https://github.com/skjftp/tripund-ecommerce/releases/download/v" + version + "/app-release.apk"
+	}
+	
+	releaseNotes := os.Getenv("APP_RELEASE_NOTES")
+	if releaseNotes == "" {
+		releaseNotes = "🎉 Major Update v" + version + "!\n" +
 			"✅ Complete cart persistence - never lose your items\n" +
 			"✅ Fixed authentication tokens for all API calls\n" +
 			"✅ Dynamic payment settings from backend\n" +
@@ -36,9 +54,27 @@ func (h *AppHandler) GetVersion(c *gin.Context) {
 			"✅ GPS location for easy address filling\n" +
 			"✅ Fixed order creation flow\n" +
 			"✅ Improved checkout experience\n" +
-			"🔧 Fixed critical bugs in payment processing",
-		ForceUpdate: false,
-		MinVersion:  "1.0.0",
+			"🔧 Fixed critical bugs in payment processing"
+	}
+	
+	forceUpdateStr := os.Getenv("APP_FORCE_UPDATE")
+	forceUpdate := false
+	if forceUpdateStr == "true" {
+		forceUpdate = true
+	}
+	
+	minVersion := os.Getenv("APP_MIN_VERSION")
+	if minVersion == "" {
+		minVersion = "1.0.0"
+	}
+	
+	versionInfo := AppVersionResponse{
+		Version:      version,
+		BuildNumber:  buildNumber,
+		DownloadURL:  downloadURL,
+		ReleaseNotes: releaseNotes,
+		ForceUpdate:  forceUpdate,
+		MinVersion:   minVersion,
 	}
 
 	c.JSON(http.StatusOK, versionInfo)

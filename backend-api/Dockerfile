@@ -34,4 +34,4 @@ COPY --from=builder /app/main .
 EXPOSE 8080
 
 # Run the application
-CMD ["./main"]
+CMD ["./main"]# Cache bust: Thu Aug 28 01:32:59 IST 2025
