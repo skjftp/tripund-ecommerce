@@ -11,6 +11,7 @@ import '../providers/product_provider.dart';
 import '../providers/notification_provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/address_provider.dart';
+import '../services/api_service.dart';
 import '../models/category.dart';
 import 'product_detail_screen.dart';
 import 'category_products_screen.dart';
@@ -79,8 +80,7 @@ class _HomeScreenState extends State<HomeScreen>
   
   Future<void> _fetchPromotions() async {
     try {
-      final apiService = Provider.of<AuthProvider>(context, listen: false).apiService;
-      final promotions = await apiService.getActivePromotions();
+      final promotions = await ApiService().getActivePromotions();
       if (mounted && promotions.isNotEmpty) {
         setState(() {
           _activePromotions = promotions;
