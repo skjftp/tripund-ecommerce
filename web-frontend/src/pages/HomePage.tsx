@@ -19,45 +19,12 @@ export default function HomePage() {
   const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
   const [selectedVariantProduct, setSelectedVariantProduct] = useState<any>(null);
   const [showVariantModal, setShowVariantModal] = useState(false);
-  const [activePromotions, setActivePromotions] = useState<any[]>([]);
-  const [currentPromoIndex, setCurrentPromoIndex] = useState(0);
-
   useEffect(() => {
     // Fetch all products initially
     dispatch(fetchProducts({ limit: 40 }));
     // Fetch categories for showcase
     dispatch(fetchCategories());
-    // Fetch active promotions
-    fetchActivePromotions();
   }, [dispatch]);
-
-  const fetchActivePromotions = async () => {
-    try {
-      const response = await fetch('https://tripund-backend-665685012221.asia-south1.run.app/api/v1/promotions/active');
-      if (response.ok) {
-        const data = await response.json();
-        if (data.promotions && data.promotions.length > 0) {
-          setActivePromotions(data.promotions);
-          // Rotate promotions every 5 seconds if there are multiple
-          if (data.promotions.length > 1) {
-            const interval = setInterval(() => {
-              setCurrentPromoIndex((prev) => (prev + 1) % data.promotions.length);
-            }, 5000);
-            return () => clearInterval(interval);
-          }
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching promotions:', error);
-      // Set default promotion if fetch fails
-      setActivePromotions([{
-        code: 'TRIPUND10',
-        description: '10% off on all orders',
-        type: 'percentage',
-        discount: 10
-      }]);
-    }
-  };
 
   const { categories } = useSelector((state: RootState) => state.categories);
 
@@ -143,27 +110,6 @@ export default function HomePage() {
     <div className="min-h-screen bg-white">
       {/* Category Icons - Above Hero */}
       <CategoryIcons />
-      
-      {/* Promo Banner */}
-      {activePromotions.length > 0 && (
-        <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-2">
-          <div className="max-w-7xl mx-auto px-4 text-center">
-            <div className="flex items-center justify-center space-x-2">
-              <span className="text-sm md:text-base">🎉 Use code</span>
-              <span className="font-bold bg-white text-purple-600 px-2 py-1 rounded text-sm md:text-base">
-                {activePromotions[currentPromoIndex]?.code}
-              </span>
-              <span className="text-sm md:text-base">
-                for {activePromotions[currentPromoIndex]?.type === 'percentage' 
-                  ? `${activePromotions[currentPromoIndex]?.discount}% off` 
-                  : `₹${activePromotions[currentPromoIndex]?.discount} off`}
-                {activePromotions[currentPromoIndex]?.description && 
-                  ` - ${activePromotions[currentPromoIndex]?.description}`}
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
       
       {/* Hero Section */}
       <HeroSection />

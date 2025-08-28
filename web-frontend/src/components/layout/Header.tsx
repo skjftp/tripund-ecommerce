@@ -12,6 +12,8 @@ export default function Header() {
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [activePromotions, setActivePromotions] = useState<any[]>([]);
+  const [currentPromoIndex, setCurrentPromoIndex] = useState(0);
   const profileDropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
@@ -28,6 +30,50 @@ export default function Header() {
       dispatch(fetchCategories());
     }
   }, [dispatch, categories.length]);
+
+  // Fetch active promotions
+  useEffect(() => {
+    const fetchPromotions = async () => {
+      try {
+        const response = await fetch('https://tripund-backend-665685012221.asia-south1.run.app/api/v1/promotions/active');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.promotions && data.promotions.length > 0) {
+            setActivePromotions(data.promotions);
+          } else {
+            // Fallback promotion
+            setActivePromotions([{
+              code: 'TRIPUND20',
+              description: '20% off on first order',
+              type: 'percentage',
+              discount: 20
+            }]);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching promotions:', error);
+        // Fallback promotion
+        setActivePromotions([{
+          code: 'TRIPUND20',
+          description: '20% off on first order',
+          type: 'percentage',
+          discount: 20
+        }]);
+      }
+    };
+
+    fetchPromotions();
+  }, []);
+
+  // Rotate promotions every 5 seconds
+  useEffect(() => {
+    if (activePromotions.length > 1) {
+      const interval = setInterval(() => {
+        setCurrentPromoIndex((prev) => (prev + 1) % activePromotions.length);
+      }, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [activePromotions.length]);
 
   // Handle click outside for profile dropdown
   useEffect(() => {
@@ -49,20 +95,36 @@ export default function Header() {
   return (
     <>
       {/* Promo Banner - Elegant Style */}
-      <div className="bg-gradient-to-r from-primary-600 to-primary-700 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-center py-2.5">
-            <div className="text-center">
-              <span className="text-xs sm:text-sm font-medium tracking-wide sm:tracking-wider uppercase">
-                <span className="hidden sm:inline">USE CODE </span>
-                <span className="bg-white/20 px-2 py-0.5 mx-1 rounded font-bold">TRIPUND20</span>
-                <span className="hidden sm:inline"> FOR 20% OFF ON YOUR FIRST ORDER</span>
-                <span className="sm:hidden"> - 20% OFF FIRST ORDER</span>
-              </span>
+      {activePromotions.length > 0 && (
+        <div className="bg-gradient-to-r from-primary-600 to-primary-700 text-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-center py-2.5">
+              <div className="text-center">
+                <span className="text-xs sm:text-sm font-medium tracking-wide sm:tracking-wider uppercase">
+                  <span className="hidden sm:inline">USE CODE </span>
+                  <span className="bg-white/20 px-2 py-0.5 mx-1 rounded font-bold">
+                    {activePromotions[currentPromoIndex]?.code || 'TRIPUND20'}
+                  </span>
+                  <span className="hidden sm:inline">
+                    {' FOR '}
+                    {activePromotions[currentPromoIndex]?.type === 'percentage' 
+                      ? `${activePromotions[currentPromoIndex]?.discount}% OFF` 
+                      : `₹${activePromotions[currentPromoIndex]?.discount} OFF`}
+                    {activePromotions[currentPromoIndex]?.description && 
+                      ` - ${activePromotions[currentPromoIndex]?.description.toUpperCase()}`}
+                  </span>
+                  <span className="sm:hidden">
+                    {' - '}
+                    {activePromotions[currentPromoIndex]?.type === 'percentage' 
+                      ? `${activePromotions[currentPromoIndex]?.discount}% OFF` 
+                      : `₹${activePromotions[currentPromoIndex]?.discount} OFF`}
+                  </span>
+                </span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Main Header */}
       <header className="bg-white sticky top-0 z-50 shadow-sm">
