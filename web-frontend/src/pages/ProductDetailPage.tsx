@@ -4,8 +4,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Heart, ShoppingCart, Truck, Shield, ChevronLeft, ChevronRight } from 'lucide-react';
 import { RootState, AppDispatch } from '../store';
 import { fetchProductById } from '../store/slices/productSlice';
-import { addToCart } from '../store/slices/cartSlice';
-import { addToWishlist, removeFromWishlist } from '../store/slices/wishlistSlice';
+import { addToCartWithSync } from '../store/slices/cartSlice';
+import { addToWishlistWithSync, removeFromWishlistWithSync } from '../store/slices/wishlistSlice';
 import toast from 'react-hot-toast';
 import MetaTags from '../components/MetaTags';
 import ProductVariantSelector from '../components/product/ProductVariantSelector';
@@ -113,16 +113,16 @@ export default function ProductDetailPage() {
       }
     } : product;
     
-    dispatch(addToCart({ product: cartProduct, quantity }));
+    dispatch(addToCartWithSync(cartProduct, quantity));
     toast.success(`Added ${quantity} item(s) to cart!`);
   };
 
   const handleWishlistToggle = () => {
     if (isInWishlist) {
-      dispatch(removeFromWishlist(product.id));
+      dispatch(removeFromWishlistWithSync(product.id));
       toast.success('Removed from wishlist');
     } else {
-      dispatch(addToWishlist(product));
+      dispatch(addToWishlistWithSync(product));
       toast.success('Added to wishlist!');
     }
   };

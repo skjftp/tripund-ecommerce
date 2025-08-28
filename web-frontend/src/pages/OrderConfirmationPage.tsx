@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { CheckCircle, Package, Mail, Phone, MapPin, ArrowRight } from 'lucide-react';
 import { useDispatch } from 'react-redux';
-import { clearCart } from '../store/slices/cartSlice';
+import { clearCartWithSync } from '../store/slices/cartSlice';
+import { AppDispatch } from '../store';
 import api from '../services/api';
 
 interface Order {
@@ -45,14 +46,14 @@ interface Order {
 export default function OrderConfirmationPage() {
   const { orderId } = useParams();
   const navigate = useNavigate();
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [showProcessing, setShowProcessing] = useState(true);
 
   useEffect(() => {
     // Clear cart when order confirmation page loads
-    dispatch(clearCart());
+    dispatch(clearCartWithSync());
     
     // Show processing animation for 2 seconds before fetching order
     const timer = setTimeout(() => {

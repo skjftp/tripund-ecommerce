@@ -2,14 +2,14 @@ import { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { Trash2, Plus, Minus, ShoppingBag, ArrowRight } from 'lucide-react';
-import { RootState } from '../store';
-import { removeFromCart, updateQuantity } from '../store/slices/cartSlice';
+import { RootState, AppDispatch } from '../store';
+import { removeFromCartWithSync, updateQuantityWithSync } from '../store/slices/cartSlice';
 import { getPublicSettings, calculateShipping, type PublicSettings } from '../services/settings';
 import { formatPrice } from '../utils/pricing';
 import { calculateCartStateBasedGST, INDIAN_STATES } from '../utils/gst';
 
 export default function CartPage() {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const { items, total } = useSelector((state: RootState) => state.cart);
   const [settings, setSettings] = useState<PublicSettings | null>(null);
@@ -21,15 +21,15 @@ export default function CartPage() {
 
   const handleQuantityChange = (productId: string, newQuantity: number) => {
     if (newQuantity > 0) {
-      dispatch(updateQuantity({ productId, quantity: newQuantity }));
+      dispatch(updateQuantityWithSync(productId, newQuantity));
     }
   };
 
   const handleRemove = (productId: string, variantId?: string) => {
     if (variantId) {
-      dispatch(removeFromCart({ productId, variantId }));
+      dispatch(removeFromCartWithSync({ productId, variantId }));
     } else {
-      dispatch(removeFromCart(productId));
+      dispatch(removeFromCartWithSync(productId));
     }
   };
 

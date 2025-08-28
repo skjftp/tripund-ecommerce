@@ -6,7 +6,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { CreditCard, Truck, MapPin, User, ChevronRight } from 'lucide-react';
 import { RootState } from '../store';
-import { clearCart } from '../store/slices/cartSlice';
+import { clearCartWithSync } from '../store/slices/cartSlice';
+import { AppDispatch } from '../store';
 import toast from 'react-hot-toast';
 import api from '../services/api';
 import { getPublicSettings, calculateShipping, type PublicSettings } from '../services/settings';
@@ -41,7 +42,7 @@ declare global {
 
 export default function CheckoutPage() {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const { items, total } = useSelector((state: RootState) => state.cart);
   const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
   const [loading, setLoading] = useState(false);
@@ -217,7 +218,7 @@ export default function CheckoutPage() {
               order_id: createdOrder.id,
             });
 
-            dispatch(clearCart());
+            dispatch(clearCartWithSync());
             toast.success('Payment successful!');
             navigate(`/order-confirmation/${createdOrder.id}`);
           } catch (error) {
@@ -300,7 +301,7 @@ export default function CheckoutPage() {
         const orderResponse = await api.post(orderEndpoint, orderData);
         const createdOrder = orderResponse.data.order;
         
-        dispatch(clearCart());
+        dispatch(clearCartWithSync());
         toast.success('Order placed successfully!');
         navigate(`/order-confirmation/${createdOrder.id}`);
       }

@@ -1,28 +1,28 @@
 import { useSelector, useDispatch } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { Heart, ShoppingCart, Trash2, ArrowRight } from 'lucide-react';
-import { RootState } from '../store';
-import { removeFromWishlist, clearWishlist } from '../store/slices/wishlistSlice';
-import { addToCart } from '../store/slices/cartSlice';
+import { RootState, AppDispatch } from '../store';
+import { removeFromWishlistWithSync, clearWishlistWithSync } from '../store/slices/wishlistSlice';
+import { addToCartWithSync } from '../store/slices/cartSlice';
 import toast from 'react-hot-toast';
 
 export default function WishlistPage() {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const wishlistItems = useSelector((state: RootState) => state.wishlist.items);
 
   const handleRemove = (productId: string) => {
-    dispatch(removeFromWishlist(productId));
+    dispatch(removeFromWishlistWithSync(productId));
     toast.success('Removed from wishlist');
   };
 
   const handleAddToCart = (product: any) => {
-    dispatch(addToCart({ product, quantity: 1 }));
+    dispatch(addToCartWithSync(product, 1));
     toast.success('Added to cart!');
   };
 
   const handleClearWishlist = () => {
     if (window.confirm('Are you sure you want to clear your wishlist?')) {
-      dispatch(clearWishlist());
+      dispatch(clearWishlistWithSync());
       toast.success('Wishlist cleared');
     }
   };
