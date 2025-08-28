@@ -241,24 +241,19 @@ func (h *AuthHandler) UpdateProfile(c *gin.Context) {
 	if addresses, ok := requestBody["addresses"]; ok {
 		log.Printf("Updating addresses field with: %+v", addresses)
 		log.Printf("Type of addresses: %T", addresses)
-		
-		// Convert addresses to proper type for Firestore
-		var addressList []interface{}
-		switch v := addresses.(type) {
-		case []interface{}:
-			addressList = v
-		case []map[string]interface{}:
-			addressList = make([]interface{}, len(v))
-			for i, addr := range v {
-				addressList[i] = addr
-			}
-		default:
-			log.Printf("Unexpected type for addresses: %T", v)
-			addressList = []interface{}{addresses}
-		}
-		
-		log.Printf("Final addresses to save: %+v", addressList)
-		updates = append(updates, firestore.Update{Path: "addresses", Value: addressList})
+		updates = append(updates, firestore.Update{Path: "addresses", Value: addresses})
+	}
+	
+	// Handle cart update
+	if cart, ok := requestBody["cart"]; ok {
+		log.Printf("Updating cart field with: %+v", cart)
+		updates = append(updates, firestore.Update{Path: "cart", Value: cart})
+	}
+	
+	// Handle wishlist update
+	if wishlist, ok := requestBody["wishlist"]; ok {
+		log.Printf("Updating wishlist field with: %+v", wishlist)
+		updates = append(updates, firestore.Update{Path: "wishlist", Value: wishlist})
 	}
 
 	// Handle profile update
