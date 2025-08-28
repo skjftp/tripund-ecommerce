@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../utils/constants.dart';
@@ -250,10 +251,14 @@ class ApiService {
       await _ensureAuthToken();
       print('ApiService: Auth token ensured, making PUT request to /profile');
       
-      // Update user with new addresses
-      final response = await _dio.put('/profile', data: {
+      // Log the exact data being sent
+      final requestData = {
         'addresses': addresses,
-      });
+      };
+      print('ApiService: Request data being sent: ${json.encode(requestData)}');
+      
+      // Update user with new addresses
+      final response = await _dio.put('/profile', data: requestData);
       
       print('ApiService: Response status: ${response.statusCode}');
       print('ApiService: Response data: ${response.data}');

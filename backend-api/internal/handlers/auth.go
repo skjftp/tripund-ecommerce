@@ -221,13 +221,17 @@ func (h *AuthHandler) GetProfile(c *gin.Context) {
 
 func (h *AuthHandler) UpdateProfile(c *gin.Context) {
 	userID := c.GetString("user_id")
+	log.Printf("UpdateProfile called for user: %s", userID)
 	
 	// Check if updating addresses
 	var requestBody map[string]interface{}
 	if err := c.ShouldBindJSON(&requestBody); err != nil {
+		log.Printf("Error binding JSON: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+
+	log.Printf("Request body received: %+v", requestBody)
 
 	updates := []firestore.Update{
 		{Path: "updated_at", Value: time.Now()},
@@ -235,6 +239,7 @@ func (h *AuthHandler) UpdateProfile(c *gin.Context) {
 
 	// Handle addresses update
 	if addresses, ok := requestBody["addresses"]; ok {
+		log.Printf("Updating addresses field with: %+v", addresses)
 		updates = append(updates, firestore.Update{Path: "addresses", Value: addresses})
 	}
 
@@ -254,13 +259,20 @@ func (h *AuthHandler) UpdateProfile(c *gin.Context) {
 		updates = append(updates, firestore.Update{Path: "profile.phone", Value: phone})
 	}
 
+	log.Printf("Applying %d updates to user document %s", len(updates), userID)
+	for i, update := range updates {
+		log.Printf("Update %d: Path=%s, Value=%+v", i, update.Path, update.Value)
+	}
+
 	_, err := h.db.Client.Collection("users").Doc(userID).Update(h.db.Context, updates)
 
 	if err != nil {
+		log.Printf("Error updating Firestore: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update profile"})
 		return
 	}
 
+	log.Printf("Successfully updated profile for user %s", userID)
 	c.JSON(http.StatusOK, gin.H{"message": "Profile updated successfully"})
 }
 
