@@ -235,7 +235,6 @@ func (h *PromotionHandler) GetActivePromotions(c *gin.Context) {
 	// Query for active promotions
 	iter := h.db.Client.Collection("promotions").
 		Where("status", "==", models.PromotionStatusActive).
-		Where("show_in_banner", "==", true).
 		OrderBy("created_at", firestore.Desc).
 		Documents(h.db.Context)
 	
@@ -396,31 +395,51 @@ func (h *PromotionHandler) DeletePromotion(c *gin.Context) {
 func (h *PromotionHandler) InitializeDefaultPromotions(c *gin.Context) {
 	defaultPromotions := []models.Promotion{
 		{
-			Code:        "TRIPUND20",
-			Description: "20% off on first order",
+			Code:        "TRIPUND10",
+			Description: "10% off on all orders",
 			Type:        models.PromotionTypePercentage,
-			Discount:    20,
+			Discount:    10,
 			Status:      models.PromotionStatusActive,
-			MaxUses:     1000,
-			MaxUsesPerUser: 1,
-			MinOrderValue: 500,
-			MaxDiscount:   1000,
-			NewCustomersOnly: true,
+			MaxUses:     10000,
+			MaxUsesPerUser: 3,
+			MinOrderValue: 999,
+			MaxDiscount:   500,
+			NewCustomersOnly: false,
+			ShowInBanner: true,
 			StartDate:   time.Now(),
 			EndDate:     time.Now().AddDate(1, 0, 0), // 1 year from now
 			CreatedAt:   time.Now(),
 			UpdatedAt:   time.Now(),
 		},
 		{
-			Code:        "WELCOME10",
-			Description: "₹100 off on orders above ₹1000",
-			Type:        models.PromotionTypeFixed,
-			Discount:    100,
+			Code:        "FESTIVE15",
+			Description: "15% off on festive items",
+			Type:        models.PromotionTypePercentage,
+			Discount:    15,
 			Status:      models.PromotionStatusActive,
-			MaxUses:     500,
+			MaxUses:     5000,
+			MaxUsesPerUser: 2,
+			MinOrderValue: 1500,
+			MaxDiscount:   750,
+			NewCustomersOnly: false,
+			ShowInBanner: true,
+			StartDate:   time.Now(),
+			EndDate:     time.Now().AddDate(0, 3, 0), // 3 months from now
+			CreatedAt:   time.Now(),
+			UpdatedAt:   time.Now(),
+		},
+		{
+			Code:        "FIRST20",
+			Description: "20% off on first order",
+			Type:        models.PromotionTypePercentage,
+			Discount:    20,
+			Status:      models.PromotionStatusActive,
+			MaxUses:     1000,
 			MaxUsesPerUser: 1,
-			MinOrderValue: 1000,
+			MinOrderValue: 2000,
+			MaxDiscount:   1000,
 			NewCustomersOnly: true,
+			ShowInBanner: true,
 			StartDate:   time.Now(),
 			EndDate:     time.Now().AddDate(0, 6, 0), // 6 months from now
 			CreatedAt:   time.Now(),
