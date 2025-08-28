@@ -18,6 +18,7 @@ class ProductProvider extends ChangeNotifier {
   
   String _error = '';
   String? _selectedCategory;
+  String? _selectedType;
   String? _searchQuery;
 
   // Getters
@@ -43,7 +44,7 @@ class ProductProvider extends ChangeNotifier {
     ]);
   }
 
-  Future<void> loadProducts({bool refresh = false}) async {
+  Future<void> loadProducts({bool refresh = false, String? type}) async {
     if (_isLoading) return;
     
     if (refresh) {
@@ -62,15 +63,20 @@ class ProductProvider extends ChangeNotifier {
         offset: _currentOffset,
         category: _selectedCategory,
         search: _searchQuery,
+        type: type ?? _selectedType,
       );
       
+      print('📊 Provider: Received ${products.length} products from API');
       if (products.isEmpty) {
         _hasMore = false;
+        print('⚠️ No products returned from API');
       } else {
         if (refresh) {
           _products = products;
+          print('🔄 Replaced products list with ${_products.length} products');
         } else {
           _products.addAll(products);
+          print('➕ Added to products list, total: ${_products.length}');
         }
         _currentOffset += _limit;
       }
@@ -110,12 +116,14 @@ class ProductProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> selectCategory(String? categoryId) async {
-    if (_selectedCategory == categoryId) return;
+  Future<void> selectCategory(String? categoryId, {String? type}) async {
+    if (_selectedCategory == categoryId && _selectedType == type) return;
     
+    print('🔍 Selecting category: $categoryId, type: $type');
     _selectedCategory = categoryId;
+    _selectedType = type;
     _searchQuery = null;
-    await loadProducts(refresh: true);
+    await loadProducts(refresh: true, type: type);
   }
 
   Future<void> searchProducts(String query) async {
@@ -128,6 +136,7 @@ class ProductProvider extends ChangeNotifier {
 
   Future<void> clearFilters() async {
     _selectedCategory = null;
+    _selectedType = null;
     _searchQuery = null;
     await loadProducts(refresh: true);
   }

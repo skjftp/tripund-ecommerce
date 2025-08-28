@@ -27,11 +27,20 @@ class Category {
       description: json['description'],
       image: json['image'],
       parentId: json['parent_id'],
-      subcategories: json['subcategories'] != null
-          ? (json['subcategories'] as List)
-              .map((sub) => Category.fromJson(sub))
+      subcategories: json['children'] != null
+          ? (json['children'] as List)
+              .map((sub) => Category(
+                id: '${json['id']}_${sub['name']}', // Create a unique ID
+                name: sub['name'] ?? '',
+                slug: sub['name']?.toLowerCase().replaceAll(' ', '-') ?? '',
+                productCount: sub['product_count'],
+              ))
               .toList()
-          : null,
+          : json['subcategories'] != null
+              ? (json['subcategories'] as List)
+                  .map((sub) => Category.fromJson(sub))
+                  .toList()
+              : null,
       productCount: json['product_count'],
     );
   }

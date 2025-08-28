@@ -19,7 +19,9 @@ class _ShopScreenState extends State<ShopScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   String? _selectedCategoryId;
+  String? _selectedCategorySlug;
   String? _selectedSubcategoryId;
+  String? _selectedSubcategoryName;
   double _minPrice = 0;
   double _maxPrice = 10000;
   RangeValues _priceRange = const RangeValues(0, 10000);
@@ -31,8 +33,24 @@ class _ShopScreenState extends State<ShopScreen> {
     super.initState();
     // Load all products
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ProductProvider>().loadProducts();
+      _loadFilteredProducts();
     });
+  }
+  
+  Future<void> _loadFilteredProducts() async {
+    print('🎯 Shop: Loading filtered products - Category: $_selectedCategorySlug, Subcategory: $_selectedSubcategoryName');
+    final provider = context.read<ProductProvider>();
+    if (_selectedCategorySlug != null) {
+      // Use API filtering with category slug and type for subcategory
+      await provider.selectCategory(
+        _selectedCategorySlug, 
+        type: _selectedSubcategoryName?.toLowerCase().replaceAll(' ', '-')
+      );
+    } else if (_searchQuery.isNotEmpty) {
+      await provider.searchProducts(_searchQuery);
+    } else {
+      await provider.loadProducts(refresh: true);
+    }
   }
 
   @override
@@ -41,59 +59,20 @@ class _ShopScreenState extends State<ShopScreen> {
     super.dispose();
   }
 
-  List<dynamic> _getFilteredProducts(ProductProvider provider) {
-    var products = provider.products;
-    
-    // Filter by search query
-    if (_searchQuery.isNotEmpty) {
-      products = products.where((product) {
-        return product.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-               (product.description ?? '').toLowerCase().contains(_searchQuery.toLowerCase());
-      }).toList();
-    }
-    
-    // Filter by category
-    if (_selectedCategoryId != null) {
-      products = products.where((product) {
-        return product.categories?.contains(_selectedCategoryId) ?? false;
-      }).toList();
-    }
-    
-    // Filter by price range
-    products = products.where((product) {
-      return product.price >= _priceRange.start && product.price <= _priceRange.end;
-    }).toList();
-    
-    // Sort products
-    switch (_sortBy) {
-      case 'price_low':
-        products.sort((a, b) => a.price.compareTo(b.price));
-        break;
-      case 'price_high':
-        products.sort((a, b) => b.price.compareTo(a.price));
-        break;
-      case 'name':
-        products.sort((a, b) => a.name.compareTo(b.name));
-        break;
-      case 'newest':
-      default:
-        // Assuming newer products are at the end of the list
-        products = products.reversed.toList();
-        break;
-    }
-    
-    return products;
-  }
+  // Removed _getFilteredProducts - now using API filtering from provider directly
 
   void _resetFilters() {
     setState(() {
       _searchQuery = '';
       _searchController.clear();
       _selectedCategoryId = null;
+      _selectedCategorySlug = null;
       _selectedSubcategoryId = null;
+      _selectedSubcategoryName = null;
       _priceRange = const RangeValues(0, 10000);
       _sortBy = 'newest';
     });
+    _loadFilteredProducts();
   }
 
   @override
@@ -202,7 +181,11 @@ class _ShopScreenState extends State<ShopScreen> {
                                         onSelected: (selected) {
                                           setState(() {
                                             _selectedCategoryId = null;
+                                            _selectedCategorySlug = null;
+                                            _selectedSubcategoryId = null;
+                                            _selectedSubcategoryName = null;
                                           });
+                                          _loadFilteredProducts();
                                         },
                                         selectedColor: AppTheme.primaryColor.withOpacity(0.2),
                                         checkmarkColor: AppTheme.primaryColor,
@@ -286,7 +269,9 @@ class _ShopScreenState extends State<ShopScreen> {
                                           onSelected: (selected) {
                                             setState(() {
                                               _selectedSubcategoryId = null;
+                                              _selectedSubcategoryName = null;
                                             });
+                                            _loadFilteredProducts();
                                           },
                                           selectedColor: AppTheme.primaryColor.withOpacity(0.2),
                                           checkmarkColor: AppTheme.primaryColor,
@@ -307,7 +292,9 @@ class _ShopScreenState extends State<ShopScreen> {
                                         onSelected: (selected) {
                                           setState(() {
                                             _selectedSubcategoryId = selected ? subcategory.id : null;
+                                            _selectedSubcategoryName = selected ? subcategory.name : null;
                                           });
+                                          _loadFilteredProducts();
                                         },
                                         selectedColor: AppTheme.primaryColor.withOpacity(0.2),
                                         checkmarkColor: AppTheme.primaryColor,
@@ -427,7 +414,33 @@ class _ShopScreenState extends State<ShopScreen> {
           Expanded(
             child: Consumer<ProductProvider>(
               builder: (context, provider, child) {
-                final products = _getFilteredProducts(provider);
+                // Use provider's products which are already filtered by API
+                var products = provider.products;
+                print('🛍️ Shop: Displaying ${products.length} products from provider');
+                
+                // Apply local price range filter
+                if (_priceRange.start > 0 || _priceRange.end < 10000) {
+                  products = products.where((product) {
+                    return product.price >= _priceRange.start && product.price <= _priceRange.end;
+                  }).toList();
+                }
+                
+                // Apply local sorting
+                switch (_sortBy) {
+                  case 'price_low':
+                    products.sort((a, b) => a.price.compareTo(b.price));
+                    break;
+                  case 'price_high':
+                    products.sort((a, b) => b.price.compareTo(a.price));
+                    break;
+                  case 'name':
+                    products.sort((a, b) => a.name.compareTo(b.name));
+                    break;
+                  case 'newest':
+                  default:
+                    // Already sorted by newest from API
+                    break;
+                }
                 
                 if (provider.isLoading && products.isEmpty) {
                   return const Center(child: CircularProgressIndicator());

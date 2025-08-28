@@ -9,9 +9,13 @@ class TermsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Terms & Conditions'),
+        title: const Text(
+          'Terms & Conditions',
+          style: TextStyle(color: Colors.white),
+        ),
         backgroundColor: AppTheme.primaryColor,
         foregroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.white),
         actions: const [
           CartIconButton(iconColor: Colors.white),
         ],

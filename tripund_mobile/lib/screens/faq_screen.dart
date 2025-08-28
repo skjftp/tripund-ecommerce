@@ -44,9 +44,13 @@ class FAQScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Frequently Asked Questions'),
+        title: const Text(
+          'Frequently Asked Questions',
+          style: TextStyle(color: Colors.white),
+        ),
         backgroundColor: AppTheme.primaryColor,
         foregroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.white),
         actions: const [
           CartIconButton(iconColor: Colors.white),
         ],

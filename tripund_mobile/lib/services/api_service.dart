@@ -67,6 +67,7 @@ class ApiService {
     int offset = 0,
     String? category,
     String? search,
+    String? type,
   }) async {
     try {
       await _ensureAuthToken();
@@ -76,12 +77,20 @@ class ApiService {
         if (offset > 0) 'offset': offset,
         if (category != null && category.isNotEmpty) 'category': category,
         if (search != null && search.isNotEmpty) 'search': search,
+        if (type != null && type.isNotEmpty) 'type': type,
       };
 
+      print('📡 API Request: GET /products with params: $queryParams');
       final response = await _dio.get('/products', queryParameters: queryParams);
+      print('✅ API Response status: ${response.statusCode}');
       
       if (response.statusCode == 200) {
+        print('📋 Full API Response: ${response.data}');
         final List<dynamic> products = response.data['products'] ?? [];
+        print('📦 API returned ${products.length} products');
+        if (products.isNotEmpty) {
+          print('🏷️ First product: ${products[0]['name']} - Categories: ${products[0]['categories']}');
+        }
         return products.map((json) => Product.fromJson(json)).toList();
       }
       return [];
