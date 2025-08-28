@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { ArrowRight, Truck, Shield, Award, RefreshCw, Heart, ShoppingBag } from 'lucide-react';
@@ -392,8 +392,8 @@ function VariantSelector({ product, onSelect }: { product: any; onSelect: (varia
     }
   }, [selectedColor, selectedSize, product]);
 
-  const availableColors = [...new Set(product.variants?.filter((v: any) => v.available).map((v: any) => v.color).filter(Boolean))];
-  const availableSizes = [...new Set(product.variants?.filter((v: any) => v.available).map((v: any) => v.size).filter(Boolean))];
+  const availableColors: string[] = [...new Set(product.variants?.filter((v: any) => v.available).map((v: any) => v.color).filter(Boolean))] as string[];
+  const availableSizes: string[] = [...new Set(product.variants?.filter((v: any) => v.available).map((v: any) => v.size).filter(Boolean))] as string[];
 
   return (
     <div className="space-y-4">
