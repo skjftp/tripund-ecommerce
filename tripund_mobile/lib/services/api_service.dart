@@ -246,14 +246,27 @@ class ApiService {
   // Address management
   Future<bool> updateAddresses(List<Map<String, dynamic>> addresses) async {
     try {
+      print('ApiService: updateAddresses called with ${addresses.length} addresses');
       await _ensureAuthToken();
+      print('ApiService: Auth token ensured, making PUT request to /profile');
+      
       // Update user with new addresses
       final response = await _dio.put('/profile', data: {
         'addresses': addresses,
       });
+      
+      print('ApiService: Response status: ${response.statusCode}');
+      print('ApiService: Response data: ${response.data}');
+      
       return response.statusCode == 200;
     } catch (e) {
-      print('Error updating addresses: $e');
+      print('ApiService: Error updating addresses: $e');
+      if (e is DioException) {
+        print('ApiService: DioException details:');
+        print('  Status code: ${e.response?.statusCode}');
+        print('  Response data: ${e.response?.data}');
+        print('  Request data: ${e.requestOptions.data}');
+      }
       return false;
     }
   }

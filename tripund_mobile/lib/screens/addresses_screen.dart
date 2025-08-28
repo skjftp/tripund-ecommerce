@@ -28,9 +28,16 @@ class _AddressesScreenState extends State<AddressesScreen> {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final addressProvider = Provider.of<AddressProvider>(context, listen: false);
     
+    print('AddressesScreen: _loadAddresses called');
+    print('AddressesScreen: Is authenticated: ${authProvider.isAuthenticated}');
+    print('AddressesScreen: User: ${authProvider.user?.toJson()}');
+    
     if (authProvider.isAuthenticated && authProvider.user != null) {
+      print('AddressesScreen: Initializing AddressProvider with user ID: ${authProvider.user!.id}');
       // Initialize address provider with user ID and load from Firestore
       await addressProvider.initializeForUser(authProvider.user!.id);
+    } else {
+      print('AddressesScreen: User not authenticated or user is null');
     }
   }
 

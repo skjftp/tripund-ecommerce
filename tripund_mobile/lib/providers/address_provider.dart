@@ -40,9 +40,14 @@ class AddressProvider extends ChangeNotifier {
 
   // Initialize addresses for a user
   Future<void> initializeForUser(String userId) async {
-    if (_currentUserId == userId) return;
+    print('AddressProvider: initializeForUser called with userId: $userId');
+    if (_currentUserId == userId) {
+      print('AddressProvider: Already initialized for this user');
+      return;
+    }
     
     _currentUserId = userId;
+    print('AddressProvider: Set current user ID to: $_currentUserId');
     await loadAddresses();
   }
 
@@ -122,10 +127,8 @@ class AddressProvider extends ChangeNotifier {
     print('AddressProvider: Firebase available: $_firebaseAvailable');
     print('AddressProvider: Firestore instance: $_firestore');
     
-    if (_currentUserId == null || !_firebaseAvailable || _firestore == null) {
-      print('AddressProvider: Cannot add - Firebase not available or no user');
-      return false;
-    }
+    // Remove the check that prevents adding addresses without user ID
+    // Allow addresses to be added locally even for guest users
 
     try {
       // Generate unique ID if not provided
@@ -255,65 +258,34 @@ class AddressProvider extends ChangeNotifier {
     }
   }
 
-  // Save addresses to Firestore and Backend API
+  // Save addresses to Backend API (which saves to Firestore)
   Future<void> _saveAddressesToFirestore() async {
+    print('AddressProvider: _saveAddressesToFirestore called');
+    print('AddressProvider: Current user ID: $_currentUserId');
+    
     if (_currentUserId == null) {
-      print('AddressProvider: Cannot save - no user ID');
-      return;
+      print('AddressProvider: WARNING - No user ID, attempting to save without authentication');
+      // Still try to save for logged-in users whose ID might not be set
     }
 
     final addressData = _addresses.map((addr) => addr.toJson()).toList();
     print('AddressProvider: Attempting to save ${_addresses.length} addresses');
     print('AddressProvider: Address data: ${addressData.toString()}');
     
-    // Try to save to backend API first (primary storage)
+    // Save to backend API which will save to Firestore
     try {
-      print('AddressProvider: Saving to backend API...');
+      print('AddressProvider: Calling ApiService.updateAddresses...');
       final success = await _apiService.updateAddresses(addressData);
+      print('AddressProvider: ApiService.updateAddresses returned: $success');
+      
       if (success) {
-        print('AddressProvider: Successfully saved addresses to backend API');
+        print('AddressProvider: ✅ Successfully saved addresses to Firestore via backend');
       } else {
-        print('AddressProvider: Failed to save addresses to backend API');
+        print('AddressProvider: ❌ Failed to save addresses - backend returned false');
       }
     } catch (e) {
-      print('AddressProvider: Error saving to backend API: $e');
-    }
-    
-    // Also try to save to Firestore if available (secondary storage)
-    if (_firebaseAvailable && _firestore != null) {
-      try {
-        print('AddressProvider: Attempting to save to Firestore...');
-        
-        await _firestore!
-            .collection('users')
-            .doc(_currentUserId)
-            .update({
-          'addresses': addressData,
-          'updatedAt': FieldValue.serverTimestamp(),
-        });
-        
-        print('AddressProvider: Successfully saved addresses to Firestore');
-      } catch (e) {
-        print('AddressProvider: Error saving to Firestore: $e');
-        // If update fails, try set (in case document doesn't exist)
-        try {
-          await _firestore!
-              .collection('users')
-              .doc(_currentUserId)
-              .set({
-            'id': _currentUserId,
-            'addresses': addressData,
-            'createdAt': FieldValue.serverTimestamp(),
-            'updatedAt': FieldValue.serverTimestamp(),
-          }, SetOptions(merge: true));
-          
-          print('AddressProvider: Created user document in Firestore with addresses');
-        } catch (e2) {
-          print('AddressProvider: Error creating Firestore document: $e2');
-        }
-      }
-    } else {
-      print('AddressProvider: Firestore not available, skipping Firestore save');
+      print('AddressProvider: ❌ Error saving to backend: $e');
+      print('AddressProvider: Stack trace: ${StackTrace.current}');
     }
   }
 
