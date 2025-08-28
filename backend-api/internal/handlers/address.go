@@ -7,8 +7,8 @@ import (
 	"cloud.google.com/go/firestore"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"backend-api/internal/database"
-	"backend-api/internal/models"
+	"tripund-api/internal/database"
+	"tripund-api/internal/models"
 )
 
 type AddressHandler struct {
