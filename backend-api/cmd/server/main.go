@@ -107,25 +107,6 @@ func main() {
 			protected.GET("/profile", authHandler.GetProfile)
 			protected.PUT("/profile", authHandler.UpdateProfile)
 
-			// Cart endpoints
-			cartHandler := handlers.NewCartHandler(db)
-			cart := protected.Group("/cart")
-			{
-				cart.GET("", cartHandler.GetCart)
-				cart.PUT("", cartHandler.UpdateCart)
-				cart.DELETE("", cartHandler.ClearCart)
-			}
-
-			// Wishlist endpoints
-			wishlistHandler := handlers.NewWishlistHandler(db)
-			wishlist := protected.Group("/wishlist")
-			{
-				wishlist.GET("", wishlistHandler.GetWishlist)
-				wishlist.PUT("", wishlistHandler.UpdateWishlist)
-				wishlist.POST("/:productId", wishlistHandler.AddToWishlist)
-				wishlist.DELETE("/:productId", wishlistHandler.RemoveFromWishlist)
-			}
-
 			// Order endpoints
 			orders := protected.Group("/orders")
 			{
