@@ -30,6 +30,7 @@ import ShippingPage from './pages/ShippingPage';
 import ReturnsPage from './pages/ReturnsPage';
 import InvoicesPage from './pages/InvoicesPage';
 import InvoiceDetailPage from './pages/InvoiceDetailPage';
+import AppInitializer from './components/AppInitializer';
 
 function App() {
   useEffect(() => {
@@ -40,10 +41,11 @@ function App() {
   return (
     <Provider store={store}>
       <Router>
-        <ScrollToTop />
-        <Toaster position="top-right" />
-        <Layout>
-          <Routes>
+        <AppInitializer>
+          <ScrollToTop />
+          <Toaster position="top-right" />
+          <Layout>
+            <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/categories" element={<CategoriesPage />} />
             <Route path="/category/:category" element={<CategoryPage />} />
@@ -71,6 +73,7 @@ function App() {
             <Route path="/returns" element={<ReturnsPage />} />
           </Routes>
         </Layout>
+        </AppInitializer>
       </Router>
     </Provider>
   );

@@ -8,7 +8,7 @@ type User struct {
 	PasswordHash string      `json:"-" firestore:"password_hash"`
 	Profile      UserProfile `json:"profile" firestore:"profile"`
 	Addresses    []UserAddress   `json:"addresses" firestore:"addresses"`
-	Cart         []CartItem      `json:"cart" firestore:"cart"`
+	Cart         []CartItem  `json:"cart" firestore:"cart"`
 	Preferences  Preferences `json:"preferences" firestore:"preferences"`
 	Wishlist     []string    `json:"wishlist" firestore:"wishlist"`
 	OrderHistory []string    `json:"order_history" firestore:"order_history"`
@@ -39,12 +39,15 @@ type UserAddress struct {
 
 type CartItem struct {
 	ProductID string  `json:"product_id" firestore:"product_id"`
+	Name      string  `json:"name" firestore:"name"`
+	Image     string  `json:"image" firestore:"image"`
 	Quantity  int     `json:"quantity" firestore:"quantity"`
 	Price     float64 `json:"price" firestore:"price"`
 	VariantID string  `json:"variant_id,omitempty" firestore:"variant_id,omitempty"`
 	Color     string  `json:"color,omitempty" firestore:"color,omitempty"`
 	Size      string  `json:"size,omitempty" firestore:"size,omitempty"`
 }
+
 
 type Preferences struct {
 	Newsletter       bool     `json:"newsletter" firestore:"newsletter"`

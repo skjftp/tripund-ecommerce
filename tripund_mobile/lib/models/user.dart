@@ -7,6 +7,8 @@ class User {
   final String? phone;
   final String? avatar;
   List<Address>? addresses;
+  List<dynamic>? cart;
+  List<String>? wishlist;
 
   User({
     required this.id,
@@ -15,6 +17,8 @@ class User {
     this.phone,
     this.avatar,
     this.addresses,
+    this.cart,
+    this.wishlist,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -25,6 +29,12 @@ class User {
           .map((addr) => Address.fromJson(addr))
           .toList();
     }
+    
+    // Parse wishlist
+    List<String>? wishlistItems;
+    if (json['wishlist'] != null) {
+      wishlistItems = List<String>.from(json['wishlist']);
+    }
 
     return User(
       id: json['id'] ?? '',
@@ -33,6 +43,8 @@ class User {
       phone: json['phone'],
       avatar: json['avatar'],
       addresses: addressList,
+      cart: json['cart'],
+      wishlist: wishlistItems,
     );
   }
 
@@ -44,6 +56,8 @@ class User {
       'phone': phone,
       'avatar': avatar,
       'addresses': addresses?.map((addr) => addr.toJson()).toList(),
+      'cart': cart,
+      'wishlist': wishlist,
     };
   }
 }

@@ -1,7 +1,10 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import api from '../../services/api';
-import { User, AuthResponse } from '../../types';
+import { User, AuthResponse, Address } from '../../types';
 import { storeToken, clearAuth } from '../../services/auth';
+import { AppDispatch } from '..';
+import { loadCartFromBackend } from './cartSlice';
+import { loadWishlistFromBackend } from './wishlistSlice';
 
 interface AuthState {
   user: User | null;
@@ -45,6 +48,71 @@ export const fetchProfile = createAsyncThunk('auth/fetchProfile', async () => {
   const response = await api.get<User>('/profile');
   return response.data;
 });
+
+export const updateAddresses = createAsyncThunk(
+  'auth/updateAddresses',
+  async (addresses: Address[]) => {
+    const response = await api.put<{ message: string }>('/profile', { addresses });
+    console.log('✅ Addresses synced to backend');
+    return addresses;
+  }
+);
+
+export const addAddress = createAsyncThunk(
+  'auth/addAddress',
+  async ({ address, userId }: { address: Address; userId: string }) => {
+    // Get current user profile first
+    const profileResponse = await api.get<User>('/profile');
+    const currentAddresses = profileResponse.data.addresses || [];
+    
+    // Add new address
+    const updatedAddresses = [...currentAddresses, address];
+    
+    // Update backend
+    await api.put('/profile', { addresses: updatedAddresses });
+    console.log('✅ Address added and synced to backend');
+    
+    return updatedAddresses;
+  }
+);
+
+export const updateAddress = createAsyncThunk(
+  'auth/updateAddress',
+  async ({ address, userId }: { address: Address; userId: string }) => {
+    // Get current user profile first
+    const profileResponse = await api.get<User>('/profile');
+    const currentAddresses = profileResponse.data.addresses || [];
+    
+    // Update the specific address
+    const updatedAddresses = currentAddresses.map((addr) =>
+      addr.id === address.id ? address : addr
+    );
+    
+    // Update backend
+    await api.put('/profile', { addresses: updatedAddresses });
+    console.log('✅ Address updated and synced to backend');
+    
+    return updatedAddresses;
+  }
+);
+
+export const deleteAddress = createAsyncThunk(
+  'auth/deleteAddress',
+  async ({ addressId, userId }: { addressId: string; userId: string }) => {
+    // Get current user profile first
+    const profileResponse = await api.get<User>('/profile');
+    const currentAddresses = profileResponse.data.addresses || [];
+    
+    // Remove the address
+    const updatedAddresses = currentAddresses.filter((addr) => addr.id !== addressId);
+    
+    // Update backend
+    await api.put('/profile', { addresses: updatedAddresses });
+    console.log('✅ Address deleted and synced to backend');
+    
+    return updatedAddresses;
+  }
+);
 
 const authSlice = createSlice({
   name: 'auth',
@@ -96,9 +164,78 @@ const authSlice = createSlice({
       })
       .addCase(fetchProfile.fulfilled, (state, action: PayloadAction<User>) => {
         state.user = action.payload;
+      })
+      // Address management
+      .addCase(updateAddresses.fulfilled, (state, action) => {
+        if (state.user) {
+          state.user.addresses = action.payload;
+        }
+      })
+      .addCase(addAddress.fulfilled, (state, action) => {
+        if (state.user) {
+          state.user.addresses = action.payload;
+        }
+      })
+      .addCase(updateAddress.fulfilled, (state, action) => {
+        if (state.user) {
+          state.user.addresses = action.payload;
+        }
+      })
+      .addCase(deleteAddress.fulfilled, (state, action) => {
+        if (state.user) {
+          state.user.addresses = action.payload;
+        }
       });
   },
 });
+
+// Helper function to login and sync cart/wishlist
+export const loginAndSync = (email: string, password: string) => 
+  async (dispatch: AppDispatch) => {
+    try {
+      // Login
+      const loginResult = await dispatch(login({ email, password })).unwrap();
+      
+      // If login successful, load cart and wishlist from backend
+      if (loginResult) {
+        dispatch(loadCartFromBackend());
+        dispatch(loadWishlistFromBackend());
+        console.log('✅ User logged in, syncing cart and wishlist');
+      }
+      
+      return loginResult;
+    } catch (error) {
+      console.error('Login failed:', error);
+      throw error;
+    }
+  };
+
+// Helper function to register and sync
+export const registerAndSync = (userData: {
+  email: string;
+  password: string;
+  first_name: string;
+  last_name: string;
+  phone?: string;
+}) => 
+  async (dispatch: AppDispatch) => {
+    try {
+      // Register
+      const registerResult = await dispatch(register(userData)).unwrap();
+      
+      // If registration successful, initial sync (usually empty)
+      if (registerResult) {
+        dispatch(loadCartFromBackend());
+        dispatch(loadWishlistFromBackend());
+        console.log('✅ User registered, initializing cart and wishlist');
+      }
+      
+      return registerResult;
+    } catch (error) {
+      console.error('Registration failed:', error);
+      throw error;
+    }
+  };
 
 export const { logout, clearError } = authSlice.actions;
 export default authSlice.reducer;

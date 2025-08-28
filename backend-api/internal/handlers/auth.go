@@ -247,12 +247,14 @@ func (h *AuthHandler) UpdateProfile(c *gin.Context) {
 	// Handle cart update
 	if cart, ok := requestBody["cart"]; ok {
 		log.Printf("Updating cart field with: %+v", cart)
+		log.Printf("Type of cart: %T", cart)
 		updates = append(updates, firestore.Update{Path: "cart", Value: cart})
 	}
 	
 	// Handle wishlist update
 	if wishlist, ok := requestBody["wishlist"]; ok {
 		log.Printf("Updating wishlist field with: %+v", wishlist)
+		log.Printf("Type of wishlist: %T", wishlist)
 		updates = append(updates, firestore.Update{Path: "wishlist", Value: wishlist})
 	}
 

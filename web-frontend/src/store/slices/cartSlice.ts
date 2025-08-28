@@ -1,10 +1,14 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
 import { CartItem, Product } from '../../types';
+import api from '../../services/api';
+import { AppDispatch } from '..';
 
 interface CartState {
   items: CartItem[];
   total: number;
   itemCount: number;
+  syncing: boolean;
+  lastSyncedAt: string | null;
 }
 
 const getInitialCart = (): CartItem[] => {
@@ -24,6 +28,8 @@ const initialState: CartState = {
   items: getInitialCart(),
   total: 0,
   itemCount: 0,
+  syncing: false,
+  lastSyncedAt: null,
 };
 
 const calculateTotals = (items: CartItem[]) => {
@@ -31,6 +37,85 @@ const calculateTotals = (items: CartItem[]) => {
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
   return { total, itemCount };
 };
+
+// Sync cart with backend
+export const syncCartToBackend = createAsyncThunk(
+  'cart/syncToBackend',
+  async (items: CartItem[]) => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      console.log('User not authenticated, skipping backend sync');
+      return { synced: false };
+    }
+
+    const cartData = items.map(item => ({
+      product_id: item.product_id,
+      name: item.product.name,
+      image: item.product.images?.[0] || '',
+      quantity: item.quantity,
+      price: item.price,
+      variant_id: item.product.variant_info?.variant_id,
+      color: item.product.variant_info?.color,
+      size: item.product.variant_info?.size,
+    }));
+
+    try {
+      await api.put('/profile', { cart: cartData });
+      console.log('✅ Cart synced to backend');
+      return { synced: true, syncedAt: new Date().toISOString() };
+    } catch (error) {
+      console.error('Failed to sync cart to backend:', error);
+      return { synced: false };
+    }
+  }
+);
+
+// Load cart from backend
+export const loadCartFromBackend = createAsyncThunk(
+  'cart/loadFromBackend',
+  async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      return { cart: [] };
+    }
+
+    try {
+      const response = await api.get('/profile');
+      const userData = response.data;
+      
+      if (userData.cart && Array.isArray(userData.cart)) {
+        console.log('📥 Loaded cart from backend:', userData.cart.length, 'items');
+        
+        // Transform backend cart items to frontend CartItem format
+        // Note: We'll need to fetch full product details or store minimal info
+        const cartItems: CartItem[] = userData.cart.map((item: any) => ({
+          product_id: item.product_id,
+          product: {
+            id: item.product_id,
+            name: item.name,
+            images: [item.image],
+            price: item.price,
+            sale_price: item.price,
+            variant_info: item.variant_id ? {
+              variant_id: item.variant_id,
+              color: item.color,
+              size: item.size,
+            } : undefined,
+          } as Product,
+          quantity: item.quantity,
+          price: item.price,
+          added_at: new Date().toISOString(),
+        }));
+        
+        return { cart: cartItems };
+      }
+      return { cart: [] };
+    } catch (error) {
+      console.error('Failed to load cart from backend:', error);
+      return { cart: [] };
+    }
+  }
+);
 
 const cartSlice = createSlice({
   name: 'cart',
@@ -114,8 +199,87 @@ const cartSlice = createSlice({
       state.itemCount = 0;
       localStorage.removeItem('cart');
     },
+    setCartFromBackend: (state, action: PayloadAction<CartItem[]>) => {
+      // Merge backend cart with local cart (prefer local for conflicts)
+      const localItemsMap = new Map(state.items.map(item => [
+        item.product.variant_info 
+          ? `${item.product_id}_${item.product.variant_info.variant_id}`
+          : item.product_id,
+        item
+      ]));
+      
+      // Add backend items that don't exist locally
+      action.payload.forEach(backendItem => {
+        const key = backendItem.product.variant_info
+          ? `${backendItem.product_id}_${backendItem.product.variant_info.variant_id}`
+          : backendItem.product_id;
+        
+        if (!localItemsMap.has(key)) {
+          state.items.push(backendItem);
+        }
+      });
+      
+      const totals = calculateTotals(state.items);
+      state.total = totals.total;
+      state.itemCount = totals.itemCount;
+      localStorage.setItem('cart', JSON.stringify(state.items));
+    },
+  },
+  extraReducers: (builder) => {
+    builder
+      // Sync to backend cases
+      .addCase(syncCartToBackend.pending, (state) => {
+        state.syncing = true;
+      })
+      .addCase(syncCartToBackend.fulfilled, (state, action) => {
+        state.syncing = false;
+        if (action.payload.synced && action.payload.syncedAt) {
+          state.lastSyncedAt = action.payload.syncedAt;
+        }
+      })
+      .addCase(syncCartToBackend.rejected, (state) => {
+        state.syncing = false;
+      })
+      // Load from backend cases
+      .addCase(loadCartFromBackend.fulfilled, (state, action) => {
+        if (action.payload.cart && action.payload.cart.length > 0) {
+          // Use the setCartFromBackend reducer to merge carts
+          cartSlice.caseReducers.setCartFromBackend(state, {
+            payload: action.payload.cart,
+            type: 'cart/setCartFromBackend'
+          });
+        }
+      });
   },
 });
 
-export const { addToCart, removeFromCart, updateQuantity, clearCart } = cartSlice.actions;
+// Helper action creators that include sync
+export const addToCartWithSync = (product: Product, quantity: number = 1) => 
+  async (dispatch: AppDispatch, getState: any) => {
+    dispatch(addToCart({ product, quantity }));
+    const { cart } = getState();
+    dispatch(syncCartToBackend(cart.items));
+  };
+
+export const removeFromCartWithSync = (payload: string | { productId: string; variantId?: string }) => 
+  async (dispatch: AppDispatch, getState: any) => {
+    dispatch(removeFromCart(payload));
+    const { cart } = getState();
+    dispatch(syncCartToBackend(cart.items));
+  };
+
+export const updateQuantityWithSync = (productId: string, quantity: number) => 
+  async (dispatch: AppDispatch, getState: any) => {
+    dispatch(updateQuantity({ productId, quantity }));
+    const { cart } = getState();
+    dispatch(syncCartToBackend(cart.items));
+  };
+
+export const clearCartWithSync = () => 
+  async (dispatch: AppDispatch) => {
+    dispatch(clearCart());
+    dispatch(syncCartToBackend([]));
+  };
+
+export const { addToCart, removeFromCart, updateQuantity, clearCart, setCartFromBackend } = cartSlice.actions;
 export default cartSlice.reducer;

@@ -492,6 +492,66 @@ class ApiService {
     }
   }
   
+  // Cart Management
+  Future<bool> updateCart(List<Map<String, dynamic>> cartItems) async {
+    try {
+      await _ensureAuthToken();
+      
+      if (_authToken == null) {
+        print('No auth token available for cart sync');
+        return false;
+      }
+      
+      final requestData = {
+        'cart': cartItems,
+      };
+      
+      print('ApiService: Syncing cart with backend');
+      print('Cart items: ${cartItems.length}');
+      
+      final response = await _dio.put('/profile', data: requestData);
+      
+      if (response.statusCode == 200) {
+        print('Cart synced successfully');
+        return true;
+      }
+      return false;
+    } catch (e) {
+      print('Error updating cart: $e');
+      return false;
+    }
+  }
+  
+  // Wishlist Management
+  Future<bool> updateWishlist(List<String> productIds) async {
+    try {
+      await _ensureAuthToken();
+      
+      if (_authToken == null) {
+        print('No auth token available for wishlist sync');
+        return false;
+      }
+      
+      final requestData = {
+        'wishlist': productIds,
+      };
+      
+      print('ApiService: Syncing wishlist with backend');
+      print('Wishlist items: ${productIds.length}');
+      
+      final response = await _dio.put('/profile', data: requestData);
+      
+      if (response.statusCode == 200) {
+        print('Wishlist synced successfully');
+        return true;
+      }
+      return false;
+    } catch (e) {
+      print('Error updating wishlist: $e');
+      return false;
+    }
+  }
+  
   // Content
   Future<Map<String, dynamic>?> getContent(String type) async {
     try {

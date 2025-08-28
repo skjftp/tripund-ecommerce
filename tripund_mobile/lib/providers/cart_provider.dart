@@ -3,13 +3,16 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import '../models/cart_item.dart';
 import '../models/product.dart';
+import '../services/api_service.dart';
 
 class CartProvider extends ChangeNotifier {
   final Map<String, CartItem> _items = {};
   static const String _cartKey = 'cart_items';
+  final ApiService _apiService = ApiService();
 
   CartProvider() {
     _loadCart();
+    _loadCartFromBackend();
   }
 
   Map<String, CartItem> get items => _items;
@@ -58,9 +61,106 @@ class CartProvider extends ChangeNotifier {
       
       final encodedData = json.encode(cartData);
       await prefs.setString(_cartKey, encodedData);
-      print('💾 Cart saved: ${_items.length} items');
+      print('💾 Cart saved locally: ${_items.length} items');
+      
+      // Sync with backend
+      await _syncCartWithBackend();
     } catch (e) {
       print('❌ Error saving cart: $e');
+    }
+  }
+  
+  Future<void> _loadCartFromBackend() async {
+    try {
+      // Check if user is authenticated
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
+      
+      if (token == null) {
+        print('⚠️ User not authenticated, skipping backend cart load');
+        return;
+      }
+      
+      // Get user profile which includes cart
+      print('📥 Loading cart from backend...');
+      final profile = await _apiService.getProfile();
+      
+      if (profile != null && profile.cart != null) {
+        final List<dynamic> backendCart = profile.cart!;
+        
+        if (backendCart.isNotEmpty) {
+          print('📦 Found ${backendCart.length} items in backend cart');
+          
+          // Merge backend cart with local cart
+          for (var item in backendCart) {
+            final productId = item['product_id'];
+            final variantId = item['variant_id'];
+            final cartItemId = CartItem.generateId(productId, variantId);
+            
+            // Only add if not already in local cart
+            if (!_items.containsKey(cartItemId)) {
+              _items[cartItemId] = CartItem(
+                id: cartItemId,
+                productId: productId,
+                title: item['name'] ?? '',
+                price: (item['price'] ?? 0).toDouble(),
+                imageUrl: item['image'] ?? '',
+                quantity: item['quantity'] ?? 1,
+                variantId: variantId,
+                color: item['color'],
+                size: item['size'],
+                sku: item['sku'],
+              );
+            }
+          }
+          
+          await _saveCart();
+          notifyListeners();
+          print('✅ Cart loaded from backend and merged with local cart');
+        }
+      }
+    } catch (e) {
+      print('❌ Error loading cart from backend: $e');
+    }
+  }
+  
+  Future<void> _syncCartWithBackend() async {
+    try {
+      // Check if user is authenticated
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
+      
+      if (token == null) {
+        print('⚠️ User not authenticated, skipping backend sync');
+        return;
+      }
+      
+      // Prepare cart data for backend
+      final List<Map<String, dynamic>> cartItems = [];
+      _items.forEach((key, item) {
+        cartItems.add({
+          'product_id': item.productId,
+          'name': item.title,
+          'image': item.imageUrl,
+          'quantity': item.quantity,
+          'price': item.price,
+          'variant_id': item.variantId,
+          'color': item.color,
+          'size': item.size,
+        });
+      });
+      
+      // Send to backend
+      print('🔄 Syncing cart with backend: ${cartItems.length} items');
+      final success = await _apiService.updateCart(cartItems);
+      
+      if (success) {
+        print('✅ Cart synced with backend successfully');
+      } else {
+        print('⚠️ Failed to sync cart with backend');
+      }
+    } catch (e) {
+      print('❌ Error syncing cart with backend: $e');
     }
   }
 

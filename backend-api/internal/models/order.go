@@ -78,9 +78,3 @@ type Cart struct {
 	UpdatedAt time.Time  `json:"updated_at" firestore:"updated_at"`
 }
 
-type CartItem struct {
-	ProductID string  `json:"product_id" firestore:"product_id"`
-	Quantity  int     `json:"quantity" firestore:"quantity"`
-	Price     float64 `json:"price" firestore:"price"`
-	AddedAt   time.Time `json:"added_at" firestore:"added_at"`
-}

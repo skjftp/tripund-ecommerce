@@ -2,9 +2,9 @@ import { Link } from 'react-router-dom';
 import { Heart, ShoppingCart } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Product } from '../../types';
-import { addToCart } from '../../store/slices/cartSlice';
-import { addToWishlist, removeFromWishlist } from '../../store/slices/wishlistSlice';
-import { RootState } from '../../store';
+import { addToCartWithSync } from '../../store/slices/cartSlice';
+import { addToWishlistWithSync, removeFromWishlistWithSync } from '../../store/slices/wishlistSlice';
+import { RootState, AppDispatch } from '../../store';
 import ImageCarousel from '../common/ImageCarousel';
 import { toProperCase } from '../../utils/textUtils';
 import toast from 'react-hot-toast';
@@ -15,23 +15,23 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product, viewMode = 'grid' }: ProductCardProps) {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const wishlistItems = useSelector((state: RootState) => state.wishlist.items);
   const isInWishlist = Array.isArray(wishlistItems) ? wishlistItems.some((item) => item.id === product.id) : false;
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
-    dispatch(addToCart({ product, quantity: 1 }));
+    dispatch(addToCartWithSync(product, 1));
     toast.success('Added to cart!');
   };
 
   const handleWishlistToggle = (e: React.MouseEvent) => {
     e.preventDefault();
     if (isInWishlist) {
-      dispatch(removeFromWishlist(product.id));
+      dispatch(removeFromWishlistWithSync(product.id));
       toast.success('Removed from wishlist');
     } else {
-      dispatch(addToWishlist(product));
+      dispatch(addToWishlistWithSync(product));
       toast.success('Added to wishlist!');
     }
   };

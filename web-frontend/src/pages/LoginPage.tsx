@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { Eye, EyeOff } from 'lucide-react';
 import { RootState, AppDispatch } from '../store';
-import { login } from '../store/slices/authSlice';
+import { loginAndSync } from '../store/slices/authSlice';
 import toast from 'react-hot-toast';
 
 export default function LoginPage() {
@@ -20,7 +20,7 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await dispatch(login(formData)).unwrap();
+      await dispatch(loginAndSync(formData.email, formData.password));
       toast.success('Login successful!');
       navigate('/');
     } catch (err) {
