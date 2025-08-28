@@ -8,7 +8,6 @@ import '../utils/theme.dart';
 import 'login_screen.dart';
 import 'orders_screen.dart';
 import 'addresses_screen.dart';
-import 'payment_methods_screen.dart';
 import 'notifications_settings_screen.dart';
 import 'help_support_screen.dart';
 
@@ -391,18 +390,6 @@ class ProfileScreen extends StatelessWidget {
             () => Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const AddressesScreen()),
-            ),
-          ),
-          _buildDivider(),
-          _buildMenuItem(
-            context,
-            'Payment Methods',
-            'Manage payment options',
-            Icons.payment_outlined,
-            Colors.green,
-            () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const PaymentMethodsScreen()),
             ),
           ),
           _buildDivider(),
