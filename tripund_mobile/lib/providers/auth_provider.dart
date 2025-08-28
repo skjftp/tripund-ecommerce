@@ -136,6 +136,27 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  // Refresh user profile from backend
+  Future<void> refreshUserProfile() async {
+    if (_token != null && isAuthenticated) {
+      try {
+        final apiService = ApiService();
+        final user = await apiService.getProfile();
+        if (user != null) {
+          _user = user;
+          
+          // Save updated user data
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('user', json.encode(user.toJson()));
+          
+          notifyListeners();
+        }
+      } catch (e) {
+        print('Error refreshing user profile: $e');
+      }
+    }
+  }
+  
   // Check auth state and refresh user data
   Future<void> checkAuthState() async {
     if (_token != null) {

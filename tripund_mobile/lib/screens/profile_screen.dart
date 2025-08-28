@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import '../providers/auth_provider.dart';
 import '../providers/cart_provider.dart';
 import '../providers/wishlist_provider.dart';
@@ -11,8 +12,30 @@ import 'addresses_screen.dart';
 import 'notifications_settings_screen.dart';
 import 'help_support_screen.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  String _appVersion = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAppVersion();
+  }
+
+  Future<void> _loadAppVersion() async {
+    final info = await PackageInfo.fromPlatform();
+    if (mounted) {
+      setState(() {
+        _appVersion = 'v${info.version}';
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +57,7 @@ class ProfileScreen extends StatelessWidget {
     return CustomScrollView(
       slivers: [
         SliverAppBar(
-          expandedHeight: 200,
+          expandedHeight: 120,
           floating: true,
           pinned: true,
           elevation: 0,
@@ -181,6 +204,8 @@ class ProfileScreen extends StatelessWidget {
                   
                   // Guest features
                   _buildGuestFeatures(context),
+                  // App Version (for guest view too)
+                  _buildAppVersion(),
                 ],
               ),
             ),
@@ -196,7 +221,7 @@ class ProfileScreen extends StatelessWidget {
     return CustomScrollView(
       slivers: [
         SliverAppBar(
-          expandedHeight: 200,
+          expandedHeight: 140,
           floating: true,
           pinned: true,
           elevation: 0,
@@ -217,17 +242,17 @@ class ProfileScreen extends StatelessWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const SizedBox(height: 60),
+                    const SizedBox(height: 20),
                     CircleAvatar(
-                      radius: 50,
+                      radius: 35,
                       backgroundColor: Colors.white,
                       child: user.avatar != null
                           ? ClipRRect(
-                              borderRadius: BorderRadius.circular(50),
+                              borderRadius: BorderRadius.circular(35),
                               child: Image.network(
                                 user.avatar!,
-                                width: 100,
-                                height: 100,
+                                width: 70,
+                                height: 70,
                                 fit: BoxFit.cover,
                               ),
                             )
@@ -240,20 +265,24 @@ class ProfileScreen extends StatelessWidget {
                               ),
                             ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 8),
                     Text(
                       user.name,
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 24,
+                        fontSize: 20,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    Text(
-                      user.email,
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 16,
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Text(
+                        user.email,
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 13,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],
@@ -319,6 +348,8 @@ class ProfileScreen extends StatelessWidget {
                   
                   // Menu Items
                   _buildMenuSection(context, authProvider),
+                  // App Version
+                  _buildAppVersion(),
                 ],
               ),
             ),
@@ -466,6 +497,23 @@ class ProfileScreen extends StatelessWidget {
       height: 1,
       color: Colors.grey[200],
       indent: 60,
+    );
+  }
+  
+  Widget _buildAppVersion() {
+    if (_appVersion.isEmpty) return const SizedBox.shrink();
+    return Container(
+      padding: const EdgeInsets.only(bottom: 30, top: 20),
+      child: Center(
+        child: Text(
+          _appVersion,
+          style: TextStyle(
+            color: AppTheme.textSecondary,
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ),
     );
   }
 

@@ -89,7 +89,7 @@ class _HomeScreenState extends State<HomeScreen>
                   return Transform.translate(
                     offset: Offset(0, 20 * (1 - _headerAnimation.value)),
                     child: Opacity(
-                      opacity: _headerAnimation.value,
+                      opacity: _headerAnimation.value.clamp(0.0, 1.0),
                       child: Container(
                         height: 40,
                         child: Image.asset(
@@ -124,7 +124,9 @@ class _HomeScreenState extends State<HomeScreen>
                       ),
                     ],
                   ),
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/notifications');
+                  },
                 ),
               ),
               const SizedBox(width: 8),

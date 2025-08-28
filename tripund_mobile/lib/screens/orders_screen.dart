@@ -108,7 +108,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
         backgroundColor: AppTheme.primaryColor,
         foregroundColor: Colors.white,
         actions: const [
-          CartIconButton(),
+          CartIconButton(iconColor: Colors.white),
         ],
       ),
       body: !authProvider.isAuthenticated 
@@ -432,23 +432,26 @@ class _OrdersScreenState extends State<OrdersScreen> {
                 Text(
                   productName,
                   style: const TextStyle(
-                    fontSize: 14,
+                    fontSize: 13,
                     fontWeight: FontWeight.w600,
                     color: Colors.black87,
                   ),
-                  maxLines: 2,
+                  maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 4),
-                if (color != null || size != null)
+                if (color != null || size != null) ...[
+                  const SizedBox(height: 2),
                   Text(
                     '${color ?? ''}${color != null && size != null ? ' • ' : ''}${size ?? ''}',
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: 11,
                       color: Colors.grey[600],
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                const SizedBox(height: 4),
+                ],
+                const SizedBox(height: 2),
                 Row(
                   children: [
                     Text(
@@ -565,23 +568,26 @@ class _OrdersScreenState extends State<OrdersScreen> {
                     Text(
                       productName,
                       style: const TextStyle(
-                        fontSize: 14,
+                        fontSize: 13,
                         fontWeight: FontWeight.w600,
                         color: Colors.black87,
                       ),
-                      maxLines: 2,
+                      maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 4),
-                    if (color != null || size != null)
+                    if (color != null || size != null) ...[
+                      const SizedBox(height: 2),
                       Text(
                         '${color ?? ''}${color != null && size != null ? ' • ' : ''}${size ?? ''}',
                         style: TextStyle(
-                          fontSize: 12,
+                          fontSize: 11,
                           color: Colors.grey[600],
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    const SizedBox(height: 4),
+                    ],
+                    const SizedBox(height: 2),
                     Row(
                       children: [
                         Text(

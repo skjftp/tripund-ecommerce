@@ -19,6 +19,7 @@ class _ShopScreenState extends State<ShopScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   String? _selectedCategoryId;
+  String? _selectedSubcategoryId;
   double _minPrice = 0;
   double _maxPrice = 10000;
   RangeValues _priceRange = const RangeValues(0, 10000);
@@ -89,6 +90,7 @@ class _ShopScreenState extends State<ShopScreen> {
       _searchQuery = '';
       _searchController.clear();
       _selectedCategoryId = null;
+      _selectedSubcategoryId = null;
       _priceRange = const RangeValues(0, 10000);
       _sortBy = 'newest';
     });
@@ -221,6 +223,7 @@ class _ShopScreenState extends State<ShopScreen> {
                                       onSelected: (selected) {
                                         setState(() {
                                           _selectedCategoryId = selected ? category.id : null;
+                                          _selectedSubcategoryId = null; // Reset subcategory
                                         });
                                       },
                                       selectedColor: AppTheme.primaryColor.withOpacity(0.2),
@@ -239,6 +242,89 @@ class _ShopScreenState extends State<ShopScreen> {
                       },
                     ),
                   ),
+                  
+                  // Subcategory Filter (shows only when category is selected)
+                  if (_selectedCategoryId != null)
+                    Consumer<ProductProvider>(
+                      builder: (context, provider, child) {
+                        final selectedCategory = provider.categories.firstWhere(
+                          (cat) => cat.id == _selectedCategoryId,
+                          orElse: () => provider.categories.first,
+                        );
+                        
+                        if (selectedCategory.subcategories == null || 
+                            selectedCategory.subcategories!.isEmpty) {
+                          return const SizedBox.shrink();
+                        }
+                        
+                        return Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Subcategory',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              SizedBox(
+                                height: 40,
+                                child: ListView.builder(
+                                  scrollDirection: Axis.horizontal,
+                                  itemCount: selectedCategory.subcategories!.length + 1,
+                                  itemBuilder: (context, index) {
+                                    if (index == 0) {
+                                      final isSelected = _selectedSubcategoryId == null;
+                                      return Padding(
+                                        padding: const EdgeInsets.only(right: 8),
+                                        child: FilterChip(
+                                          label: const Text('All'),
+                                          selected: isSelected,
+                                          onSelected: (selected) {
+                                            setState(() {
+                                              _selectedSubcategoryId = null;
+                                            });
+                                          },
+                                          selectedColor: AppTheme.primaryColor.withOpacity(0.2),
+                                          checkmarkColor: AppTheme.primaryColor,
+                                          labelStyle: TextStyle(
+                                            color: isSelected ? AppTheme.primaryColor : Colors.black87,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                    final subcategory = selectedCategory.subcategories![index - 1];
+                                    final isSelected = _selectedSubcategoryId == subcategory.id;
+                                    return Padding(
+                                      padding: const EdgeInsets.only(right: 8),
+                                      child: FilterChip(
+                                        label: Text(subcategory.name),
+                                        selected: isSelected,
+                                        onSelected: (selected) {
+                                          setState(() {
+                                            _selectedSubcategoryId = selected ? subcategory.id : null;
+                                          });
+                                        },
+                                        selectedColor: AppTheme.primaryColor.withOpacity(0.2),
+                                        checkmarkColor: AppTheme.primaryColor,
+                                        labelStyle: TextStyle(
+                                          color: isSelected ? AppTheme.primaryColor : Colors.black87,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
                   
                   // Price Range Filter
                   Container(

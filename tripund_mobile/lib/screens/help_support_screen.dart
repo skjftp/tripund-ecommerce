@@ -18,7 +18,7 @@ class HelpSupportScreen extends StatelessWidget {
         backgroundColor: AppTheme.primaryColor,
         foregroundColor: Colors.white,
         actions: const [
-          CartIconButton(),
+          CartIconButton(iconColor: Colors.white),
         ],
       ),
       body: ListView(

@@ -72,6 +72,8 @@ class _AddressesScreenState extends State<AddressesScreen> {
       } else {
         // Update local user data
         authProvider.updateUserAddresses(_addresses);
+        // Refresh user profile from backend to ensure sync
+        await authProvider.refreshUserProfile();
       }
     } else {
       // For guest users, save to SharedPreferences
@@ -442,7 +444,7 @@ class _AddressesScreenState extends State<AddressesScreen> {
         backgroundColor: AppTheme.primaryColor,
         foregroundColor: Colors.white,
         actions: const [
-          CartIconButton(),
+          CartIconButton(iconColor: Colors.white),
         ],
       ),
       body: _addresses.isEmpty 

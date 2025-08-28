@@ -19,7 +19,8 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
     return Scaffold(
       appBar: AppBar(
         title: const Text('Notification Settings'),
-        backgroundColor: AppTheme.backgroundColor,
+        backgroundColor: AppTheme.primaryColor,
+        foregroundColor: Colors.white,
       ),
       body: ListView(
         padding: const EdgeInsets.all(20),
