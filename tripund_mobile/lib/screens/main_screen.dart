@@ -19,9 +19,10 @@ class MainScreen extends StatefulWidget {
 
 class MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   int _currentIndex = 0;
-  late PageController _pageController;
   late AnimationController _fabAnimationController;
   late Animation<double> _fabAnimation;
+  late AnimationController _transitionController;
+  late Animation<double> _fadeAnimation;
 
   final List<Widget> _screens = [
     const HomeScreen(),
@@ -42,7 +43,6 @@ class MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    _pageController = PageController();
     
     _fabAnimationController = AnimationController(
       duration: const Duration(milliseconds: 300),
@@ -54,7 +54,18 @@ class MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
       curve: Curves.easeInOut,
     );
     
+    _transitionController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    
+    _fadeAnimation = CurvedAnimation(
+      parent: _transitionController,
+      curve: Curves.easeInOut,
+    );
+    
     _fabAnimationController.forward();
+    _transitionController.forward();
     
     // Check for updates after a delay
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -68,45 +79,42 @@ class MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
 
   @override
   void dispose() {
-    _pageController.dispose();
     _fabAnimationController.dispose();
+    _transitionController.dispose();
     super.dispose();
   }
 
-  void switchTab(int index) {
-    // Calculate the distance between current and target index
-    int distance = (index - _currentIndex).abs();
+  void switchTab(int index) async {
+    if (index == _currentIndex) return;
     
-    // Adjust animation duration based on distance
-    // Base duration of 300ms for adjacent tabs, add 100ms for each additional tab
-    int animationDuration = 300 + (distance > 1 ? (distance - 1) * 100 : 0);
-    // Cap the maximum duration at 600ms to prevent too slow animations
-    animationDuration = animationDuration.clamp(300, 600);
+    // Fade out current screen
+    await _transitionController.reverse();
     
+    // Switch to new tab
     setState(() {
       _currentIndex = index;
     });
     
-    // Use animateToPage for smoother transitions
-    _pageController.animateToPage(
-      index,
-      duration: Duration(milliseconds: animationDuration),
-      curve: Curves.easeInOutCubic,
-    );
+    // Fade in new screen
+    _transitionController.forward();
+    
+    // Animate FAB if switching to/from home
+    if (index == 0 || _currentIndex == 0) {
+      _fabAnimationController.reverse().then((_) {
+        _fabAnimationController.forward();
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: PageView(
-        controller: _pageController,
-        physics: const BouncingScrollPhysics(),
-        onPageChanged: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-        children: _screens,
+      body: FadeTransition(
+        opacity: _fadeAnimation,
+        child: IndexedStack(
+          index: _currentIndex,
+          children: _screens,
+        ),
       ),
       bottomNavigationBar: CurvedNavigationBar(
         index: _currentIndex,
@@ -126,29 +134,22 @@ class MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                 : AppTheme.textSecondary,
           );
         }).toList(),
-        onTap: (index) {
-          // Calculate the distance between current and target index
-          int distance = (index - _currentIndex).abs();
+        onTap: (index) async {
+          if (index == _currentIndex) return;
           
-          // Adjust animation duration based on distance
-          // Base duration of 300ms for adjacent tabs, add 100ms for each additional tab
-          int animationDuration = 300 + (distance > 1 ? (distance - 1) * 100 : 0);
-          // Cap the maximum duration at 600ms to prevent too slow animations
-          animationDuration = animationDuration.clamp(300, 600);
+          // Fade out current screen
+          await _transitionController.reverse();
           
+          // Switch to new tab
           setState(() {
             _currentIndex = index;
           });
           
-          // Use animateToPage with adjusted duration for smoother transitions
-          _pageController.animateToPage(
-            index,
-            duration: Duration(milliseconds: animationDuration),
-            curve: Curves.easeInOutCubic,
-          );
+          // Fade in new screen
+          _transitionController.forward();
           
-          // Animate FAB only if switching to/from home
-          if (index == 0 || _currentIndex == 0) {
+          // Animate FAB if switching to/from home
+          if (index == 0) {
             _fabAnimationController.reverse().then((_) {
               _fabAnimationController.forward();
             });

@@ -32,7 +32,14 @@ class _HomeScreenState extends State<HomeScreen>
   late AnimationController _searchController;
   late Animation<double> _headerAnimation;
   late Animation<double> _searchAnimation;
-  List<Map<String, dynamic>> _activePromotions = [];
+  List<Map<String, dynamic>> _activePromotions = [
+    {
+      'code': 'TRIPUND10',
+      'description': '10% off on all orders',
+      'type': 'percentage',
+      'discount': 10,
+    }
+  ];
   int _currentPromoIndex = 0;
   
   
