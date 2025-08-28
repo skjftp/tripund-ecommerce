@@ -34,14 +34,7 @@ class CartProvider extends ChangeNotifier {
         
         _items.clear();
         decodedData.forEach((key, value) {
-          _items[key] = CartItem(
-            id: value['id'],
-            productId: value['productId'],
-            title: value['title'],
-            price: value['price'].toDouble(),
-            imageUrl: value['imageUrl'],
-            quantity: value['quantity'],
-          );
+          _items[key] = CartItem.fromJson(value);
         });
         
         print('✅ Cart loaded: ${_items.length} items');
@@ -60,14 +53,7 @@ class CartProvider extends ChangeNotifier {
       
       final Map<String, Map<String, dynamic>> cartData = {};
       _items.forEach((key, item) {
-        cartData[key] = {
-          'id': item.id,
-          'productId': item.productId,
-          'title': item.title,
-          'price': item.price,
-          'imageUrl': item.imageUrl,
-          'quantity': item.quantity,
-        };
+        cartData[key] = item.toJson();
       });
       
       final encodedData = json.encode(cartData);
@@ -78,29 +64,49 @@ class CartProvider extends ChangeNotifier {
     }
   }
 
-  void addItem(Product product) {
-    if (_items.containsKey(product.id)) {
+  void addItem(
+    String productId,
+    String title,
+    double price,
+    String imageUrl, {
+    int quantity = 1,
+    String? variantId,
+    String? color,
+    String? size,
+    String? sku,
+  }) {
+    final cartItemId = CartItem.generateId(productId, variantId);
+    
+    if (_items.containsKey(cartItemId)) {
       _items.update(
-        product.id,
+        cartItemId,
         (existingItem) => CartItem(
           id: existingItem.id,
           productId: existingItem.productId,
           title: existingItem.title,
           price: existingItem.price,
           imageUrl: existingItem.imageUrl,
-          quantity: existingItem.quantity + 1,
+          quantity: existingItem.quantity + quantity,
+          variantId: existingItem.variantId,
+          color: existingItem.color,
+          size: existingItem.size,
+          sku: existingItem.sku,
         ),
       );
     } else {
       _items.putIfAbsent(
-        product.id,
+        cartItemId,
         () => CartItem(
-          id: DateTime.now().toString(),
-          productId: product.id,
-          title: product.name,
-          price: product.salePrice ?? product.price,
-          imageUrl: product.images.isNotEmpty ? product.images[0] : '',
-          quantity: 1,
+          id: cartItemId,
+          productId: productId,
+          title: title,
+          price: price,
+          imageUrl: imageUrl,
+          quantity: quantity,
+          variantId: variantId,
+          color: color,
+          size: size,
+          sku: sku,
         ),
       );
     }
@@ -130,6 +136,10 @@ class CartProvider extends ChangeNotifier {
           price: existingItem.price,
           imageUrl: existingItem.imageUrl,
           quantity: quantity,
+          variantId: existingItem.variantId,
+          color: existingItem.color,
+          size: existingItem.size,
+          sku: existingItem.sku,
         ),
       );
       _saveCart();
@@ -143,11 +153,35 @@ class CartProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  bool isInCart(String productId) {
-    return _items.containsKey(productId);
+  bool isInCart(String productId, {String? variantId}) {
+    final cartItemId = CartItem.generateId(productId, variantId);
+    return _items.containsKey(cartItemId);
   }
 
-  int getQuantity(String productId) {
-    return _items[productId]?.quantity ?? 0;
+  int getQuantity(String productId, {String? variantId}) {
+    final cartItemId = CartItem.generateId(productId, variantId);
+    return _items[cartItemId]?.quantity ?? 0;
+  }
+  
+  // Add convenient method for Product objects
+  void addProduct(Product product, {int quantity = 1, ProductVariant? variant}) {
+    final price = variant?.displayPrice ?? product.displayPrice;
+    final imageUrl = (variant?.images?.isNotEmpty == true) 
+        ? variant!.images!.first 
+        : product.images.isNotEmpty 
+            ? product.images.first 
+            : '';
+    
+    addItem(
+      product.id,
+      product.name,
+      price,
+      imageUrl,
+      quantity: quantity,
+      variantId: variant?.id,
+      color: variant?.color,
+      size: variant?.size,
+      sku: variant?.sku ?? product.sku,
+    );
   }
 }

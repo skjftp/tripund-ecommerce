@@ -18,7 +18,7 @@ class ShopScreen extends StatefulWidget {
 class _ShopScreenState extends State<ShopScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
-  String _selectedCategory = 'All';
+  String? _selectedCategoryId;
   double _minPrice = 0;
   double _maxPrice = 10000;
   RangeValues _priceRange = const RangeValues(0, 10000);
@@ -52,9 +52,9 @@ class _ShopScreenState extends State<ShopScreen> {
     }
     
     // Filter by category
-    if (_selectedCategory != 'All') {
+    if (_selectedCategoryId != null) {
       products = products.where((product) {
-        return product.categories?.contains(_selectedCategory) ?? false;
+        return product.categories?.contains(_selectedCategoryId) ?? false;
       }).toList();
     }
     
@@ -88,7 +88,7 @@ class _ShopScreenState extends State<ShopScreen> {
     setState(() {
       _searchQuery = '';
       _searchController.clear();
-      _selectedCategory = 'All';
+      _selectedCategoryId = null;
       _priceRange = const RangeValues(0, 10000);
       _sortBy = 'newest';
     });
@@ -171,7 +171,7 @@ class _ShopScreenState extends State<ShopScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     child: Consumer<ProductProvider>(
                       builder: (context, provider, child) {
-                        final categories = ['All', ...provider.categories.map((c) => c.name)];
+                        final categories = provider.categories;
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -187,18 +187,40 @@ class _ShopScreenState extends State<ShopScreen> {
                               height: 35,
                               child: ListView.builder(
                                 scrollDirection: Axis.horizontal,
-                                itemCount: categories.length,
+                                itemCount: categories.length + 1, // +1 for 'All' option
                                 itemBuilder: (context, index) {
-                                  final category = categories[index];
-                                  final isSelected = _selectedCategory == category;
+                                  if (index == 0) {
+                                    // 'All' option
+                                    final isSelected = _selectedCategoryId == null;
+                                    return Padding(
+                                      padding: const EdgeInsets.only(right: 8),
+                                      child: FilterChip(
+                                        label: const Text('All'),
+                                        selected: isSelected,
+                                        onSelected: (selected) {
+                                          setState(() {
+                                            _selectedCategoryId = null;
+                                          });
+                                        },
+                                        selectedColor: AppTheme.primaryColor.withOpacity(0.2),
+                                        checkmarkColor: AppTheme.primaryColor,
+                                        labelStyle: TextStyle(
+                                          color: isSelected ? AppTheme.primaryColor : Colors.black87,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                  final category = categories[index - 1];
+                                  final isSelected = _selectedCategoryId == category.id;
                                   return Padding(
                                     padding: const EdgeInsets.only(right: 8),
                                     child: FilterChip(
-                                      label: Text(category),
+                                      label: Text(category.name),
                                       selected: isSelected,
                                       onSelected: (selected) {
                                         setState(() {
-                                          _selectedCategory = selected ? category : 'All';
+                                          _selectedCategoryId = selected ? category.id : null;
                                         });
                                       },
                                       selectedColor: AppTheme.primaryColor.withOpacity(0.2),
@@ -345,7 +367,7 @@ class _ShopScreenState extends State<ShopScreen> {
                             color: Colors.grey[600],
                           ),
                         ),
-                        if (_searchQuery.isNotEmpty || _selectedCategory != 'All' || 
+                        if (_searchQuery.isNotEmpty || _selectedCategoryId != null || 
                             _priceRange.start > 0 || _priceRange.end < 10000)
                           Padding(
                             padding: const EdgeInsets.only(top: 16),

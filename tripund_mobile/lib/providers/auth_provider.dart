@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../models/user.dart';
+import '../models/address.dart';
 import '../utils/constants.dart';
 import '../services/api_service.dart';
 
@@ -119,5 +120,40 @@ class AuthProvider extends ChangeNotifier {
     ApiService().clearAuthToken();
 
     notifyListeners();
+  }
+
+  // Update user addresses locally
+  void updateUserAddresses(List<Address> addresses) {
+    if (_user != null) {
+      _user!.addresses = addresses;
+      notifyListeners();
+      
+      // Also save to SharedPreferences
+      final prefs = SharedPreferences.getInstance();
+      prefs.then((p) {
+        p.setString('user', json.encode(_user!.toJson()));
+      });
+    }
+  }
+
+  // Check auth state and refresh user data
+  Future<void> checkAuthState() async {
+    if (_token != null) {
+      try {
+        final apiService = ApiService();
+        final user = await apiService.getProfile();
+        if (user != null) {
+          _user = user;
+          
+          // Save updated user data
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('user', json.encode(user.toJson()));
+          
+          notifyListeners();
+        }
+      } catch (e) {
+        print('Error refreshing user data: $e');
+      }
+    }
   }
 }

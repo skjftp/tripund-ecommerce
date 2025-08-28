@@ -7,6 +7,7 @@ import '../utils/theme.dart';
 import '../utils/constants.dart';
 import '../providers/wishlist_provider.dart';
 import '../providers/cart_provider.dart';
+import 'variant_selection_modal.dart';
 
 class ParallaxCard extends StatefulWidget {
   final Product product;
@@ -187,27 +188,53 @@ class _ParallaxCardState extends State<ParallaxCard>
                             right: 10,
                             child: Consumer<CartProvider>(
                               builder: (context, cartProvider, child) {
-                                final isInCart = cartProvider.items.containsKey(widget.product.id);
+                                // Check if any variant of this product is in cart
+                                bool isInCart = false;
+                                if (widget.product.hasVariants) {
+                                  // Check if any variant is in cart
+                                  isInCart = cartProvider.items.values.any((item) => 
+                                    item.productId == widget.product.id
+                                  );
+                                } else {
+                                  isInCart = cartProvider.isInCart(widget.product.id);
+                                }
+                                
                                 return GestureDetector(
                                   onTap: () {
-                                    if (isInCart) {
-                                      // Remove from cart
-                                      cartProvider.removeItem(widget.product.id);
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(
-                                          content: Text('${widget.product.name} removed from cart'),
-                                          duration: const Duration(seconds: 1),
+                                    if (widget.product.hasVariants) {
+                                      // Show variant selection modal
+                                      showModalBottomSheet(
+                                        context: context,
+                                        isScrollControlled: true,
+                                        backgroundColor: Colors.transparent,
+                                        builder: (context) => VariantSelectionModal(
+                                          product: widget.product,
                                         ),
                                       );
                                     } else {
-                                      // Add to cart
-                                      cartProvider.addItem(widget.product);
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(
-                                          content: Text('${widget.product.name} added to cart'),
-                                          duration: const Duration(seconds: 1),
-                                        ),
-                                      );
+                                      // Regular add/remove for non-variant products
+                                      if (isInCart) {
+                                        cartProvider.removeItem(widget.product.id);
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: Text('${widget.product.name} removed from cart'),
+                                            duration: const Duration(seconds: 1),
+                                          ),
+                                        );
+                                      } else {
+                                        cartProvider.addItem(
+                                          widget.product.id,
+                                          widget.product.name,
+                                          widget.product.displayPrice,
+                                          widget.product.images.isNotEmpty ? widget.product.images[0] : '',
+                                        );
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: Text('${widget.product.name} added to cart'),
+                                            duration: const Duration(seconds: 1),
+                                          ),
+                                        );
+                                      }
                                     }
                                   },
                                   child: AnimatedContainer(
@@ -263,7 +290,9 @@ class _ParallaxCardState extends State<ParallaxCard>
                             Row(
                               children: [
                                 Text(
-                                  '${Constants.currency}${widget.product.displayPrice.toStringAsFixed(0)}',
+                                  widget.product.hasVariants 
+                                    ? 'From ${Constants.currency}${widget.product.lowestPrice.toStringAsFixed(0)}'
+                                    : '${Constants.currency}${widget.product.displayPrice.toStringAsFixed(0)}',
                                   style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,

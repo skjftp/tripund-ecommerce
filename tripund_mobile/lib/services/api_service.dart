@@ -233,6 +233,21 @@ class ApiService {
       return false;
     }
   }
+  
+  // Address management
+  Future<bool> updateAddresses(List<Map<String, dynamic>> addresses) async {
+    try {
+      await _ensureAuthToken();
+      // Update user with new addresses
+      final response = await _dio.put('/profile', data: {
+        'addresses': addresses,
+      });
+      return response.statusCode == 200;
+    } catch (e) {
+      print('Error updating addresses: $e');
+      return false;
+    }
+  }
 
   // Cart & Orders
   Future<Map<String, dynamic>?> createGuestOrder({
@@ -447,6 +462,21 @@ class ApiService {
         'release_notes': '• New features and improvements\n• Bug fixes\n• Performance enhancements',
         'force_update': false,
       };
+    }
+  }
+  
+  // Content
+  Future<Map<String, dynamic>?> getContent(String type) async {
+    try {
+      final response = await _dio.get('/content/$type');
+      
+      if (response.statusCode == 200) {
+        return response.data;
+      }
+      return null;
+    } catch (e) {
+      print('Error fetching $type content: $e');
+      return null;
     }
   }
 }

@@ -7,6 +7,7 @@ import '../providers/cart_provider.dart';
 import '../utils/theme.dart';
 import '../utils/constants.dart';
 import '../utils/navigation_helper.dart';
+import '../widgets/variant_selection_modal.dart';
 import 'product_detail_screen.dart';
 import 'shop_screen.dart';
 
@@ -313,18 +314,35 @@ class WishlistScreen extends StatelessWidget {
                                               builder: (context, cartProvider, child) {
                                                 return ElevatedButton(
                                                   onPressed: () {
-                                                    cartProvider.addItem(product);
-                                                    ScaffoldMessenger.of(context).showSnackBar(
-                                                      SnackBar(
-                                                        content: Text('${product.name} added to cart'),
-                                                        action: SnackBarAction(
-                                                          label: 'VIEW CART',
-                                                          onPressed: () {
-                                                            Navigator.of(context).pushNamed('/cart');
-                                                          },
+                                                    if (product.hasVariants) {
+                                                      // Show variant selection modal
+                                                      showModalBottomSheet(
+                                                        context: context,
+                                                        isScrollControlled: true,
+                                                        backgroundColor: Colors.transparent,
+                                                        builder: (context) => VariantSelectionModal(
+                                                          product: product,
                                                         ),
-                                                      ),
-                                                    );
+                                                      );
+                                                    } else {
+                                                      cartProvider.addItem(
+                                                        product.id,
+                                                        product.name,
+                                                        product.displayPrice,
+                                                        product.images.isNotEmpty ? product.images[0] : '',
+                                                      );
+                                                      ScaffoldMessenger.of(context).showSnackBar(
+                                                        SnackBar(
+                                                          content: Text('${product.name} added to cart'),
+                                                          action: SnackBarAction(
+                                                            label: 'VIEW CART',
+                                                            onPressed: () {
+                                                              Navigator.of(context).pushNamed('/cart');
+                                                            },
+                                                          ),
+                                                        ),
+                                                      );
+                                                    }
                                                   },
                                                   style: ElevatedButton.styleFrom(
                                                     backgroundColor: AppTheme.primaryColor,

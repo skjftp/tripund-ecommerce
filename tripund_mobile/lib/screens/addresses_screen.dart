@@ -7,6 +7,9 @@ import 'dart:convert';
 import '../utils/theme.dart';
 import '../utils/indian_states.dart';
 import '../models/address.dart';
+import '../models/user.dart';
+import '../providers/auth_provider.dart';
+import '../services/api_service.dart';
 import '../widgets/cart_icon_button.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
@@ -19,6 +22,8 @@ class AddressesScreen extends StatefulWidget {
 
 class _AddressesScreenState extends State<AddressesScreen> {
   List<Address> _addresses = [];
+  final ApiService _apiService = ApiService();
+  bool _isLoading = true;
   
   @override
   void initState() {
@@ -27,20 +32,53 @@ class _AddressesScreenState extends State<AddressesScreen> {
   }
   
   Future<void> _loadAddresses() async {
-    final prefs = await SharedPreferences.getInstance();
-    final addressesJson = prefs.getString('user_addresses');
-    if (addressesJson != null) {
-      final List<dynamic> decoded = json.decode(addressesJson);
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    
+    if (authProvider.isAuthenticated && authProvider.user != null) {
+      // Load addresses from user profile
       setState(() {
-        _addresses = decoded.map((json) => Address.fromJson(json)).toList();
+        _addresses = authProvider.user!.addresses ?? [];
+        _isLoading = false;
+      });
+    } else {
+      // For guest users, load from SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      final addressesJson = prefs.getString('user_addresses');
+      if (addressesJson != null) {
+        final List<dynamic> decoded = json.decode(addressesJson);
+        setState(() {
+          _addresses = decoded.map((json) => Address.fromJson(json)).toList();
+        });
+      }
+      setState(() {
+        _isLoading = false;
       });
     }
   }
   
   Future<void> _saveAddresses() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('user_addresses', 
-      json.encode(_addresses.map((a) => a.toJson()).toList()));
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    
+    if (authProvider.isAuthenticated) {
+      // Save to database via API
+      final success = await _apiService.updateAddresses(
+        _addresses.map((a) => a.toJson()).toList()
+      );
+      if (!success) {
+        Fluttertoast.showToast(
+          msg: "Failed to save addresses",
+          backgroundColor: Colors.red,
+        );
+      } else {
+        // Update local user data
+        authProvider.updateUserAddresses(_addresses);
+      }
+    } else {
+      // For guest users, save to SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('user_addresses', 
+        json.encode(_addresses.map((a) => a.toJson()).toList()));
+    }
   }
 
   Future<void> _setDefaultAddress(int index) async {

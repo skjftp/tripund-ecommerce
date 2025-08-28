@@ -21,6 +21,8 @@ class CategoryProductsScreen extends StatefulWidget {
 }
 
 class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
+  String? _selectedSubcategoryId;
+  
   @override
   void initState() {
     super.initState();
@@ -44,7 +46,15 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
       body: Consumer<ProductProvider>(
         builder: (context, provider, child) {
           // Use the products from provider which are already filtered by category
-          final products = provider.products;
+          var products = provider.products;
+          
+          // Apply subcategory filter if selected
+          if (_selectedSubcategoryId != null) {
+            products = products.where((product) {
+              // Check if product's categories contains the selected subcategory
+              return product.categories?.contains(_selectedSubcategoryId) ?? false;
+            }).toList();
+          }
           
           if (provider.isLoading && products.isEmpty) {
             return const Center(
@@ -77,40 +87,103 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
           
           return RefreshIndicator(
             onRefresh: () => provider.refreshProducts(),
-            child: GridView.builder(
-              padding: const EdgeInsets.all(16),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                childAspectRatio: 0.7,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-              ),
-              itemCount: products.length,
-              itemBuilder: (context, index) {
-                final product = products[index];
-                return AnimationConfiguration.staggeredGrid(
-                  position: index,
-                  duration: const Duration(milliseconds: 375),
-                  columnCount: 2,
-                  child: ScaleAnimation(
-                    child: FadeInAnimation(
-                      child: ParallaxCard(
-                        product: product,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => ProductDetailScreen(
-                                product: product,
+            child: Column(
+              children: [
+                // Subcategory filter chips
+                if (widget.category.subcategories != null && widget.category.subcategories!.isNotEmpty)
+                  Container(
+                    height: 50,
+                    color: Colors.white,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      itemCount: widget.category.subcategories!.length + 1,
+                      itemBuilder: (context, index) {
+                        if (index == 0) {
+                          // 'All' option
+                          final isSelected = _selectedSubcategoryId == null;
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: FilterChip(
+                              label: const Text('All'),
+                              selected: isSelected,
+                              onSelected: (selected) {
+                                setState(() {
+                                  _selectedSubcategoryId = null;
+                                });
+                              },
+                              selectedColor: AppTheme.primaryColor.withOpacity(0.2),
+                              checkmarkColor: AppTheme.primaryColor,
+                              labelStyle: TextStyle(
+                                color: isSelected ? AppTheme.primaryColor : Colors.black87,
+                                fontSize: 13,
                               ),
                             ),
                           );
-                        },
-                      ),
+                        }
+                        final subcategory = widget.category.subcategories![index - 1];
+                        final isSelected = _selectedSubcategoryId == subcategory.id;
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: FilterChip(
+                            label: Text(subcategory.name),
+                            selected: isSelected,
+                            onSelected: (selected) {
+                              setState(() {
+                                _selectedSubcategoryId = selected ? subcategory.id : null;
+                              });
+                            },
+                            selectedColor: AppTheme.primaryColor.withOpacity(0.2),
+                            checkmarkColor: AppTheme.primaryColor,
+                            labelStyle: TextStyle(
+                              color: isSelected ? AppTheme.primaryColor : Colors.black87,
+                              fontSize: 13,
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   ),
-                );
-              },
+                if (widget.category.subcategories != null && widget.category.subcategories!.isNotEmpty)
+                  const Divider(height: 1),
+                Expanded(
+                  child: GridView.builder(
+                    padding: const EdgeInsets.all(16),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      childAspectRatio: 0.7,
+                      crossAxisSpacing: 16,
+                      mainAxisSpacing: 16,
+                    ),
+                    itemCount: products.length,
+                    itemBuilder: (context, index) {
+                      final product = products[index];
+                      return AnimationConfiguration.staggeredGrid(
+                        position: index,
+                        duration: const Duration(milliseconds: 375),
+                        columnCount: 2,
+                        child: ScaleAnimation(
+                          child: FadeInAnimation(
+                            child: ParallaxCard(
+                              product: product,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => ProductDetailScreen(
+                                      product: product,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
           );
         },

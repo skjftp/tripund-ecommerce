@@ -15,6 +15,7 @@ import '../providers/cart_provider.dart';
 import '../providers/auth_provider.dart';
 import '../services/api_service.dart';
 import '../services/payment_service.dart';
+import '../widgets/payment_modals.dart';
 
 class CheckoutScreenV2 extends StatefulWidget {
   const CheckoutScreenV2({super.key});
@@ -110,12 +111,12 @@ class _CheckoutScreenV2State extends State<CheckoutScreenV2> {
   }
 
   Future<void> _loadSavedAddresses() async {
-    final prefs = await SharedPreferences.getInstance();
-    final addressesJson = prefs.getString('user_addresses');
-    if (addressesJson != null) {
-      final List<dynamic> decoded = json.decode(addressesJson);
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    
+    if (authProvider.isAuthenticated && authProvider.user != null) {
+      // Load addresses from user profile
       setState(() {
-        _savedAddresses = decoded.map((json) => Address.fromJson(json)).toList();
+        _savedAddresses = authProvider.user!.addresses ?? [];
         
         // Select default address if available
         final defaultAddress = _savedAddresses.firstWhere(
@@ -140,9 +141,41 @@ class _CheckoutScreenV2State extends State<CheckoutScreenV2> {
         }
       });
     } else {
-      setState(() {
-        _useNewAddress = true;
-      });
+      // For guest users, load from SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      final addressesJson = prefs.getString('user_addresses');
+      if (addressesJson != null) {
+        final List<dynamic> decoded = json.decode(addressesJson);
+        setState(() {
+          _savedAddresses = decoded.map((json) => Address.fromJson(json)).toList();
+          
+          // Select default address if available
+          final defaultAddress = _savedAddresses.firstWhere(
+            (addr) => addr.isDefault,
+            orElse: () => _savedAddresses.isNotEmpty ? _savedAddresses.first : Address(
+              id: '',
+              name: '',
+              line1: '',
+              city: '',
+              state: '',
+              stateCode: '',
+              postalCode: '',
+              phone: '',
+            ),
+          );
+          
+          if (defaultAddress.id.isNotEmpty) {
+            _selectedAddress = defaultAddress;
+            _fillAddressFields(defaultAddress);
+          } else if (_savedAddresses.isEmpty) {
+            _useNewAddress = true;
+          }
+        });
+      } else {
+        setState(() {
+          _useNewAddress = true;
+        });
+      }
     }
   }
   
@@ -240,11 +273,34 @@ class _CheckoutScreenV2State extends State<CheckoutScreenV2> {
       _isProcessing = false;
     });
     
-    // Don't show error if user cancelled
-    if (response.code != Razorpay.PAYMENT_CANCELLED) {
-      Fluttertoast.showToast(
-        msg: "Payment failed: ${response.message}",
-        backgroundColor: Colors.red,
+    if (response.code == Razorpay.PAYMENT_CANCELLED || 
+        response.message?.toLowerCase().contains('cancelled') == true ||
+        response.message?.toLowerCase().contains('canceled') == true) {
+      // Show cancelled modal
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => PaymentCancelledModal(
+          onRetry: () {
+            Navigator.of(context).pop();
+            // Retry payment
+            _placeOrder();
+          },
+        ),
+      );
+    } else {
+      // Show failed modal for other errors
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => PaymentFailedModal(
+          message: response.message,
+          onRetry: () {
+            Navigator.of(context).pop();
+            // Retry payment
+            _placeOrder();
+          },
+        ),
       );
     }
   }
@@ -367,7 +423,7 @@ class _CheckoutScreenV2State extends State<CheckoutScreenV2> {
           'total': cartProvider.totalAmount,
         },
         paymentMethod: _selectedPaymentMethod == 'online' 
-          ? (_useNativePayment ? _selectedNativePaymentMethod : 'razorpay')
+          ? 'razorpay'
           : _selectedPaymentMethod,
         address: {
           'line1': _addressLine1Controller.text,
@@ -448,12 +504,8 @@ class _CheckoutScreenV2State extends State<CheckoutScreenV2> {
       }
       await _createOrder('COD_${DateTime.now().millisecondsSinceEpoch}');
     } else if (_selectedPaymentMethod == 'online') {
-      if (_useNativePayment) {
-        _processNativePayment();
-      } else {
-        // Razorpay payment - First create order, then payment order
-        await _initiateRazorpayPayment();
-      }
+      // Online payment via Razorpay - First create order, then payment order
+      await _initiateRazorpayPayment();
     }
   }
   
@@ -610,6 +662,23 @@ class _CheckoutScreenV2State extends State<CheckoutScreenV2> {
   }
   
   void _showSuccessDialog(String orderId) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => PaymentSuccessModal(
+        orderId: orderId,
+        onShopMore: () {
+          // Clear cart and go to home
+          context.read<CartProvider>().clear();
+          Navigator.of(context).pushNamedAndRemoveUntil(
+            '/home',
+            (route) => false,
+          );
+        },
+      ),
+    );
+    return;
+    // OLD CODE BELOW - keeping for reference
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -939,6 +1008,9 @@ class _CheckoutScreenV2State extends State<CheckoutScreenV2> {
   }
   
   Widget _buildPaymentStep() {
+    final cartProvider = context.read<CartProvider>();
+    final orderTotal = cartProvider.totalAmount;
+    
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -950,15 +1022,7 @@ class _CheckoutScreenV2State extends State<CheckoutScreenV2> {
           ),
           const SizedBox(height: 16),
           
-          if (_codEnabled)
-            _buildPaymentMethodCard(
-              'cod',
-              'Cash on Delivery',
-              Icons.money,
-              'Pay when you receive the product (Max: ₹${_codLimit.toStringAsFixed(0)})',
-            ),
-          const SizedBox(height: 12),
-          
+          // Online Payment - Always available
           _buildPaymentMethodCard(
             'online',
             'Online Payment',
@@ -966,71 +1030,124 @@ class _CheckoutScreenV2State extends State<CheckoutScreenV2> {
             'Pay securely with Card/UPI/NetBanking',
           ),
           
-          if (_selectedPaymentMethod == 'online') ...[
-            const SizedBox(height: 24),
-            
-            // Payment type selector
+          const SizedBox(height: 12),
+          
+          // COD - Show based on settings and limit
+          if (_codEnabled) ...[            
+            Stack(
+              children: [
+                _buildPaymentMethodCard(
+                  'cod',
+                  'Cash on Delivery',
+                  Icons.money,
+                  orderTotal <= _codLimit 
+                    ? 'Pay when you receive the product'
+                    : 'Not available for orders above ₹${_codLimit.toStringAsFixed(0)}',
+                  enabled: orderTotal <= _codLimit,
+                ),
+                if (orderTotal > _codLimit)
+                  Positioned.fill(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.7),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Center(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.red,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: const Text(
+                            'Not Available',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ] else ...[            
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.grey[50],
+                color: Colors.grey[100],
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: Colors.grey[300]!),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Row(
                 children: [
-                  const Text(
-                    'Choose Payment Option',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 16),
-                  
-                  ListTile(
-                    leading: Radio<bool>(
-                      value: false,
-                      groupValue: _useNativePayment,
-                      onChanged: (value) {
-                        setState(() {
-                          _useNativePayment = value!;
-                        });
-                      },
+                  Icon(Icons.info_outline, color: Colors.grey[600]),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Text(
+                      'Cash on Delivery is currently not available',
+                      style: TextStyle(color: Colors.grey),
                     ),
-                    title: const Text('Razorpay'),
-                    subtitle: const Text('Quick & secure payment gateway'),
-                    onTap: () {
-                      setState(() {
-                        _useNativePayment = false;
-                      });
-                    },
                   ),
-                  
-                  ListTile(
-                    leading: Radio<bool>(
-                      value: true,
-                      groupValue: _useNativePayment,
-                      onChanged: (value) {
-                        setState(() {
-                          _useNativePayment = value!;
-                        });
-                      },
+                ],
+              ),
+            ),
+          ],
+          
+          if (_selectedPaymentMethod == 'online') ...[
+            const SizedBox(height: 24),
+            
+            // Payment info
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    AppTheme.primaryColor.withOpacity(0.1),
+                    AppTheme.primaryColor.withOpacity(0.05),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppTheme.primaryColor.withOpacity(0.3)),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.security,
+                    color: AppTheme.primaryColor,
+                    size: 32,
+                  ),
+                  const SizedBox(width: 16),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Secure Online Payment',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          'Pay securely with Card, UPI, NetBanking or Wallets',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ],
                     ),
-                    title: const Text('Direct Payment'),
-                    subtitle: const Text('Enter payment details manually'),
-                    onTap: () {
-                      setState(() {
-                        _useNativePayment = true;
-                      });
-                    },
                   ),
                 ],
               ),
             ),
             
-            if (_useNativePayment) ...[
-              const SizedBox(height: 24),
-              _buildNativePaymentForm(),
-            ],
+            const SizedBox(height: 24),
           ],
         ],
       ),
@@ -1220,29 +1337,29 @@ class _CheckoutScreenV2State extends State<CheckoutScreenV2> {
     );
   }
   
-  Widget _buildPaymentMethodCard(String value, String title, IconData icon, String subtitle) {
+  Widget _buildPaymentMethodCard(String value, String title, IconData icon, String subtitle, {bool enabled = true}) {
     final isSelected = _selectedPaymentMethod == value;
     return GestureDetector(
-      onTap: () {
+      onTap: enabled ? () {
         setState(() {
           _selectedPaymentMethod = value;
         });
-      },
+      } : null,
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           border: Border.all(
-            color: isSelected ? AppTheme.primaryColor : Colors.grey[300]!,
-            width: isSelected ? 2 : 1,
+            color: !enabled ? Colors.grey[300]! : isSelected ? AppTheme.primaryColor : Colors.grey[300]!,
+            width: isSelected && enabled ? 2 : 1,
           ),
           borderRadius: BorderRadius.circular(12),
-          color: isSelected ? AppTheme.primaryColor.withOpacity(0.05) : Colors.white,
+          color: !enabled ? Colors.grey[100] : isSelected ? AppTheme.primaryColor.withOpacity(0.05) : Colors.white,
         ),
         child: Row(
           children: [
             Icon(
               icon,
-              color: isSelected ? AppTheme.primaryColor : Colors.grey,
+              color: !enabled ? Colors.grey[400] : isSelected ? AppTheme.primaryColor : Colors.grey,
               size: 30,
             ),
             const SizedBox(width: 16),
@@ -1255,7 +1372,7 @@ class _CheckoutScreenV2State extends State<CheckoutScreenV2> {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: isSelected ? AppTheme.primaryColor : Colors.black87,
+                      color: !enabled ? Colors.grey[400] : isSelected ? AppTheme.primaryColor : Colors.black87,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -1263,7 +1380,7 @@ class _CheckoutScreenV2State extends State<CheckoutScreenV2> {
                     subtitle,
                     style: TextStyle(
                       fontSize: 12,
-                      color: Colors.grey[600],
+                      color: !enabled ? Colors.grey[400] : Colors.grey[600],
                     ),
                   ),
                 ],
@@ -1387,9 +1504,7 @@ class _CheckoutScreenV2State extends State<CheckoutScreenV2> {
                 Text(
                   _selectedPaymentMethod == 'cod' && _codEnabled
                     ? 'Cash on Delivery'
-                    : _useNativePayment
-                      ? 'Online Payment - $_selectedNativePaymentMethod'
-                      : 'Online Payment - Razorpay',
+                    : 'Online Payment',
                 ),
               ],
             ),

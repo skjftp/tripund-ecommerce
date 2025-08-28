@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../utils/theme.dart';
+import '../widgets/cart_icon_button.dart';
+import 'faq_screen.dart';
+import 'terms_screen.dart';
+import 'privacy_screen.dart';
+import 'about_screen.dart';
 
 class HelpSupportScreen extends StatelessWidget {
   const HelpSupportScreen({super.key});
@@ -10,7 +15,11 @@ class HelpSupportScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Help & Support'),
-        backgroundColor: AppTheme.backgroundColor,
+        backgroundColor: AppTheme.primaryColor,
+        foregroundColor: Colors.white,
+        actions: const [
+          CartIconButton(),
+        ],
       ),
       body: ListView(
         padding: const EdgeInsets.all(20),
@@ -21,7 +30,12 @@ class HelpSupportScreen extends StatelessWidget {
             'Find answers to common questions',
             Icons.help_outline,
             Colors.blue,
-            () {},
+            () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const FAQScreen()),
+              );
+            },
           ),
           const SizedBox(height: 16),
           _buildHelpSection(
@@ -48,7 +62,12 @@ class HelpSupportScreen extends StatelessWidget {
             'View our terms of service',
             Icons.description_outlined,
             Colors.purple,
-            () {},
+            () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const TermsScreen()),
+              );
+            },
           ),
           const SizedBox(height: 16),
           _buildHelpSection(
@@ -57,7 +76,12 @@ class HelpSupportScreen extends StatelessWidget {
             'Learn about our privacy practices',
             Icons.privacy_tip_outlined,
             Colors.red,
-            () {},
+            () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const PrivacyScreen()),
+              );
+            },
           ),
           const SizedBox(height: 16),
           _buildHelpSection(
@@ -66,7 +90,12 @@ class HelpSupportScreen extends StatelessWidget {
             'Learn more about us',
             Icons.info_outline,
             Colors.indigo,
-            () {},
+            () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const AboutScreen()),
+              );
+            },
           ),
         ],
       ),

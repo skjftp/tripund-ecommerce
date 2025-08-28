@@ -8,6 +8,7 @@ import '../utils/constants.dart';
 import '../providers/cart_provider.dart';
 import '../providers/wishlist_provider.dart';
 import '../widgets/cart_icon_button.dart';
+import '../widgets/variant_selection_modal.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final Product product;
@@ -295,13 +296,30 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     ),
                   );
                 } else {
-                  cartProvider.addItem(widget.product);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('${widget.product.name} added to cart'),
-                      duration: const Duration(seconds: 1),
-                    ),
-                  );
+                  if (widget.product.hasVariants) {
+                    // Show variant selection modal
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: Colors.transparent,
+                      builder: (context) => VariantSelectionModal(
+                        product: widget.product,
+                      ),
+                    );
+                  } else {
+                    cartProvider.addItem(
+                      widget.product.id,
+                      widget.product.name,
+                      widget.product.displayPrice,
+                      widget.product.images.isNotEmpty ? widget.product.images[0] : '',
+                    );
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('${widget.product.name} added to cart'),
+                        duration: const Duration(seconds: 1),
+                      ),
+                    );
+                  }
                 }
               },
               style: ElevatedButton.styleFrom(
