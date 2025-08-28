@@ -5,6 +5,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import '../providers/auth_provider.dart';
 import '../providers/cart_provider.dart';
 import '../providers/wishlist_provider.dart';
+import '../utils/navigation_helper.dart';
 import '../utils/theme.dart';
 import 'login_screen.dart';
 import 'orders_screen.dart';
@@ -64,7 +65,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           backgroundColor: AppTheme.backgroundColor,
           flexibleSpace: FlexibleSpaceBar(
             title: Text(
-              'Welcome to TRIPUND',
+              'Welcome to Tripund Lifestyle',
               style: TextStyle(
                 color: AppTheme.primaryColor,
                 fontWeight: FontWeight.bold,
@@ -221,74 +222,149 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return CustomScrollView(
       slivers: [
         SliverAppBar(
-          expandedHeight: 140,
+          expandedHeight: 80,
           floating: true,
           pinned: true,
           elevation: 0,
           backgroundColor: AppTheme.primaryColor,
           flexibleSpace: FlexibleSpaceBar(
-            background: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    AppTheme.primaryColor,
-                    AppTheme.secondaryColor,
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
+            title: Text(
+              'My Profile',
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
               ),
-              child: SafeArea(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+            ),
+            centerTitle: true,
+          ),
+        ),
+        // Contact Information Card
+        SliverToBoxAdapter(
+          child: Container(
+            margin: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Contact Information',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.primaryColor,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
                   children: [
-                    const SizedBox(height: 20),
-                    CircleAvatar(
-                      radius: 35,
-                      backgroundColor: Colors.white,
-                      child: user.avatar != null
-                          ? ClipRRect(
-                              borderRadius: BorderRadius.circular(35),
-                              child: Image.network(
-                                user.avatar!,
-                                width: 70,
-                                height: 70,
-                                fit: BoxFit.cover,
-                              ),
-                            )
-                          : Text(
-                              user.name.isNotEmpty ? user.name[0].toUpperCase() : 'U',
-                              style: TextStyle(
-                                fontSize: 32,
-                                fontWeight: FontWeight.bold,
-                                color: AppTheme.primaryColor,
-                              ),
-                            ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      user.name,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primaryColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        Icons.email_outlined,
+                        color: AppTheme.primaryColor,
+                        size: 20,
                       ),
                     ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 30),
-                      child: Text(
-                        user.email,
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          fontSize: 12,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Email',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[600],
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          Text(
+                            user.email,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
-              ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primaryColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        Icons.phone_outlined,
+                        color: AppTheme.primaryColor,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Mobile Number',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[600],
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          user.phone != null && user.phone!.isNotEmpty
+                            ? Text(
+                                user.phone!,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.black87,
+                                ),
+                              )
+                            : TextButton(
+                                onPressed: () {
+                                  _showAddMobileDialog(context, authProvider);
+                                },
+                                style: TextButton.styleFrom(
+                                  padding: EdgeInsets.zero,
+                                  alignment: Alignment.centerLeft,
+                                ),
+                                child: Text(
+                                  'Add mobile number',
+                                  style: TextStyle(
+                                    color: AppTheme.primaryColor,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
         ),
@@ -316,32 +392,52 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       children: [
                         Consumer<CartProvider>(
                           builder: (context, cartProvider, child) {
-                            return _buildStatItem(
-                              context,
-                              'Cart',
-                              cartProvider.itemCount.toString(),
-                              Icons.shopping_cart_outlined,
-                              AppTheme.primaryColor,
+                            return GestureDetector(
+                              onTap: () {
+                                Navigator.of(context).popUntil((route) => route.isFirst);
+                                NavigationHelper.goToCart();
+                              },
+                              child: _buildStatItem(
+                                context,
+                                'Cart',
+                                cartProvider.itemCount.toString(),
+                                Icons.shopping_cart_outlined,
+                                AppTheme.primaryColor,
+                              ),
                             );
                           },
                         ),
                         Consumer<WishlistProvider>(
                           builder: (context, wishlistProvider, child) {
-                            return _buildStatItem(
-                              context,
-                              'Wishlist',
-                              wishlistProvider.itemCount.toString(),
-                              Icons.favorite_outline,
-                              Colors.red,
+                            return GestureDetector(
+                              onTap: () {
+                                Navigator.of(context).popUntil((route) => route.isFirst);
+                                NavigationHelper.goToWishlist();
+                              },
+                              child: _buildStatItem(
+                                context,
+                                'Wishlist',
+                                wishlistProvider.itemCount.toString(),
+                                Icons.favorite_outline,
+                                Colors.red,
+                              ),
                             );
                           },
                         ),
-                        _buildStatItem(
-                          context,
-                          'Orders',
-                          '0',
-                          Icons.receipt_long_outlined,
-                          Colors.green,
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => const OrdersScreen()),
+                            );
+                          },
+                          child: _buildStatItem(
+                            context,
+                            'Orders',
+                            '0',
+                            Icons.receipt_long_outlined,
+                            Colors.green,
+                          ),
                         ),
                       ],
                     ),
@@ -543,7 +639,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
             'Explore our handicraft collection',
             Icons.search,
             AppTheme.primaryColor,
-            () => Navigator.of(context).popUntil((route) => route.isFirst),
+            () {
+              // Navigate directly to categories (shop) screen
+              Navigator.of(context).popUntil((route) => route.isFirst);
+              NavigationHelper.goToCategories();
+            },
           ),
           _buildDivider(),
           _buildMenuItem(
@@ -552,9 +652,108 @@ class _ProfileScreenState extends State<ProfileScreen> {
             'Get help and contact us',
             Icons.help_outline,
             Colors.purple,
-            () => {},
+            () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const HelpSupportScreen()),
+              );
+            },
           ),
         ],
+      ),
+    );
+  }
+
+  void _showAddMobileDialog(BuildContext context, AuthProvider authProvider) {
+    final TextEditingController controller = TextEditingController();
+    String? errorText;
+    
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            title: Text(
+              'Add Mobile Number',
+              style: TextStyle(color: AppTheme.primaryColor),
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: controller,
+                  keyboardType: TextInputType.phone,
+                  maxLength: 10,
+                  decoration: InputDecoration(
+                    labelText: 'Mobile Number',
+                    prefixText: '+91 ',
+                    errorText: errorText,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: AppTheme.primaryColor),
+                    ),
+                  ),
+                  onChanged: (value) {
+                    if (errorText != null) {
+                      setState(() {
+                        errorText = null;
+                      });
+                    }
+                  },
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  final mobile = controller.text.trim();
+                  if (mobile.isEmpty) {
+                    setState(() {
+                      errorText = 'Mobile number is required';
+                    });
+                    return;
+                  }
+                  if (mobile.length != 10) {
+                    setState(() {
+                      errorText = 'Mobile number must be 10 digits';
+                    });
+                    return;
+                  }
+                  if (!RegExp(r'^[0-9]+$').hasMatch(mobile)) {
+                    setState(() {
+                      errorText = 'Mobile number must contain only digits';
+                    });
+                    return;
+                  }
+                  
+                  // Update user profile with mobile number
+                  // This would typically call an API to update the user profile
+                  // For now, we'll just close the dialog
+                  Navigator.of(ctx).pop();
+                  
+                  // Show success message
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Mobile number will be updated soon'),
+                      backgroundColor: AppTheme.primaryColor,
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primaryColor,
+                ),
+                child: const Text('Save', style: TextStyle(color: Colors.white)),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

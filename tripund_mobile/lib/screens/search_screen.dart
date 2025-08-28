@@ -36,14 +36,63 @@ class _SearchScreenState extends State<SearchScreen> {
     super.dispose();
   }
 
-  void _performSearch(String query) {
+  void _performSearch(String query, {bool isCategory = false}) {
     setState(() {
       _searchQuery = query;
       _isSearching = query.isNotEmpty;
     });
     if (query.isNotEmpty) {
-      context.read<ProductProvider>().searchProducts(query);
+      if (isCategory) {
+        // Search by category slug
+        context.read<ProductProvider>().selectCategory(query.toLowerCase().replaceAll(' ', '-'));
+      } else {
+        // Regular text search
+        context.read<ProductProvider>().searchProducts(query);
+      }
     }
+  }
+
+  List<Widget> _buildDynamicPopularSearches() {
+    final provider = context.read<ProductProvider>();
+    final products = provider.products;
+    
+    // Extract unique tags from all products
+    Set<String> allTags = {};
+    for (var product in products) {
+      if (product.tags != null) {
+        allTags.addAll(product.tags!);
+      }
+    }
+    
+    // Also extract popular subcategories
+    Set<String> popularSubcategories = {};
+    for (var product in products) {
+      if (product.subcategories != null) {
+        popularSubcategories.addAll(product.subcategories!);
+      }
+    }
+    
+    // Combine and limit to most relevant terms
+    List<String> popularTerms = [
+      ...allTags.take(4),
+      ...popularSubcategories.take(4),
+    ].toList();
+    
+    // Fallback to hardcoded terms if no dynamic terms found
+    if (popularTerms.isEmpty) {
+      popularTerms = [
+        'Wall Hangings',
+        'Brass Idols', 
+        'Paintings',
+        'Torans',
+        'Diyas',
+        'Gift Sets',
+        'Storage Boxes',
+        'Lanterns',
+      ];
+    }
+    
+    return popularTerms.take(8).map((term) => _buildSuggestionChip(term)).toList();
   }
 
   @override
@@ -105,16 +154,7 @@ class _SearchScreenState extends State<SearchScreen> {
             Wrap(
               spacing: 12,
               runSpacing: 12,
-              children: [
-                _buildSuggestionChip('Wall Hangings'),
-                _buildSuggestionChip('Brass Idols'),
-                _buildSuggestionChip('Paintings'),
-                _buildSuggestionChip('Torans'),
-                _buildSuggestionChip('Diyas'),
-                _buildSuggestionChip('Gift Sets'),
-                _buildSuggestionChip('Storage Boxes'),
-                _buildSuggestionChip('Lanterns'),
-              ],
+              children: _buildDynamicPopularSearches(),
             ),
             const SizedBox(height: 32),
             Text(
@@ -134,8 +174,13 @@ class _SearchScreenState extends State<SearchScreen> {
                     return ActionChip(
                       label: Text(category.name),
                       onPressed: () {
-                        _searchController.text = category.name;
-                        _performSearch(category.name);
+                        // Don't update the search controller for category selection
+                        // Just perform the search with the category slug
+                        setState(() {
+                          _searchQuery = category.name;
+                          _isSearching = true;
+                        });
+                        context.read<ProductProvider>().selectCategory(category.slug);
                       },
                       backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
                       labelStyle: TextStyle(color: AppTheme.primaryColor),
@@ -155,7 +200,9 @@ class _SearchScreenState extends State<SearchScreen> {
         final products = provider.products.where((product) {
           final query = _searchQuery.toLowerCase();
           return product.name.toLowerCase().contains(query) ||
-              product.description.toLowerCase().contains(query);
+              product.description.toLowerCase().contains(query) ||
+              (product.tags != null && product.tags!.any((tag) => tag.toLowerCase().contains(query))) ||
+              (product.subcategories != null && product.subcategories!.any((sub) => sub.toLowerCase().contains(query)));
         }).toList();
 
         if (provider.isLoading) {

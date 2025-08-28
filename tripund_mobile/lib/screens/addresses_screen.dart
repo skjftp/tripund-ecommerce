@@ -1,15 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
-import 'dart:convert';
 import '../utils/theme.dart';
 import '../utils/indian_states.dart';
 import '../models/address.dart';
-import '../models/user.dart';
 import '../providers/auth_provider.dart';
-import '../services/api_service.dart';
+import '../providers/address_provider.dart';
 import '../widgets/cart_icon_button.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
@@ -21,10 +18,6 @@ class AddressesScreen extends StatefulWidget {
 }
 
 class _AddressesScreenState extends State<AddressesScreen> {
-  List<Address> _addresses = [];
-  final ApiService _apiService = ApiService();
-  bool _isLoading = true;
-  
   @override
   void initState() {
     super.initState();
@@ -33,110 +26,76 @@ class _AddressesScreenState extends State<AddressesScreen> {
   
   Future<void> _loadAddresses() async {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final addressProvider = Provider.of<AddressProvider>(context, listen: false);
     
     if (authProvider.isAuthenticated && authProvider.user != null) {
-      // Load addresses from user profile
-      setState(() {
-        _addresses = authProvider.user!.addresses ?? [];
-        _isLoading = false;
-      });
-    } else {
-      // For guest users, load from SharedPreferences
-      final prefs = await SharedPreferences.getInstance();
-      final addressesJson = prefs.getString('user_addresses');
-      if (addressesJson != null) {
-        final List<dynamic> decoded = json.decode(addressesJson);
-        setState(() {
-          _addresses = decoded.map((json) => Address.fromJson(json)).toList();
-        });
-      }
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }
-  
-  Future<void> _saveAddresses() async {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    
-    if (authProvider.isAuthenticated) {
-      // Save to database via API
-      final success = await _apiService.updateAddresses(
-        _addresses.map((a) => a.toJson()).toList()
-      );
-      if (!success) {
-        Fluttertoast.showToast(
-          msg: "Failed to save addresses",
-          backgroundColor: Colors.red,
-        );
-      } else {
-        // Update local user data
-        authProvider.updateUserAddresses(_addresses);
-        // Refresh user profile from backend to ensure sync
-        await authProvider.refreshUserProfile();
-      }
-    } else {
-      // For guest users, save to SharedPreferences
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('user_addresses', 
-        json.encode(_addresses.map((a) => a.toJson()).toList()));
+      // Initialize address provider with user ID and load from Firestore
+      await addressProvider.initializeForUser(authProvider.user!.id);
     }
   }
 
-  Future<void> _setDefaultAddress(int index) async {
-    setState(() {
-      for (int i = 0; i < _addresses.length; i++) {
-        _addresses[i] = _addresses[i].copyWith(isDefault: i == index);
-      }
-    });
-    await _saveAddresses();
-    Fluttertoast.showToast(
-      msg: "Default address updated",
-      backgroundColor: Colors.green,
-    );
+  Future<void> _setDefaultAddress(String addressId) async {
+    final addressProvider = Provider.of<AddressProvider>(context, listen: false);
+    final success = await addressProvider.setDefaultAddress(addressId);
+    if (success) {
+      Fluttertoast.showToast(
+        msg: "Default address updated",
+        backgroundColor: Colors.green,
+      );
+    } else {
+      Fluttertoast.showToast(
+        msg: "Failed to update default address",
+        backgroundColor: Colors.red,
+      );
+    }
   }
   
-  void _addAddress(Address address) {
-    setState(() {
-      // If this is the first address, make it default
-      if (_addresses.isEmpty) {
-        _addresses.add(address.copyWith(isDefault: true));
-      } else {
-        _addresses.add(address);
-      }
-    });
-    _saveAddresses();
-    Fluttertoast.showToast(
-      msg: "Address added successfully",
-      backgroundColor: Colors.green,
-    );
+  Future<void> _addAddress(Address address) async {
+    final addressProvider = Provider.of<AddressProvider>(context, listen: false);
+    final success = await addressProvider.addAddress(address);
+    if (success) {
+      Fluttertoast.showToast(
+        msg: "Address added successfully",
+        backgroundColor: Colors.green,
+      );
+    } else {
+      Fluttertoast.showToast(
+        msg: "Failed to add address",
+        backgroundColor: Colors.red,
+      );
+    }
   }
   
-  void _updateAddress(int index, Address address) {
-    setState(() {
-      _addresses[index] = address;
-    });
-    _saveAddresses();
-    Fluttertoast.showToast(
-      msg: "Address updated successfully",
-      backgroundColor: Colors.green,
-    );
+  Future<void> _updateAddress(String addressId, Address address) async {
+    final addressProvider = Provider.of<AddressProvider>(context, listen: false);
+    final success = await addressProvider.updateAddress(address);
+    if (success) {
+      Fluttertoast.showToast(
+        msg: "Address updated successfully",
+        backgroundColor: Colors.green,
+      );
+    } else {
+      Fluttertoast.showToast(
+        msg: "Failed to update address",
+        backgroundColor: Colors.red,
+      );
+    }
   }
   
-  void _deleteAddress(int index) {
-    final wasDefault = _addresses[index].isDefault;
-    setState(() {
-      _addresses.removeAt(index);
-      // If deleted address was default, make first address default
-      if (wasDefault && _addresses.isNotEmpty) {
-        _addresses[0] = _addresses[0].copyWith(isDefault: true);
-      }
-    });
-    _saveAddresses();
-    Fluttertoast.showToast(
-      msg: "Address deleted",
-      backgroundColor: Colors.red,
-    );
+  Future<void> _deleteAddress(String addressId) async {
+    final addressProvider = Provider.of<AddressProvider>(context, listen: false);
+    final success = await addressProvider.deleteAddress(addressId);
+    if (success) {
+      Fluttertoast.showToast(
+        msg: "Address deleted",
+        backgroundColor: Colors.red,
+      );
+    } else {
+      Fluttertoast.showToast(
+        msg: "Failed to delete address",
+        backgroundColor: Colors.red,
+      );
+    }
   }
 
   Future<void> _getCurrentLocation(
@@ -226,9 +185,10 @@ class _AddressesScreenState extends State<AddressesScreen> {
     }
   }
   
-  void _showAddAddressDialog({int? editIndex}) {
-    final isEdit = editIndex != null;
-    final address = isEdit ? _addresses[editIndex] : null;
+  void _showAddAddressDialog({String? editAddressId}) {
+    final addressProvider = Provider.of<AddressProvider>(context, listen: false);
+    final isEdit = editAddressId != null;
+    final address = isEdit ? addressProvider.getAddressById(editAddressId) : null;
     
     final nameController = TextEditingController(text: address?.name ?? '');
     final phoneController = TextEditingController(text: address?.phone ?? '');
@@ -416,7 +376,7 @@ class _AddressesScreenState extends State<AddressesScreen> {
                     );
                     
                     if (isEdit) {
-                      _updateAddress(editIndex, newAddress);
+                      _updateAddress(editAddressId!, newAddress);
                     } else {
                       _addAddress(newAddress);
                     }
@@ -438,7 +398,91 @@ class _AddressesScreenState extends State<AddressesScreen> {
   
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    final authProvider = Provider.of<AuthProvider>(context);
+    
+    // Show login prompt if not authenticated
+    if (!authProvider.isAuthenticated) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text(
+            'My Addresses',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: AppTheme.primaryColor,
+          foregroundColor: Colors.white,
+          iconTheme: const IconThemeData(color: Colors.white),
+        ),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.lock_outline,
+                size: 64,
+                color: Colors.grey[400],
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Login Required',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Please login to manage your addresses',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey,
+                ),
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pushReplacementNamed(context, '/login');
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primaryColor,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32,
+                    vertical: 12,
+                  ),
+                ),
+                child: const Text(
+                  'Login',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    
+    return Consumer<AddressProvider>(
+      builder: (context, addressProvider, child) {
+        final addresses = addressProvider.addresses;
+        final isLoading = addressProvider.isLoading;
+        
+        if (isLoading) {
+          return Scaffold(
+            appBar: AppBar(
+              title: const Text(
+                'My Addresses',
+                style: TextStyle(color: Colors.white),
+              ),
+              backgroundColor: AppTheme.primaryColor,
+              foregroundColor: Colors.white,
+              iconTheme: const IconThemeData(color: Colors.white),
+            ),
+            body: const Center(
+              child: CircularProgressIndicator(),
+            ),
+          );
+        }
+        
+        return Scaffold(
       appBar: AppBar(
         title: const Text(
           'My Addresses',
@@ -451,7 +495,7 @@ class _AddressesScreenState extends State<AddressesScreen> {
           CartIconButton(iconColor: Colors.white),
         ],
       ),
-      body: _addresses.isEmpty 
+      body: addresses.isEmpty 
         ? Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -482,9 +526,9 @@ class _AddressesScreenState extends State<AddressesScreen> {
           )
         : ListView.builder(
             padding: const EdgeInsets.all(16),
-            itemCount: _addresses.length,
+            itemCount: addresses.length,
             itemBuilder: (context, index) {
-              final address = _addresses[index];
+              final address = addresses[index];
               return Card(
                 elevation: 2,
                 margin: const EdgeInsets.only(bottom: 12),
@@ -538,7 +582,7 @@ class _AddressesScreenState extends State<AddressesScreen> {
                   trailing: PopupMenuButton<String>(
                     onSelected: (value) {
                       if (value == 'edit') {
-                        _showAddAddressDialog(editIndex: index);
+                        _showAddAddressDialog(editAddressId: address.id);
                       } else if (value == 'delete') {
                         showDialog(
                           context: context,
@@ -552,7 +596,7 @@ class _AddressesScreenState extends State<AddressesScreen> {
                               ),
                               TextButton(
                                 onPressed: () {
-                                  _deleteAddress(index);
+                                  _deleteAddress(address.id);
                                   Navigator.pop(context);
                                 },
                                 child: const Text('Delete', style: TextStyle(color: Colors.red)),
@@ -561,7 +605,7 @@ class _AddressesScreenState extends State<AddressesScreen> {
                           ),
                         );
                       } else if (value == 'default') {
-                        _setDefaultAddress(index);
+                        _setDefaultAddress(address.id);
                       }
                     },
                     itemBuilder: (context) => [
@@ -589,6 +633,8 @@ class _AddressesScreenState extends State<AddressesScreen> {
         backgroundColor: AppTheme.primaryColor,
         child: const Icon(Icons.add, color: Colors.white),
       ),
+        );
+      },
     );
   }
 }

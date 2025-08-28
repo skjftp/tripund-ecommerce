@@ -222,16 +222,39 @@ func (h *AuthHandler) GetProfile(c *gin.Context) {
 func (h *AuthHandler) UpdateProfile(c *gin.Context) {
 	userID := c.GetString("user_id")
 	
-	var profile models.UserProfile
-	if err := c.ShouldBindJSON(&profile); err != nil {
+	// Check if updating addresses
+	var requestBody map[string]interface{}
+	if err := c.ShouldBindJSON(&requestBody); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	_, err := h.db.Client.Collection("users").Doc(userID).Update(h.db.Context, []firestore.Update{
-		{Path: "profile", Value: profile},
+	updates := []firestore.Update{
 		{Path: "updated_at", Value: time.Now()},
-	})
+	}
+
+	// Handle addresses update
+	if addresses, ok := requestBody["addresses"]; ok {
+		updates = append(updates, firestore.Update{Path: "addresses", Value: addresses})
+	}
+
+	// Handle profile update
+	if profile, ok := requestBody["profile"]; ok {
+		updates = append(updates, firestore.Update{Path: "profile", Value: profile})
+	}
+
+	// Handle other fields if present
+	if firstName, ok := requestBody["first_name"]; ok {
+		updates = append(updates, firestore.Update{Path: "profile.first_name", Value: firstName})
+	}
+	if lastName, ok := requestBody["last_name"]; ok {
+		updates = append(updates, firestore.Update{Path: "profile.last_name", Value: lastName})
+	}
+	if phone, ok := requestBody["phone"]; ok {
+		updates = append(updates, firestore.Update{Path: "profile.phone", Value: phone})
+	}
+
+	_, err := h.db.Client.Collection("users").Doc(userID).Update(h.db.Context, updates)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update profile"})

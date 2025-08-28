@@ -58,12 +58,14 @@ class ProductProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
+      final typeToUse = type ?? _selectedType;
+      print('🚀 Provider: Calling API with category: $_selectedCategory, type: $typeToUse');
       final products = await _apiService.getProducts(
         limit: _limit,
         offset: _currentOffset,
         category: _selectedCategory,
         search: _searchQuery,
-        type: type ?? _selectedType,
+        type: typeToUse,
       );
       
       print('📊 Provider: Received ${products.length} products from API');
@@ -84,6 +86,7 @@ class ProductProvider extends ChangeNotifier {
       _error = 'Failed to load products: $e';
     } finally {
       _isLoading = false;
+      print('🔔 Provider: Calling notifyListeners with ${_products.length} products');
       notifyListeners();
     }
   }
@@ -119,10 +122,11 @@ class ProductProvider extends ChangeNotifier {
   Future<void> selectCategory(String? categoryId, {String? type}) async {
     if (_selectedCategory == categoryId && _selectedType == type) return;
     
-    print('🔍 Selecting category: $categoryId, type: $type');
+    print('🔍 Provider: Selecting category: $categoryId, type: $type');
     _selectedCategory = categoryId;
     _selectedType = type;
     _searchQuery = null;
+    print('🔍 Provider: About to load products with type: $type');
     await loadProducts(refresh: true, type: type);
   }
 

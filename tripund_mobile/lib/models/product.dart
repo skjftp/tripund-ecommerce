@@ -55,6 +55,7 @@ class Product {
   final double? salePrice;
   final List<String> images;
   final List<String> categories;
+  final List<String>? subcategories;
   final List<String>? tags;
   final String sku;
   final int stock;
@@ -75,6 +76,7 @@ class Product {
     this.salePrice,
     required this.images,
     required this.categories,
+    this.subcategories,
     this.tags,
     required this.sku,
     required this.stock,
@@ -124,6 +126,7 @@ class Product {
       salePrice: json['sale_price'] != null ? parsePrice(json['sale_price']) : null,
       images: List<String>.from(json['images'] ?? []),
       categories: List<String>.from(json['categories'] ?? []),
+      subcategories: json['subcategories'] != null ? List<String>.from(json['subcategories']) : null,
       tags: json['tags'] != null ? List<String>.from(json['tags']) : null,
       sku: json['sku'] ?? '',
       stock: json['stock_quantity'] ?? json['stock'] ?? 0,

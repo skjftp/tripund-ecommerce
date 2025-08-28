@@ -8,11 +8,15 @@ import '../utils/theme.dart';
 import '../widgets/parallax_card.dart';
 import '../widgets/cart_icon_button.dart';
 import '../providers/product_provider.dart';
+import '../providers/notification_provider.dart';
+import '../providers/auth_provider.dart';
+import '../providers/address_provider.dart';
 import '../models/category.dart';
 import 'product_detail_screen.dart';
 import 'category_products_screen.dart';
 import 'all_categories_screen.dart';
 import 'all_products_screen.dart';
+import 'notifications_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -104,30 +108,62 @@ class _HomeScreenState extends State<HomeScreen>
             ),
             actions: [
               const CartIconButton(iconColor: Colors.black),
-              ScaleTransition(
-                scale: _headerAnimation,
-                child: IconButton(
-                  icon: Stack(
-                    children: [
-                      const Icon(Icons.notifications_outlined),
-                      Positioned(
-                        right: 0,
-                        top: 0,
-                        child: Container(
-                          width: 8,
-                          height: 8,
-                          decoration: const BoxDecoration(
-                            color: AppTheme.errorColor,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
+              Consumer<NotificationProvider>(
+                builder: (context, notificationProvider, child) {
+                  // Initialize notifications and addresses for user if authenticated
+                  final authProvider = context.read<AuthProvider>();
+                  final addressProvider = context.read<AddressProvider>();
+                  if (authProvider.isAuthenticated && authProvider.user != null) {
+                    notificationProvider.initializeForUser(authProvider.user!.id);
+                    addressProvider.initializeForUser(authProvider.user!.id);
+                  }
+                  
+                  return ScaleTransition(
+                    scale: _headerAnimation,
+                    child: IconButton(
+                      icon: Stack(
+                        children: [
+                          const Icon(Icons.notifications_outlined),
+                          if (notificationProvider.unreadCount > 0)
+                            Positioned(
+                              right: 0,
+                              top: 0,
+                              child: Container(
+                                padding: const EdgeInsets.all(2),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.errorColor,
+                                  shape: BoxShape.circle,
+                                ),
+                                constraints: const BoxConstraints(
+                                  minWidth: 16,
+                                  minHeight: 16,
+                                ),
+                                child: Text(
+                                  notificationProvider.unreadCount > 9 
+                                    ? '9+' 
+                                    : notificationProvider.unreadCount.toString(),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
-                    ],
-                  ),
-                  onPressed: () {
-                    Navigator.pushNamed(context, '/notifications');
-                  },
-                ),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const NotificationsScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                  );
+                },
               ),
               const SizedBox(width: 8),
             ],

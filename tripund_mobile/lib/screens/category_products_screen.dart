@@ -22,6 +22,7 @@ class CategoryProductsScreen extends StatefulWidget {
 
 class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
   String? _selectedSubcategoryId;
+  String? _selectedSubcategoryName;
   
   @override
   void initState() {
@@ -49,10 +50,10 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
           var products = provider.products;
           
           // Apply subcategory filter if selected
-          if (_selectedSubcategoryId != null) {
+          if (_selectedSubcategoryName != null) {
             products = products.where((product) {
-              // Check if product's categories contains the selected subcategory
-              return product.categories?.contains(_selectedSubcategoryId) ?? false;
+              return product.subcategories != null && 
+                     product.subcategories!.contains(_selectedSubcategoryName);
             }).toList();
           }
           
@@ -101,7 +102,7 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
                       itemBuilder: (context, index) {
                         if (index == 0) {
                           // 'All' option
-                          final isSelected = _selectedSubcategoryId == null;
+                          final isSelected = _selectedSubcategoryName == null;
                           return Padding(
                             padding: const EdgeInsets.only(right: 8),
                             child: FilterChip(
@@ -110,6 +111,7 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
                               onSelected: (selected) {
                                 setState(() {
                                   _selectedSubcategoryId = null;
+                                  _selectedSubcategoryName = null;
                                 });
                               },
                               selectedColor: AppTheme.primaryColor.withOpacity(0.2),
@@ -122,7 +124,7 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
                           );
                         }
                         final subcategory = widget.category.subcategories![index - 1];
-                        final isSelected = _selectedSubcategoryId == subcategory.id;
+                        final isSelected = _selectedSubcategoryName == subcategory.name;
                         return Padding(
                           padding: const EdgeInsets.only(right: 8),
                           child: FilterChip(
@@ -131,6 +133,7 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
                             onSelected: (selected) {
                               setState(() {
                                 _selectedSubcategoryId = selected ? subcategory.id : null;
+                                _selectedSubcategoryName = selected ? subcategory.name : null;
                               });
                             },
                             selectedColor: AppTheme.primaryColor.withOpacity(0.2),

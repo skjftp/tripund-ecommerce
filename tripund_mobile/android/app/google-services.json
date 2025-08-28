@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "665685012221",
+    "firebase_url": "https://tripund-ecommerce-1755860933.firebaseio.com",
+    "project_id": "tripund-ecommerce-1755860933",
+    "storage_bucket": "tripund-ecommerce-1755860933.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:665685012221:android:your_app_id",
+        "android_client_info": {
+          "package_name": "com.tripundlifestyle.tripund_mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD_your_api_key_here"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

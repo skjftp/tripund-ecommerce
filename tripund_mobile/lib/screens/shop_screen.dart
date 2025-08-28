@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import 'dart:math' as Math;
 import '../providers/product_provider.dart';
 import '../widgets/parallax_card.dart';
 import '../widgets/cart_icon_button.dart';
@@ -31,6 +32,7 @@ class _ShopScreenState extends State<ShopScreen> {
   @override
   void initState() {
     super.initState();
+    print('🏪 Shop screen initState called');
     // Load all products
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadFilteredProducts();
@@ -38,14 +40,11 @@ class _ShopScreenState extends State<ShopScreen> {
   }
   
   Future<void> _loadFilteredProducts() async {
-    print('🎯 Shop: Loading filtered products - Category: $_selectedCategorySlug, Subcategory: $_selectedSubcategoryName');
+    print('🎯 Shop: Loading filtered products - Category: $_selectedCategorySlug');
     final provider = context.read<ProductProvider>();
     if (_selectedCategorySlug != null) {
-      // Use API filtering with category slug and type for subcategory
-      await provider.selectCategory(
-        _selectedCategorySlug, 
-        type: _selectedSubcategoryName?.toLowerCase().replaceAll(' ', '-')
-      );
+      // Only filter by category via API, subcategory will be filtered locally
+      await provider.selectCategory(_selectedCategorySlug);
     } else if (_searchQuery.isNotEmpty) {
       await provider.searchProducts(_searchQuery);
     } else {
@@ -55,11 +54,10 @@ class _ShopScreenState extends State<ShopScreen> {
 
   @override
   void dispose() {
+    print('🏪 Shop screen dispose called');
     _searchController.dispose();
     super.dispose();
   }
-
-  // Removed _getFilteredProducts - now using API filtering from provider directly
 
   void _resetFilters() {
     setState(() {
@@ -77,6 +75,7 @@ class _ShopScreenState extends State<ShopScreen> {
 
   @override
   Widget build(BuildContext context) {
+    print('🏪 Shop screen build() called');
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
       appBar: AppBar(
@@ -140,283 +139,39 @@ class _ShopScreenState extends State<ShopScreen> {
             ),
           ),
           
-          // Filters Section
-          if (_showFilters)
-            Container(
-              color: Colors.white,
-              child: Column(
-                children: [
-                  const Divider(height: 1),
-                  // Category Filter
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    child: Consumer<ProductProvider>(
-                      builder: (context, provider, child) {
-                        final categories = provider.categories;
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Category',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            SizedBox(
-                              height: 35,
-                              child: ListView.builder(
-                                scrollDirection: Axis.horizontal,
-                                itemCount: categories.length + 1, // +1 for 'All' option
-                                itemBuilder: (context, index) {
-                                  if (index == 0) {
-                                    // 'All' option
-                                    final isSelected = _selectedCategoryId == null;
-                                    return Padding(
-                                      padding: const EdgeInsets.only(right: 8),
-                                      child: FilterChip(
-                                        label: const Text('All'),
-                                        selected: isSelected,
-                                        onSelected: (selected) {
-                                          setState(() {
-                                            _selectedCategoryId = null;
-                                            _selectedCategorySlug = null;
-                                            _selectedSubcategoryId = null;
-                                            _selectedSubcategoryName = null;
-                                          });
-                                          _loadFilteredProducts();
-                                        },
-                                        selectedColor: AppTheme.primaryColor.withOpacity(0.2),
-                                        checkmarkColor: AppTheme.primaryColor,
-                                        labelStyle: TextStyle(
-                                          color: isSelected ? AppTheme.primaryColor : Colors.black87,
-                                          fontSize: 12,
-                                        ),
-                                      ),
-                                    );
-                                  }
-                                  final category = categories[index - 1];
-                                  final isSelected = _selectedCategoryId == category.id;
-                                  return Padding(
-                                    padding: const EdgeInsets.only(right: 8),
-                                    child: FilterChip(
-                                      label: Text(category.name),
-                                      selected: isSelected,
-                                      onSelected: (selected) {
-                                        setState(() {
-                                          _selectedCategoryId = selected ? category.id : null;
-                                          _selectedSubcategoryId = null; // Reset subcategory
-                                        });
-                                      },
-                                      selectedColor: AppTheme.primaryColor.withOpacity(0.2),
-                                      checkmarkColor: AppTheme.primaryColor,
-                                      labelStyle: TextStyle(
-                                        color: isSelected ? AppTheme.primaryColor : Colors.black87,
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
-                          ],
-                        );
-                      },
-                    ),
-                  ),
-                  
-                  // Subcategory Filter (shows only when category is selected)
-                  if (_selectedCategoryId != null)
-                    Consumer<ProductProvider>(
-                      builder: (context, provider, child) {
-                        final selectedCategory = provider.categories.firstWhere(
-                          (cat) => cat.id == _selectedCategoryId,
-                          orElse: () => provider.categories.first,
-                        );
-                        
-                        if (selectedCategory.subcategories == null || 
-                            selectedCategory.subcategories!.isEmpty) {
-                          return const SizedBox.shrink();
-                        }
-                        
-                        return Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Subcategory',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              SizedBox(
-                                height: 40,
-                                child: ListView.builder(
-                                  scrollDirection: Axis.horizontal,
-                                  itemCount: selectedCategory.subcategories!.length + 1,
-                                  itemBuilder: (context, index) {
-                                    if (index == 0) {
-                                      final isSelected = _selectedSubcategoryId == null;
-                                      return Padding(
-                                        padding: const EdgeInsets.only(right: 8),
-                                        child: FilterChip(
-                                          label: const Text('All'),
-                                          selected: isSelected,
-                                          onSelected: (selected) {
-                                            setState(() {
-                                              _selectedSubcategoryId = null;
-                                              _selectedSubcategoryName = null;
-                                            });
-                                            _loadFilteredProducts();
-                                          },
-                                          selectedColor: AppTheme.primaryColor.withOpacity(0.2),
-                                          checkmarkColor: AppTheme.primaryColor,
-                                          labelStyle: TextStyle(
-                                            color: isSelected ? AppTheme.primaryColor : Colors.black87,
-                                            fontSize: 12,
-                                          ),
-                                        ),
-                                      );
-                                    }
-                                    final subcategory = selectedCategory.subcategories![index - 1];
-                                    final isSelected = _selectedSubcategoryId == subcategory.id;
-                                    return Padding(
-                                      padding: const EdgeInsets.only(right: 8),
-                                      child: FilterChip(
-                                        label: Text(subcategory.name),
-                                        selected: isSelected,
-                                        onSelected: (selected) {
-                                          setState(() {
-                                            _selectedSubcategoryId = selected ? subcategory.id : null;
-                                            _selectedSubcategoryName = selected ? subcategory.name : null;
-                                          });
-                                          _loadFilteredProducts();
-                                        },
-                                        selectedColor: AppTheme.primaryColor.withOpacity(0.2),
-                                        checkmarkColor: AppTheme.primaryColor,
-                                        labelStyle: TextStyle(
-                                          color: isSelected ? AppTheme.primaryColor : Colors.black87,
-                                          fontSize: 12,
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                  
-                  // Price Range Filter
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text(
-                              'Price Range',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                              ),
-                            ),
-                            Text(
-                              '${Constants.currency}${_priceRange.start.toInt()} - ${Constants.currency}${_priceRange.end.toInt()}',
-                              style: TextStyle(
-                                color: AppTheme.primaryColor,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                        RangeSlider(
-                          values: _priceRange,
-                          min: _minPrice,
-                          max: _maxPrice,
-                          activeColor: AppTheme.primaryColor,
-                          inactiveColor: Colors.grey[300],
-                          onChanged: (values) {
-                            setState(() {
-                              _priceRange = values;
-                            });
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                  
-                  // Sort Options
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Sort By',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        SizedBox(
-                          height: 35,
-                          child: ListView(
-                            scrollDirection: Axis.horizontal,
-                            children: [
-                              _buildSortChip('newest', 'Newest'),
-                              _buildSortChip('price_low', 'Price: Low to High'),
-                              _buildSortChip('price_high', 'Price: High to Low'),
-                              _buildSortChip('name', 'Name: A to Z'),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  
-                  // Reset Filters Button
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton(
-                        onPressed: _resetFilters,
-                        style: OutlinedButton.styleFrom(
-                          side: BorderSide(color: AppTheme.primaryColor),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        child: Text(
-                          'Reset Filters',
-                          style: TextStyle(color: AppTheme.primaryColor),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                ],
-              ),
-            ),
+          // Filters Section - Collapsible with Animation
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            height: _showFilters ? null : 0,
+            child: _showFilters 
+              ? SingleChildScrollView(
+                  child: _buildFiltersSection(),
+                )
+              : const SizedBox.shrink(),
+          ),
           
           // Products Grid
           Expanded(
             child: Consumer<ProductProvider>(
               builder: (context, provider, child) {
-                // Use provider's products which are already filtered by API
+                print('🏪 Consumer builder called - subcategory: $_selectedSubcategoryName');
+                // Get products from provider (filtered by category via API)
                 var products = provider.products;
-                print('🛍️ Shop: Displaying ${products.length} products from provider');
+                
+                // Apply local subcategory filter if selected
+                if (_selectedSubcategoryName != null) {
+                  print('🛍️ Shop: About to filter for subcategory: $_selectedSubcategoryName');
+                  print('🛍️ Shop: Original product count: ${products.length}');
+                  
+                  products = products.where((product) {
+                    final hasSubcat = product.subcategories != null && 
+                                    product.subcategories!.contains(_selectedSubcategoryName);
+                    return hasSubcat;
+                  }).toList();
+                  print('🛍️ Shop: Filtered to ${products.length} products for subcategory: $_selectedSubcategoryName');
+                } else {
+                  print('🛍️ Shop: Showing all ${products.length} products in category');
+                }
                 
                 // Apply local price range filter
                 if (_priceRange.start > 0 || _priceRange.end < 10000) {
@@ -528,6 +283,281 @@ class _ShopScreenState extends State<ShopScreen> {
     );
   }
   
+  Widget _buildFiltersSection() {
+    return Container(
+      color: Colors.white,
+      child: Column(
+        children: [
+          const Divider(height: 1),
+          // Category Filter
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Consumer<ProductProvider>(
+              builder: (context, provider, child) {
+                final categories = provider.categories;
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Category',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      height: 35,
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: categories.length + 1, // +1 for 'All' option
+                        itemBuilder: (context, index) {
+                          if (index == 0) {
+                            // 'All' option
+                            final isSelected = _selectedCategoryId == null;
+                            return Padding(
+                              padding: const EdgeInsets.only(right: 8),
+                              child: FilterChip(
+                                label: const Text('All'),
+                                selected: isSelected,
+                                onSelected: (selected) {
+                                  setState(() {
+                                    _selectedCategoryId = null;
+                                    _selectedCategorySlug = null;
+                                    _selectedSubcategoryId = null;
+                                    _selectedSubcategoryName = null;
+                                  });
+                                  _loadFilteredProducts();
+                                },
+                                selectedColor: AppTheme.primaryColor.withOpacity(0.2),
+                                checkmarkColor: AppTheme.primaryColor,
+                                labelStyle: TextStyle(
+                                  color: isSelected ? AppTheme.primaryColor : Colors.black87,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            );
+                          }
+                          final category = categories[index - 1];
+                          final isSelected = _selectedCategoryId == category.id;
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: FilterChip(
+                              label: Text(category.name),
+                              selected: isSelected,
+                              onSelected: (selected) {
+                                setState(() {
+                                  _selectedCategoryId = selected ? category.id : null;
+                                  _selectedCategorySlug = selected ? category.slug : null;
+                                  _selectedSubcategoryId = null; // Reset subcategory
+                                  _selectedSubcategoryName = null;
+                                });
+                                _loadFilteredProducts();
+                              },
+                              selectedColor: AppTheme.primaryColor.withOpacity(0.2),
+                              checkmarkColor: AppTheme.primaryColor,
+                              labelStyle: TextStyle(
+                                color: isSelected ? AppTheme.primaryColor : Colors.black87,
+                                fontSize: 12,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+          
+          // Subcategory Filter (shows only when category is selected)
+          if (_selectedCategoryId != null)
+            Consumer<ProductProvider>(
+              builder: (context, provider, child) {
+                final selectedCategory = provider.categories.firstWhere(
+                  (cat) => cat.id == _selectedCategoryId,
+                  orElse: () => provider.categories.first,
+                );
+                
+                if (selectedCategory.subcategories == null || 
+                    selectedCategory.subcategories!.isEmpty) {
+                  return const SizedBox.shrink();
+                }
+                
+                return Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Subcategory',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        height: 40,
+                        child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: selectedCategory.subcategories!.length + 1,
+                          itemBuilder: (context, index) {
+                            if (index == 0) {
+                              final isSelected = _selectedSubcategoryId == null;
+                              return Padding(
+                                padding: const EdgeInsets.only(right: 8),
+                                child: FilterChip(
+                                  label: const Text('All'),
+                                  selected: isSelected,
+                                  onSelected: (selected) {
+                                    setState(() {
+                                      _selectedSubcategoryId = null;
+                                      _selectedSubcategoryName = null;
+                                    });
+                                    // No need to reload from API - filtering happens locally
+                                  },
+                                  selectedColor: AppTheme.primaryColor.withOpacity(0.2),
+                                  checkmarkColor: AppTheme.primaryColor,
+                                  labelStyle: TextStyle(
+                                    color: isSelected ? AppTheme.primaryColor : Colors.black87,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              );
+                            }
+                            final subcategory = selectedCategory.subcategories![index - 1];
+                            final isSelected = _selectedSubcategoryId == subcategory.id;
+                            return Padding(
+                              padding: const EdgeInsets.only(right: 8),
+                              child: FilterChip(
+                                label: Text(subcategory.name),
+                                selected: isSelected,
+                                onSelected: (selected) {
+                                  print('🎯 Subcategory "${subcategory.name}" selected: $selected');
+                                  setState(() {
+                                    _selectedSubcategoryId = selected ? subcategory.id : null;
+                                    _selectedSubcategoryName = selected ? subcategory.name : null;
+                                  });
+                                  print('🎯 After setState - _selectedSubcategoryName: $_selectedSubcategoryName');
+                                  // No need to reload from API - filtering happens locally
+                                },
+                                selectedColor: AppTheme.primaryColor.withOpacity(0.2),
+                                checkmarkColor: AppTheme.primaryColor,
+                                labelStyle: TextStyle(
+                                  color: isSelected ? AppTheme.primaryColor : Colors.black87,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          
+          // Price Range Filter
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Price Range',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                    Text(
+                      '${Constants.currency}${_priceRange.start.toInt()} - ${Constants.currency}${_priceRange.end.toInt()}',
+                      style: TextStyle(
+                        color: AppTheme.primaryColor,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+                RangeSlider(
+                  values: _priceRange,
+                  min: _minPrice,
+                  max: _maxPrice,
+                  activeColor: AppTheme.primaryColor,
+                  inactiveColor: Colors.grey[300],
+                  onChanged: (values) {
+                    setState(() {
+                      _priceRange = values;
+                    });
+                  },
+                ),
+              ],
+            ),
+          ),
+          
+          // Sort Options
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Sort By',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                SizedBox(
+                  height: 35,
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    children: [
+                      _buildSortChip('newest', 'Newest'),
+                      _buildSortChip('price_low', 'Price: Low to High'),
+                      _buildSortChip('price_high', 'Price: High to Low'),
+                      _buildSortChip('name', 'Name: A to Z'),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          
+          // Reset Filters Button
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: SizedBox(
+              width: double.infinity,
+              child: OutlinedButton(
+                onPressed: _resetFilters,
+                style: OutlinedButton.styleFrom(
+                  side: BorderSide(color: AppTheme.primaryColor),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: Text(
+                  'Reset Filters',
+                  style: TextStyle(color: AppTheme.primaryColor),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+        ],
+      ),
+    );
+  }
+
   Widget _buildSortChip(String value, String label) {
     final isSelected = _sortBy == value;
     return Padding(

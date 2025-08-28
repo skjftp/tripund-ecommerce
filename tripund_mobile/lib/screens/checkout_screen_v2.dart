@@ -13,6 +13,7 @@ import '../utils/indian_states.dart';
 import '../models/address.dart';
 import '../providers/cart_provider.dart';
 import '../providers/auth_provider.dart';
+import '../providers/address_provider.dart';
 import '../services/api_service.dart';
 import '../services/payment_service.dart';
 import '../widgets/payment_modals.dart';
@@ -112,30 +113,21 @@ class _CheckoutScreenV2State extends State<CheckoutScreenV2> {
 
   Future<void> _loadSavedAddresses() async {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final addressProvider = Provider.of<AddressProvider>(context, listen: false);
     
     if (authProvider.isAuthenticated && authProvider.user != null) {
-      // Load addresses from user profile
+      // Initialize address provider and load from Firestore
+      await addressProvider.initializeForUser(authProvider.user!.id);
+      
+      // Load addresses from AddressProvider (Firestore)
       setState(() {
-        _savedAddresses = authProvider.user!.addresses ?? [];
+        _savedAddresses = addressProvider.addresses;
         
         // Select default address if available
-        final defaultAddress = _savedAddresses.firstWhere(
-          (addr) => addr.isDefault,
-          orElse: () => _savedAddresses.isNotEmpty ? _savedAddresses.first : Address(
-            id: '',
-            name: '',
-            line1: '',
-            city: '',
-            state: '',
-            stateCode: '',
-            postalCode: '',
-            phone: '',
-          ),
-        );
+        _selectedAddress = addressProvider.defaultAddress;
         
-        if (defaultAddress.id.isNotEmpty) {
-          _selectedAddress = defaultAddress;
-          _fillAddressFields(defaultAddress);
+        if (_selectedAddress != null) {
+          _fillAddressFields(_selectedAddress!);
         } else if (_savedAddresses.isEmpty) {
           _useNewAddress = true;
         }
@@ -509,11 +501,89 @@ class _CheckoutScreenV2State extends State<CheckoutScreenV2> {
     }
   }
   
+  Future<Map<String, dynamic>> _validateCartStock() async {
+    final cartProvider = context.read<CartProvider>();
+    final outOfStockItems = <Map<String, String>>[];
+    
+    // In a real app, this would check with the backend API
+    // For now, we'll simulate a validation
+    for (var item in cartProvider.items.values) {
+      // You would call an API endpoint to check current stock
+      // final currentStock = await _apiService.checkStock(item.productId);
+      // if (currentStock < item.quantity) {
+      //   outOfStockItems.add({'id': item.productId, 'name': item.name});
+      // }
+    }
+    
+    return {
+      'isValid': outOfStockItems.isEmpty,
+      'outOfStockItems': outOfStockItems,
+    };
+  }
+  
   Future<void> _initiateRazorpayPayment() async {
     final cartProvider = context.read<CartProvider>();
     final authProvider = context.read<AuthProvider>();
     
     try {
+      // First validate stock availability
+      print('🔍 Validating stock availability...');
+      final stockValidation = await _validateCartStock();
+      if (!stockValidation['isValid']) {
+        // Show dialog with out of stock items
+        if (mounted) {
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (context) => AlertDialog(
+              title: const Text('Stock Alert'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(
+                    Icons.warning_amber_rounded,
+                    size: 48,
+                    color: Colors.orange,
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Some items in your cart are now out of stock:',
+                    style: TextStyle(fontSize: 16),
+                  ),
+                  const SizedBox(height: 12),
+                  ...stockValidation['outOfStockItems'].map<Widget>((item) => 
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: Text(
+                        '• ${item['name']}',
+                        style: const TextStyle(color: Colors.red),
+                      ),
+                    ),
+                  ).toList(),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Please remove these items or add them to wishlist to continue.',
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    Navigator.of(context).pop(); // Go back to cart
+                  },
+                  child: const Text('Go to Cart'),
+                ),
+              ],
+            ),
+          );
+        }
+        return;
+      }
+      
+      print('✅ Stock validation passed');
       // Calculate GST
       final gstBreakdown = IndianStates.calculateStateBasedGST(
         cartProvider.totalAmount,

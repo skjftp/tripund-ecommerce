@@ -284,11 +284,6 @@ class _CategoryCardState extends State<_CategoryCard>
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            widget.category.icon,
-                            style: const TextStyle(fontSize: 40),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
                             widget.category.name,
                             style: const TextStyle(
                               color: Colors.white,
