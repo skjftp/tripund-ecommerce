@@ -107,17 +107,6 @@ func main() {
 			protected.GET("/profile", authHandler.GetProfile)
 			protected.PUT("/profile", authHandler.UpdateProfile)
 
-			// Address endpoints
-			addressHandler := handlers.NewAddressHandler(db)
-			addresses := protected.Group("/addresses")
-			{
-				addresses.GET("", addressHandler.GetAddresses)
-				addresses.POST("", addressHandler.AddAddress)
-				addresses.PUT("/:id", addressHandler.UpdateAddress)
-				addresses.DELETE("/:id", addressHandler.DeleteAddress)
-				addresses.PUT("/:id/default", addressHandler.SetDefaultAddress)
-			}
-
 			// Order endpoints
 			orders := protected.Group("/orders")
 			{
