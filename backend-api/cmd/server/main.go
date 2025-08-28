@@ -93,6 +93,7 @@ func main() {
 		
 		// Promotion validation (public)
 		api.POST("/promotions/validate", promotionHandler.ValidatePromotion)
+		api.GET("/promotions/active", promotionHandler.GetActivePromotions)
 
 		// Guest checkout endpoints (no authentication required)
 		api.POST("/guest/orders", orderHandler.CreateGuestOrder)

@@ -31,6 +31,8 @@ class _HomeScreenState extends State<HomeScreen>
   late AnimationController _searchController;
   late Animation<double> _headerAnimation;
   late Animation<double> _searchAnimation;
+  List<Map<String, dynamic>> _activePromotions = [];
+  int _currentPromoIndex = 0;
   
   
 
@@ -47,6 +49,9 @@ class _HomeScreenState extends State<HomeScreen>
       duration: const Duration(milliseconds: 800),
       vsync: this,
     );
+    
+    // Fetch active promotions
+    _fetchPromotions();
     
     _headerAnimation = CurvedAnimation(
       parent: _headerController,
@@ -70,6 +75,58 @@ class _HomeScreenState extends State<HomeScreen>
     _headerController.dispose();
     _searchController.dispose();
     super.dispose();
+  }
+  
+  Future<void> _fetchPromotions() async {
+    try {
+      final apiService = Provider.of<AuthProvider>(context, listen: false).apiService;
+      final promotions = await apiService.getActivePromotions();
+      if (mounted && promotions.isNotEmpty) {
+        setState(() {
+          _activePromotions = promotions;
+        });
+        
+        // Rotate promotions every 5 seconds if there are multiple
+        if (_activePromotions.length > 1) {
+          Future.delayed(const Duration(seconds: 5), _rotatePromotion);
+        }
+      }
+    } catch (e) {
+      print('Error fetching promotions: $e');
+    }
+  }
+  
+  void _rotatePromotion() {
+    if (!mounted || _activePromotions.isEmpty) return;
+    
+    setState(() {
+      _currentPromoIndex = (_currentPromoIndex + 1) % _activePromotions.length;
+    });
+    
+    // Continue rotating
+    if (_activePromotions.length > 1) {
+      Future.delayed(const Duration(seconds: 5), _rotatePromotion);
+    }
+  }
+  
+  String _getPromoDescription() {
+    if (_activePromotions.isEmpty) return 'for special offers';
+    
+    final promo = _activePromotions[_currentPromoIndex];
+    final type = promo['type'] ?? 'percentage';
+    final discount = promo['discount'] ?? 10;
+    final description = promo['description'];
+    
+    if (description != null && description.toString().isNotEmpty) {
+      // Use the description if provided
+      return 'for ${description.toString().toLowerCase()}';
+    } else if (type == 'percentage') {
+      return 'for ${discount.toInt()}% off';
+    } else if (type == 'fixed') {
+      return 'for ₹${discount.toInt()} off';
+    } else {
+      return 'for special offers';
+    }
   }
 
   @override
@@ -170,76 +227,81 @@ class _HomeScreenState extends State<HomeScreen>
           ),
           
           // Promo Code Banner
-          SliverToBoxAdapter(
-            child: SlideTransition(
-              position: Tween<Offset>(
-                begin: const Offset(0, -1),
-                end: Offset.zero,
-              ).animate(_searchAnimation),
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      AppTheme.primaryColor.withOpacity(0.9),
-                      AppTheme.secondaryColor.withOpacity(0.9),
-                    ],
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppTheme.primaryColor.withOpacity(0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.local_offer,
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Use code ',
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.9),
-                        fontSize: 14,
+          if (_activePromotions.isNotEmpty)
+            SliverToBoxAdapter(
+              child: SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(0, -1),
+                  end: Offset.zero,
+                ).animate(_searchAnimation),
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 500),
+                  child: Container(
+                    key: ValueKey(_currentPromoIndex),
+                    margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          AppTheme.primaryColor.withOpacity(0.9),
+                          AppTheme.secondaryColor.withOpacity(0.9),
+                        ],
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
                       ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        'TRIPUND10',
-                        style: TextStyle(
-                          color: AppTheme.primaryColor,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppTheme.primaryColor.withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
                         ),
-                      ),
+                      ],
                     ),
-                    Text(
-                      ' for 10% off',
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.9),
-                        fontSize: 14,
-                      ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.local_offer,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Use code ',
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.9),
+                            fontSize: 14,
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            _activePromotions[_currentPromoIndex]['code'] ?? 'TRIPUND10',
+                            style: TextStyle(
+                              color: AppTheme.primaryColor,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                        Text(
+                          ' ${_getPromoDescription()}',
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.9),
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ),
             ),
-          ),
           
           // Hero Banner Carousel from Categories
           SliverToBoxAdapter(

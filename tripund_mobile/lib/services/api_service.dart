@@ -439,6 +439,29 @@ class ApiService {
     }
   }
 
+  // Fetch active promotions
+  Future<List<Map<String, dynamic>>> getActivePromotions() async {
+    try {
+      final response = await _dio.get('/promotions/active');
+      if (response.statusCode == 200) {
+        final List<dynamic> promotions = response.data['promotions'] ?? [];
+        return List<Map<String, dynamic>>.from(promotions);
+      }
+      return [];
+    } catch (e) {
+      print('Error fetching active promotions: $e');
+      // Return default promotion
+      return [
+        {
+          'code': 'TRIPUND10',
+          'description': '10% off on all orders',
+          'type': 'percentage',
+          'discount': 10,
+        }
+      ];
+    }
+  }
+
   // Settings
   Future<Map<String, dynamic>?> getPublicSettings() async {
     try {

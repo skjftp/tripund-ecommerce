@@ -5,6 +5,9 @@ import { ArrowRight, Truck, Shield, Award, RefreshCw, Heart, ShoppingBag } from 
 import { RootState, AppDispatch } from '../store';
 import { fetchProducts } from '../store/slices/productSlice';
 import { fetchCategories } from '../store/slices/categoriesSlice';
+import { addToCartWithSync } from '../store/slices/cartSlice';
+import { addToWishlistWithSync, removeFromWishlistWithSync } from '../store/slices/wishlistSlice';
+import toast from 'react-hot-toast';
 import ProductGrid from '../components/product/ProductGrid';
 import HeroSection from '../components/common/HeroSection';
 import CategoryIcons from '../components/common/CategoryIcons';
@@ -12,7 +15,10 @@ import CategoryIcons from '../components/common/CategoryIcons';
 export default function HomePage() {
   const dispatch = useDispatch<AppDispatch>();
   const { featuredProducts, loading } = useSelector((state: RootState) => state.products);
+  const wishlistItems = useSelector((state: RootState) => state.wishlist.items);
   const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
+  const [selectedVariantProduct, setSelectedVariantProduct] = useState<any>(null);
+  const [showVariantModal, setShowVariantModal] = useState(false);
 
   useEffect(() => {
     // Fetch all products initially
@@ -22,6 +28,27 @@ export default function HomePage() {
   }, [dispatch]);
 
   const { categories } = useSelector((state: RootState) => state.categories);
+
+  const handleAddToCart = (product: any) => {
+    if (product.has_variants && product.variants && product.variants.length > 0) {
+      setSelectedVariantProduct(product);
+      setShowVariantModal(true);
+    } else {
+      dispatch(addToCartWithSync(product, 1));
+      toast.success('Added to cart!');
+    }
+  };
+
+  const handleWishlistToggle = (product: any) => {
+    const isInWishlist = wishlistItems.some((item: any) => item.id === product.id);
+    if (isInWishlist) {
+      dispatch(removeFromWishlistWithSync(product.id));
+      toast.success('Removed from wishlist');
+    } else {
+      dispatch(addToWishlistWithSync(product));
+      toast.success('Added to wishlist!');
+    }
+  };
 
   // Memoize categoryShowcase to ensure proper re-rendering when categories change
   const categoryShowcase = useMemo(() => {
@@ -160,10 +187,27 @@ export default function HomePage() {
                   
                   {/* Quick Actions */}
                   <div className="absolute top-4 right-4 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <button className="bg-white p-2 rounded-full shadow-lg hover:bg-gray-50 transition-colors">
-                      <Heart size={18} className="text-gray-600" />
+                    <button 
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleWishlistToggle(product);
+                      }}
+                      className="bg-white p-2 rounded-full shadow-lg hover:bg-gray-50 transition-colors"
+                    >
+                      <Heart 
+                        size={18} 
+                        className={wishlistItems.some(item => item.id === product.id) ? 'fill-red-500 text-red-500' : 'text-gray-600'} 
+                      />
                     </button>
-                    <button className="bg-white p-2 rounded-full shadow-lg hover:bg-gray-50 transition-colors">
+                    <button 
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleAddToCart(product);
+                      }}
+                      className="bg-white p-2 rounded-full shadow-lg hover:bg-gray-50 transition-colors"
+                    >
                       <ShoppingBag size={18} className="text-gray-600" />
                     </button>
                   </div>
@@ -268,6 +312,149 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Variant Selection Modal */}
+      {showVariantModal && selectedVariantProduct && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <div className="flex justify-between items-start mb-4">
+              <h3 className="text-lg font-semibold">{selectedVariantProduct.name}</h3>
+              <button
+                onClick={() => {
+                  setShowVariantModal(false);
+                  setSelectedVariantProduct(null);
+                }}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ×
+              </button>
+            </div>
+
+            <VariantSelector
+              product={selectedVariantProduct}
+              onSelect={(variant) => {
+                const cartProduct = {
+                  ...selectedVariantProduct,
+                  price: variant.price,
+                  sale_price: variant.sale_price,
+                  sku: variant.sku,
+                  variant_info: {
+                    color: variant.color,
+                    size: variant.size,
+                    variant_id: variant.id
+                  }
+                };
+                dispatch(addToCartWithSync(cartProduct, 1));
+                toast.success('Added to cart!');
+                setShowVariantModal(false);
+                setSelectedVariantProduct(null);
+              }}
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Simplified Variant Selector Component
+function VariantSelector({ product, onSelect }: { product: any; onSelect: (variant: any) => void }) {
+  const [selectedColor, setSelectedColor] = useState<string>('');
+  const [selectedSize, setSelectedSize] = useState<string>('');
+  const [selectedVariant, setSelectedVariant] = useState<any>(null);
+
+  // Find cheapest variant as default
+  React.useEffect(() => {
+    if (product.variants && product.variants.length > 0) {
+      const availableVariants = product.variants.filter((v: any) => v.available);
+      if (availableVariants.length > 0) {
+        const cheapest = availableVariants.reduce((min: any, variant: any) => {
+          const variantPrice = variant.sale_price || variant.price;
+          const minPrice = min.sale_price || min.price;
+          return variantPrice < minPrice ? variant : min;
+        });
+        
+        setSelectedColor(cheapest.color || '');
+        setSelectedSize(cheapest.size || '');
+        setSelectedVariant(cheapest);
+      }
+    }
+  }, [product]);
+
+  React.useEffect(() => {
+    if (selectedColor || selectedSize) {
+      const variant = product.variants?.find((v: any) => 
+        v.available &&
+        (!selectedColor || v.color === selectedColor) &&
+        (!selectedSize || v.size === selectedSize)
+      );
+      setSelectedVariant(variant);
+    }
+  }, [selectedColor, selectedSize, product]);
+
+  const availableColors = [...new Set(product.variants?.filter((v: any) => v.available).map((v: any) => v.color).filter(Boolean))];
+  const availableSizes = [...new Set(product.variants?.filter((v: any) => v.available).map((v: any) => v.size).filter(Boolean))];
+
+  return (
+    <div className="space-y-4">
+      {availableColors.length > 0 && (
+        <div>
+          <label className="block text-sm font-medium mb-2">Color</label>
+          <div className="flex gap-2 flex-wrap">
+            {availableColors.map((color: string) => (
+              <button
+                key={color}
+                onClick={() => setSelectedColor(color)}
+                className={`px-3 py-1 border rounded ${
+                  selectedColor === color ? 'border-primary-600 bg-primary-50' : 'border-gray-300'
+                }`}
+              >
+                {color}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {availableSizes.length > 0 && (
+        <div>
+          <label className="block text-sm font-medium mb-2">Size</label>
+          <div className="flex gap-2 flex-wrap">
+            {availableSizes.map((size: string) => (
+              <button
+                key={size}
+                onClick={() => setSelectedSize(size)}
+                className={`px-3 py-1 border rounded ${
+                  selectedSize === size ? 'border-primary-600 bg-primary-50' : 'border-gray-300'
+                }`}
+              >
+                {size}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {selectedVariant && (
+        <div className="border-t pt-4">
+          <div className="flex justify-between items-center mb-4">
+            <span className="text-lg font-semibold">
+              ₹{(selectedVariant.sale_price || selectedVariant.price).toLocaleString('en-IN')}
+            </span>
+            {selectedVariant.sale_price && selectedVariant.price > selectedVariant.sale_price && (
+              <span className="text-sm text-gray-500 line-through">
+                ₹{selectedVariant.price.toLocaleString('en-IN')}
+              </span>
+            )}
+          </div>
+          <button
+            onClick={() => onSelect(selectedVariant)}
+            className="w-full bg-primary-600 text-white py-2 px-4 rounded hover:bg-primary-700 transition-colors"
+          >
+            Add to Cart
+          </button>
+        </div>
+      )}
     </div>
   );
 }

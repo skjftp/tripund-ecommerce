@@ -44,6 +44,9 @@ type Promotion struct {
 	NewCustomersOnly bool     `json:"new_customers_only" firestore:"new_customers_only"`
 	AllowedUserIds   []string `json:"allowed_user_ids" firestore:"allowed_user_ids"`
 	
+	// Display settings
+	ShowInBanner bool `json:"show_in_banner" firestore:"show_in_banner"`
+	
 	// Timestamps
 	CreatedAt time.Time `json:"created_at" firestore:"created_at"`
 	UpdatedAt time.Time `json:"updated_at" firestore:"updated_at"`

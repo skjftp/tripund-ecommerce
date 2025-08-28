@@ -129,13 +129,44 @@ export default function WishlistPage() {
             Share your wishlist with friends and family so they know exactly what you'd love!
           </p>
           <div className="flex space-x-3">
-            <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+            <button 
+              onClick={() => {
+                const wishlistUrl = window.location.href;
+                const shareText = `Check out my wishlist at TRIPUND Lifestyle!`;
+                window.open(
+                  `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(wishlistUrl)}&quote=${encodeURIComponent(shareText)}`,
+                  '_blank',
+                  'width=600,height=400'
+                );
+              }}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            >
               Share on Facebook
             </button>
-            <button className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors">
+            <button 
+              onClick={() => {
+                const wishlistUrl = window.location.href;
+                const shareText = `Check out my wishlist at TRIPUND Lifestyle! ${wishlistUrl}`;
+                window.open(
+                  `https://wa.me/?text=${encodeURIComponent(shareText)}`,
+                  '_blank'
+                );
+              }}
+              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+            >
               Share on WhatsApp
             </button>
-            <button className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
+            <button 
+              onClick={() => {
+                const wishlistUrl = window.location.href;
+                navigator.clipboard.writeText(wishlistUrl).then(() => {
+                  toast.success('Link copied to clipboard!');
+                }).catch(() => {
+                  toast.error('Failed to copy link');
+                });
+              }}
+              className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+            >
               Copy Link
             </button>
           </div>

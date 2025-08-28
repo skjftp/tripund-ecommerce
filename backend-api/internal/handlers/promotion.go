@@ -228,6 +228,71 @@ func (h *PromotionHandler) isReturningCustomer(userID string) bool {
 	return err != iterator.Done
 }
 
+// GetActivePromotions returns public active promo codes for display in frontend
+func (h *PromotionHandler) GetActivePromotions(c *gin.Context) {
+	now := time.Now()
+	
+	// Query for active promotions
+	iter := h.db.Client.Collection("promotions").
+		Where("status", "==", models.PromotionStatusActive).
+		Where("show_in_banner", "==", true).
+		OrderBy("created_at", firestore.Desc).
+		Documents(h.db.Context)
+	
+	docs, err := iter.GetAll()
+	if err != nil {
+		// Return a default promotion if query fails
+		c.JSON(http.StatusOK, gin.H{
+			"promotions": []map[string]interface{}{
+				{
+					"code":        "TRIPUND10",
+					"description": "10% off on all orders",
+					"type":        "percentage",
+					"discount":    10,
+				},
+			},
+		})
+		return
+	}
+
+	var activePromotions []map[string]interface{}
+	for _, doc := range docs {
+		var promo models.Promotion
+		if err := doc.DataTo(&promo); err != nil {
+			continue
+		}
+		
+		// Check if promotion is within date range
+		if now.Before(promo.StartDate) || now.After(promo.EndDate) {
+			continue
+		}
+		
+		// Return only public info
+		activePromotions = append(activePromotions, map[string]interface{}{
+			"code":        promo.Code,
+			"description": promo.Description,
+			"type":        promo.Type,
+			"discount":    promo.Discount,
+		})
+	}
+	
+	// If no active promotions, return a default one
+	if len(activePromotions) == 0 {
+		activePromotions = []map[string]interface{}{
+			{
+				"code":        "TRIPUND10",
+				"description": "10% off on all orders",
+				"type":        "percentage",
+				"discount":    10,
+			},
+		}
+	}
+	
+	c.JSON(http.StatusOK, gin.H{
+		"promotions": activePromotions,
+	})
+}
+
 // Admin endpoints
 
 func (h *PromotionHandler) GetPromotions(c *gin.Context) {

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../providers/wishlist_provider.dart';
 import '../providers/cart_provider.dart';
 import '../utils/theme.dart';
@@ -26,36 +29,46 @@ class WishlistScreen extends StatelessWidget {
           Consumer<WishlistProvider>(
             builder: (context, wishlistProvider, child) {
               if (wishlistProvider.itemCount > 0) {
-                return IconButton(
-                  icon: const Icon(Icons.delete_sweep),
-                  onPressed: () {
-                    showDialog(
-                      context: context,
-                      builder: (ctx) => AlertDialog(
-                        title: const Text('Clear Wishlist'),
-                        content: const Text('Are you sure you want to remove all items from your wishlist?'),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.of(ctx).pop(),
-                            child: const Text('Cancel'),
+                return Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.share),
+                      onPressed: () {
+                        _showShareOptions(context, wishlistProvider);
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete_sweep),
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (ctx) => AlertDialog(
+                            title: const Text('Clear Wishlist'),
+                            content: const Text('Are you sure you want to remove all items from your wishlist?'),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.of(ctx).pop(),
+                                child: const Text('Cancel'),
+                              ),
+                              ElevatedButton(
+                                onPressed: () {
+                                  wishlistProvider.clear();
+                                  Navigator.of(ctx).pop();
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Wishlist cleared!')),
+                                  );
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.red,
+                                ),
+                                child: const Text('Clear All', style: TextStyle(color: Colors.white)),
+                              ),
+                            ],
                           ),
-                          ElevatedButton(
-                            onPressed: () {
-                              wishlistProvider.clear();
-                              Navigator.of(ctx).pop();
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Wishlist cleared!')),
-                              );
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.red,
-                            ),
-                            child: const Text('Clear All', style: TextStyle(color: Colors.white)),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
+                        );
+                      },
+                    ),
+                  ],
                 );
               }
               return const SizedBox.shrink();
@@ -384,6 +397,166 @@ class WishlistScreen extends StatelessWidget {
             ],
           );
         },
+      ),
+    );
+  }
+
+  void _showShareOptions(BuildContext context, WishlistProvider wishlistProvider) {
+    final wishlistUrl = 'https://tripundlifestyle.netlify.app/wishlist';
+    final shareText = '''Check out my wishlist at TRIPUND Lifestyle!
+
+I've saved ${wishlistProvider.itemCount} amazing item${wishlistProvider.itemCount == 1 ? '' : 's'} from Indian artisans.
+
+Browse my wishlist here: $wishlistUrl''';
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (BuildContext context) {
+        return Container(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 20),
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              Text(
+                'Share Your Wishlist',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'Let your friends and family know what you love!',
+                style: TextStyle(color: Colors.grey[600]),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _ShareButton(
+                    icon: Icons.share,
+                    label: 'Share',
+                    color: AppTheme.primaryColor,
+                    onTap: () {
+                      Navigator.pop(context);
+                      Share.share(shareText);
+                    },
+                  ),
+                  _ShareButton(
+                    icon: Icons.message,
+                    label: 'WhatsApp',
+                    color: const Color(0xFF25D366),
+                    onTap: () async {
+                      Navigator.pop(context);
+                      final whatsappUrl = Uri.parse(
+                        'https://wa.me/?text=${Uri.encodeComponent(shareText)}'
+                      );
+                      if (await canLaunchUrl(whatsappUrl)) {
+                        await launchUrl(whatsappUrl, mode: LaunchMode.externalApplication);
+                      } else {
+                        Share.share(shareText);
+                      }
+                    },
+                  ),
+                  _ShareButton(
+                    icon: Icons.facebook,
+                    label: 'Facebook',
+                    color: const Color(0xFF1877F2),
+                    onTap: () async {
+                      Navigator.pop(context);
+                      final facebookUrl = Uri.parse(
+                        'https://www.facebook.com/sharer/sharer.php?u=${Uri.encodeComponent(wishlistUrl)}&quote=${Uri.encodeComponent('Check out my wishlist at TRIPUND Lifestyle!')}'
+                      );
+                      if (await canLaunchUrl(facebookUrl)) {
+                        await launchUrl(facebookUrl, mode: LaunchMode.externalApplication);
+                      } else {
+                        Share.share(shareText);
+                      }
+                    },
+                  ),
+                  _ShareButton(
+                    icon: Icons.link,
+                    label: 'Copy Link',
+                    color: Colors.grey[600]!,
+                    onTap: () {
+                      Navigator.pop(context);
+                      Clipboard.setData(ClipboardData(text: wishlistUrl));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Link copied to clipboard!'),
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _ShareButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _ShareButton({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          children: [
+            Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(25),
+              ),
+              child: Icon(
+                icon,
+                color: color,
+                size: 24,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey[700],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

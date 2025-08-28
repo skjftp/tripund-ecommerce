@@ -74,10 +74,25 @@ class MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   }
 
   void switchTab(int index) {
+    // Calculate the distance between current and target index
+    int distance = (index - _currentIndex).abs();
+    
+    // Adjust animation duration based on distance
+    // Base duration of 300ms for adjacent tabs, add 100ms for each additional tab
+    int animationDuration = 300 + (distance > 1 ? (distance - 1) * 100 : 0);
+    // Cap the maximum duration at 600ms to prevent too slow animations
+    animationDuration = animationDuration.clamp(300, 600);
+    
     setState(() {
       _currentIndex = index;
-      _pageController.jumpToPage(index);
     });
+    
+    // Use animateToPage for smoother transitions
+    _pageController.animateToPage(
+      index,
+      duration: Duration(milliseconds: animationDuration),
+      curve: Curves.easeInOutCubic,
+    );
   }
 
   @override
@@ -85,7 +100,12 @@ class MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     return Scaffold(
       body: PageView(
         controller: _pageController,
-        physics: const NeverScrollableScrollPhysics(),
+        physics: const BouncingScrollPhysics(),
+        onPageChanged: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
         children: _screens,
       ),
       bottomNavigationBar: CurvedNavigationBar(
@@ -107,19 +127,32 @@ class MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
           );
         }).toList(),
         onTap: (index) {
+          // Calculate the distance between current and target index
+          int distance = (index - _currentIndex).abs();
+          
+          // Adjust animation duration based on distance
+          // Base duration of 300ms for adjacent tabs, add 100ms for each additional tab
+          int animationDuration = 300 + (distance > 1 ? (distance - 1) * 100 : 0);
+          // Cap the maximum duration at 600ms to prevent too slow animations
+          animationDuration = animationDuration.clamp(300, 600);
+          
           setState(() {
             _currentIndex = index;
-            _pageController.animateToPage(
-              index,
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeInOut,
-            );
           });
           
-          // Animate FAB
-          _fabAnimationController.reverse().then((_) {
-            _fabAnimationController.forward();
-          });
+          // Use animateToPage with adjusted duration for smoother transitions
+          _pageController.animateToPage(
+            index,
+            duration: Duration(milliseconds: animationDuration),
+            curve: Curves.easeInOutCubic,
+          );
+          
+          // Animate FAB only if switching to/from home
+          if (index == 0 || _currentIndex == 0) {
+            _fabAnimationController.reverse().then((_) {
+              _fabAnimationController.forward();
+            });
+          }
         },
       ),
       floatingActionButton: _currentIndex == 0
