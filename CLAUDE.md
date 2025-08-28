@@ -609,6 +609,34 @@ Add this A record to your DNS provider:
 - Category filtering on products page
 - Proper case formatting for product names
 
+### Mobile App (Flutter)
+- **Orders Screen**: Complete revamp with carousel for multiple products
+  - Fixed 75x75px image size consistency
+  - Product details display (name, color, size, quantity, price)
+  - Clean status badges with proper colors
+  - Gradient header design
+- **Product Variants**: Full variant system implementation
+  - Variant selection modal with cheapest default
+  - Color/size combinations with dynamic pricing
+  - Variant info displayed throughout cart/checkout/orders
+- **Payment System**:
+  - Proper payment flow (order → payment order → verification)
+  - Payment modals for success/failed/cancelled states
+  - Online Payment and COD options only
+  - Dynamic COD limits from backend
+  - Live Razorpay integration
+- **Category Filters**:
+  - Fixed category filtering using IDs not names
+  - Subcategory filters in category product listings
+  - Category search integration
+- **Data Persistence**:
+  - Cart persistence with SharedPreferences
+  - Address persistence in database
+  - Auth token synchronization
+- **iOS Support**:
+  - Location permissions configured
+  - Proper build configuration
+
 ### Admin Panel
 - Product CRUD operations with multi-image support
 - Category management with subcategories
@@ -647,6 +675,6 @@ Add this A record to your DNS provider:
 - `ProductForm.tsx` - Comprehensive product management form
 
 ---
-Last Updated: August 2025
+Last Updated: August 28, 2025
 Platform: TRIPUND E-Commerce
 Version: 1.0.0
