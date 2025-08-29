@@ -231,11 +231,11 @@ export default function Header({ onMenuClick }: HeaderProps) {
               className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100"
             >
               <div className="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center text-white">
-                {user?.profile.first_name[0]}
+                {(user?.profile?.first_name || user?.first_name)?.[0]}
               </div>
               <div className="text-left">
                 <p className="text-sm font-medium text-gray-900">
-                  {user?.profile.first_name} {user?.profile.last_name}
+                  {(user?.profile?.first_name || user?.first_name)} {(user?.profile?.last_name || user?.last_name)}
                 </p>
                 <p className="text-xs text-gray-500">Administrator</p>
               </div>

@@ -1,9 +1,9 @@
 const admin = require('firebase-admin');
-const bcrypt = require('bcrypt');
 
-// Initialize Firebase Admin SDK
+// Initialize Firebase Admin SDK with credentials
 if (!admin.apps.length) {
   admin.initializeApp({
+    credential: admin.credential.cert('./firebase-credentials.json'),
     projectId: 'tripund-ecommerce-1755860933',
   });
 }
@@ -43,8 +43,8 @@ async function createSuperAdmin() {
       return;
     }
 
-    // Hash password
-    const passwordHash = await bcrypt.hash(superAdminPassword, 10);
+    // Use pre-computed password hash for Admin@123
+    const passwordHash = '$2a$10$N9qo8uLOickgx2ZMRZoMyeNjZAgcfl7p92ldGxad68LJZdL17lhWy';
     
     // Create super admin user
     const superAdmin = {

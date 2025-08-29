@@ -34,6 +34,7 @@ build/
 # Backend specific
 backend-api/serviceAccount.json
 backend-api/serviceAccountKey.json
+backend-api/firebase-credentials.json
 backend-api/vendor/
 backend-api/tmp/
 backend-api/main

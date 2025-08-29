@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -152,7 +154,7 @@ func (h *AdminUserHandler) CreateAdminUser(c *gin.Context) {
 
 	docRef, _, err := h.db.Client.Collection("admin_users").Add(h.db.Context, user)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create admin user"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to create admin user: %v", err)})
 		return
 	}
 
@@ -442,12 +444,18 @@ func (h *AdminUserHandler) AdminLogin(c *gin.Context) {
 	}
 
 	// Verify password
+	log.Printf("AdminLogin: Attempting password verification for user %s", user.Email)
+	log.Printf("AdminLogin: Password hash length: %d", len(user.PasswordHash))
+	
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password)); err != nil {
+		log.Printf("AdminLogin: Password verification failed for %s: %v", user.Email, err)
 		h.handleFailedLogin(user.ID, req.Email)
 		h.logFailedLogin(c, req.Email, "invalid_password")
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
 		return
 	}
+	
+	log.Printf("AdminLogin: Password verification successful for %s", user.Email)
 
 	// Reset failed login attempts on successful login
 	h.resetFailedLoginAttempts(user.ID)

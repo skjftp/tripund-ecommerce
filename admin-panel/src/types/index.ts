@@ -1,13 +1,18 @@
 export interface User {
   id: string;
   email: string;
-  role: 'admin' | 'customer' | 'artisan';
-  profile: {
+  role: 'admin' | 'customer' | 'artisan' | 'super_admin' | 'manager' | 'editor' | 'viewer';
+  profile?: {
     first_name: string;
     last_name: string;
     phone: string;
     avatar?: string;
   };
+  // New RBAC structure
+  first_name?: string;
+  last_name?: string;
+  permissions?: string[];
+  department?: string;
   created_at: string;
   last_login_at?: string;
   status: 'active' | 'inactive' | 'suspended';
