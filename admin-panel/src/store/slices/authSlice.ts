@@ -10,8 +10,17 @@ interface AuthState {
   error: string | null;
 }
 
+const getStoredUser = () => {
+  try {
+    const stored = localStorage.getItem('adminUser');
+    return stored ? JSON.parse(stored) : null;
+  } catch {
+    return null;
+  }
+};
+
 const initialState: AuthState = {
-  user: null,
+  user: getStoredUser(),
   token: localStorage.getItem('adminToken'),
   isAuthenticated: !!localStorage.getItem('adminToken'),
   loading: false,
@@ -40,6 +49,7 @@ const authSlice = createSlice({
       state.token = null;
       state.isAuthenticated = false;
       localStorage.removeItem('adminToken');
+      localStorage.removeItem('adminUser');
     },
     clearError: (state) => {
       state.error = null;
@@ -57,6 +67,7 @@ const authSlice = createSlice({
         state.token = action.payload.token;
         state.isAuthenticated = true;
         localStorage.setItem('adminToken', action.payload.token);
+        localStorage.setItem('adminUser', JSON.stringify(action.payload.user));
       })
       .addCase(login.rejected, (state, action) => {
         state.loading = false;
@@ -64,6 +75,7 @@ const authSlice = createSlice({
       })
       .addCase(fetchProfile.fulfilled, (state, action) => {
         state.user = action.payload;
+        localStorage.setItem('adminUser', JSON.stringify(action.payload));
       });
   },
 });

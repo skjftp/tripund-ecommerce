@@ -181,29 +181,51 @@ func (h *EmailTemplateHandler) TestTemplate(c *gin.Context) {
 		return
 	}
 	
-	// Fetch the template
+	// Try to fetch from database first
+	var template models.EmailTemplate
+	var templateFound bool
+	
 	doc, err := h.db.Client.Collection("email_templates").Doc(req.TemplateID).Get(h.db.Context)
-	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Template not found"})
-		return
+	if err == nil {
+		// Found in database
+		if err := doc.DataTo(&template); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to parse template"})
+			return
+		}
+		templateFound = true
+	} else {
+		// Try predefined templates
+		predefinedTemplates := h.getPredefinedTemplates()
+		for _, predefined := range predefinedTemplates {
+			if predefined.ID == req.TemplateID {
+				template = models.EmailTemplate{
+					ID:          predefined.ID,
+					Name:        predefined.Name,
+					Subject:     predefined.Subject,
+					HTMLContent: predefined.HTMLContent,
+					Variables:   predefined.Variables,
+				}
+				templateFound = true
+				break
+			}
+		}
 	}
 	
-	var template models.EmailTemplate
-	if err := doc.DataTo(&template); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to parse template"})
+	if !templateFound {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Template not found"})
 		return
 	}
 	
 	// Process the template with test data
 	tmpl, err := htmltemplate.New("email").Parse(template.HTMLContent)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid template syntax"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Invalid template syntax: %v", err)})
 		return
 	}
 	
 	var buf bytes.Buffer
 	if err := tmpl.Execute(&buf, req.TestData); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to process template"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Failed to process template: %v", err)})
 		return
 	}
 	

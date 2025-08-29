@@ -244,19 +244,52 @@ const EmailTemplates = () => {
       } else {
         switch (variable.type) {
           case 'string':
-            data[variable.key] = 'Test Value';
+            data[variable.key] = variable.key === 'CustomerName' ? 'John Doe' : 
+                                variable.key === 'CustomerEmail' ? 'customer@email.com' :
+                                variable.key === 'OrderNumber' ? 'ORD-2025-123456' :
+                                'Test Value';
             break;
           case 'number':
-            data[variable.key] = 100;
+            data[variable.key] = variable.key === 'Subtotal' ? 9999.00 :
+                                variable.key === 'Shipping' ? 100.00 :
+                                variable.key === 'Tax' ? 1800.00 :
+                                variable.key === 'Total' ? 11899.00 :
+                                100;
             break;
           case 'date':
-            data[variable.key] = new Date().toLocaleDateString();
+            data[variable.key] = 'January 2, 2025';
             break;
           case 'array':
-            data[variable.key] = [];
+            data[variable.key] = variable.key === 'Items' ? [
+              {
+                "ProductName": "Janger Grace – Hand-Carved Balinese Dancer Mask",
+                "SKU": "TLSWD00004", 
+                "Quantity": 1,
+                "Price": 7250,
+                "Total": 7250,
+                "VariantColor": "Natural Wood",
+                "VariantSize": "Standard"
+              },
+              {
+                "ProductName": "Premium Antique Finish Meditating Hanuman Ji Idol",
+                "SKU": "TLSMT00037",
+                "Quantity": 2, 
+                "Price": 6049,
+                "Total": 12098,
+                "VariantColor": "",
+                "VariantSize": ""
+              }
+            ] : [];
             break;
           case 'object':
-            data[variable.key] = {};
+            data[variable.key] = variable.key === 'ShippingAddress' ? {
+              "Line1": "C-201 Runwal Bliss, Kanjurmarg East",
+              "Line2": "Near Mumbai Metro Station", 
+              "City": "Mumbai",
+              "State": "Maharashtra",
+              "PostalCode": "400042",
+              "Country": "India"
+            } : {};
             break;
         }
       }
