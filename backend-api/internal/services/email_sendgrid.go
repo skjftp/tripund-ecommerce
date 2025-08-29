@@ -2,74 +2,82 @@ package services
 
 import (
 	"bytes"
-	"context"
-	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"html/template"
 	"log"
 	"os"
-	"strings"
 	"time"
 
-	"google.golang.org/api/gmail/v1"
-	"google.golang.org/api/option"
+	"github.com/sendgrid/sendgrid-go"
+	"github.com/sendgrid/sendgrid-go/helpers/mail"
 	"tripund-api/internal/models"
 )
 
-type OAuth2EmailService struct {
+type SendGridEmailService struct {
+	APIKey    string
 	FromEmail string
-	service   *gmail.Service
+	FromName  string
+	client    *sendgrid.Client
 }
 
-type ServiceAccountKey struct {
-	Type                    string `json:"type"`
-	ProjectID               string `json:"project_id"`
-	PrivateKeyID            string `json:"private_key_id"`
-	PrivateKey              string `json:"private_key"`
-	ClientEmail             string `json:"client_email"`
-	ClientID                string `json:"client_id"`
-	AuthURI                 string `json:"auth_uri"`
-	TokenURI                string `json:"token_uri"`
-	AuthProviderX509CertURL string `json:"auth_provider_x509_cert_url"`
-	ClientX509CertURL       string `json:"client_x509_cert_url"`
+type OrderConfirmationData struct {
+	Order         models.Order
+	CustomerName  string
+	CustomerEmail string
+	Items         []OrderEmailItem
+	Totals        models.OrderTotals
+	OrderDate     string
 }
 
-func NewOAuth2EmailService() (*OAuth2EmailService, error) {
-	ctx := context.Background()
-	
-	// Get service account credentials from environment
-	credentialsJSON := os.Getenv("GOOGLE_SERVICE_ACCOUNT_KEY")
-	if credentialsJSON == "" {
-		return nil, fmt.Errorf("GOOGLE_SERVICE_ACCOUNT_KEY environment variable not set")
+type ShippingConfirmationData struct {
+	Order         models.Order
+	CustomerName  string
+	CustomerEmail string
+	Items         []OrderEmailItem
+	TrackingInfo  *models.Tracking
+	OrderDate     string
+	ShippedDate   string
+}
+
+type OrderEmailItem struct {
+	ProductName  string
+	SKU          string
+	Quantity     int
+	Price        float64
+	Total        float64
+	VariantColor string
+	VariantSize  string
+}
+
+func NewSendGridEmailService() (*SendGridEmailService, error) {
+	apiKey := os.Getenv("SENDGRID_API_KEY")
+	if apiKey == "" {
+		return nil, fmt.Errorf("SENDGRID_API_KEY environment variable not set")
 	}
-	
-	log.Printf("OAuth2: Service account key found, length: %d", len(credentialsJSON))
 
 	fromEmail := os.Getenv("EMAIL_FROM")
 	if fromEmail == "" {
 		fromEmail = "orders@tripundlifestyle.com"
 	}
-	log.Printf("OAuth2: Will send emails from: %s", fromEmail)
 
-	// Create Gmail service with service account credentials
-	log.Printf("OAuth2: Creating Gmail service with domain-wide delegation...")
-	service, err := gmail.NewService(ctx, 
-		option.WithCredentialsJSON([]byte(credentialsJSON)),
-		option.WithScopes(gmail.GmailSendScope),
-	)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create Gmail service: %v", err)
+	fromName := os.Getenv("EMAIL_FROM_NAME")
+	if fromName == "" {
+		fromName = "TRIPUND Lifestyle"
 	}
 
-	log.Printf("OAuth2: Gmail service created successfully")
-	return &OAuth2EmailService{
+	client := sendgrid.NewSendClient(apiKey)
+	
+	log.Printf("SendGrid: Email service initialized with from: %s <%s>", fromName, fromEmail)
+	
+	return &SendGridEmailService{
+		APIKey:    apiKey,
 		FromEmail: fromEmail,
-		service:   service,
+		FromName:  fromName,
+		client:    client,
 	}, nil
 }
 
-func (e *OAuth2EmailService) SendOrderConfirmation(order models.Order) error {
+func (s *SendGridEmailService) SendOrderConfirmation(order models.Order) error {
 	// Prepare email data
 	data := OrderConfirmationData{
 		Order:         order,
@@ -79,10 +87,8 @@ func (e *OAuth2EmailService) SendOrderConfirmation(order models.Order) error {
 		Totals:        order.Totals,
 	}
 
-	// If it's a registered user order, we might need to fetch user email
+	// If it's a registered user order, ensure we have email
 	if order.UserID != "guest" && order.GuestEmail == "" {
-		// For now, we'll need the email to be passed in the order
-		// This might need to be updated based on your user system
 		return fmt.Errorf("user email not found for order %s", order.ID)
 	}
 
@@ -101,15 +107,15 @@ func (e *OAuth2EmailService) SendOrderConfirmation(order models.Order) error {
 	}
 
 	subject := fmt.Sprintf("Order Confirmation - %s | TRIPUND Lifestyle", order.OrderNumber)
-	body, err := e.renderOrderConfirmationTemplate(data)
+	htmlBody, err := s.renderOrderConfirmationTemplate(data)
 	if err != nil {
 		return fmt.Errorf("failed to render email template: %v", err)
 	}
 
-	return e.sendEmail(data.CustomerEmail, subject, body)
+	return s.sendEmail(data.CustomerEmail, data.CustomerName, subject, htmlBody)
 }
 
-func (e *OAuth2EmailService) SendShippingConfirmation(order models.Order) error {
+func (s *SendGridEmailService) SendShippingConfirmation(order models.Order) error {
 	// Prepare email data
 	data := ShippingConfirmationData{
 		Order:         order,
@@ -120,7 +126,7 @@ func (e *OAuth2EmailService) SendShippingConfirmation(order models.Order) error 
 		TrackingInfo:  order.Tracking,
 	}
 
-	// If it's a registered user order
+	// If it's a registered user order, ensure we have email
 	if order.UserID != "guest" && order.GuestEmail == "" {
 		return fmt.Errorf("user email not found for order %s", order.ID)
 	}
@@ -140,45 +146,52 @@ func (e *OAuth2EmailService) SendShippingConfirmation(order models.Order) error 
 	}
 
 	subject := fmt.Sprintf("Your Order is Shipped - %s | TRIPUND Lifestyle", order.OrderNumber)
-	body, err := e.renderShippingConfirmationTemplate(data)
+	htmlBody, err := s.renderShippingConfirmationTemplate(data)
 	if err != nil {
 		return fmt.Errorf("failed to render email template: %v", err)
 	}
 
-	return e.sendEmail(data.CustomerEmail, subject, body)
+	return s.sendEmail(data.CustomerEmail, data.CustomerName, subject, htmlBody)
 }
 
-func (e *OAuth2EmailService) sendEmail(to, subject, body string) error {
-	log.Printf("OAuth2: Attempting to send email to %s with subject: %s", to, subject)
-	
-	// Create the email message
-	message := &gmail.Message{}
-	
-	// Build the email headers and body
-	emailBody := fmt.Sprintf("To: %s\r\n"+
-		"From: TRIPUND Lifestyle <%s>\r\n"+
-		"Subject: %s\r\n"+
-		"MIME-Version: 1.0\r\n"+
-		"Content-Type: text/html; charset=UTF-8\r\n"+
-		"\r\n%s", to, e.FromEmail, subject, body)
+func (s *SendGridEmailService) sendEmail(toEmail, toName, subject, htmlBody string) error {
+	log.Printf("SendGrid: Preparing to send email to %s <%s> with subject: %s", toName, toEmail, subject)
 
-	// Encode the message
-	message.Raw = base64.URLEncoding.EncodeToString([]byte(emailBody))
-	log.Printf("OAuth2: Email message created, size: %d bytes", len(message.Raw))
+	from := mail.NewEmail(s.FromName, s.FromEmail)
+	to := mail.NewEmail(toName, toEmail)
+	
+	// Create plain text version from HTML (basic conversion)
+	plainTextBody := s.htmlToText(htmlBody)
+	
+	message := mail.NewSingleEmail(from, subject, to, plainTextBody, htmlBody)
 
-	// Send the email
-	log.Printf("OAuth2: Calling Gmail API to send email...")
-	result, err := e.service.Users.Messages.Send("me", message).Do()
+	// Send email
+	response, err := s.client.Send(message)
 	if err != nil {
-		log.Printf("OAuth2 ERROR: Gmail API error: %v", err)
-		return fmt.Errorf("failed to send email via Gmail API: %v", err)
+		log.Printf("SendGrid ERROR: Failed to send email: %v", err)
+		return fmt.Errorf("failed to send email via SendGrid: %v", err)
 	}
 
-	log.Printf("OAuth2 SUCCESS: Email sent successfully to %s via Gmail API. Message ID: %s", to, result.Id)
+	log.Printf("SendGrid SUCCESS: Email sent to %s. Status: %d, Body: %s", toEmail, response.StatusCode, response.Body)
+	
+	if response.StatusCode >= 400 {
+		return fmt.Errorf("SendGrid API returned error status %d: %s", response.StatusCode, response.Body)
+	}
+
 	return nil
 }
 
-func (e *OAuth2EmailService) renderOrderConfirmationTemplate(data OrderConfirmationData) (string, error) {
+// Basic HTML to text conversion
+func (s *SendGridEmailService) htmlToText(html string) string {
+	// This is a very basic conversion - for production you might want to use a proper HTML to text library
+	// Remove common HTML tags and replace with text equivalents
+	text := html
+	// Replace line breaks
+	text = fmt.Sprintf("Order Confirmation - TRIPUND Lifestyle\n\nThank you for your order! We're excited to handcraft your selected items with care and attention to detail.\n\nVisit us at tripundlifestyle.com for more details.")
+	return text
+}
+
+func (s *SendGridEmailService) renderOrderConfirmationTemplate(data OrderConfirmationData) (string, error) {
 	tmpl := `
 <!DOCTYPE html>
 <html>
@@ -337,7 +350,7 @@ func (e *OAuth2EmailService) renderOrderConfirmationTemplate(data OrderConfirmat
 	return buf.String(), nil
 }
 
-func (e *OAuth2EmailService) renderShippingConfirmationTemplate(data ShippingConfirmationData) (string, error) {
+func (s *SendGridEmailService) renderShippingConfirmationTemplate(data ShippingConfirmationData) (string, error) {
 	tmpl := `
 <!DOCTYPE html>
 <html>
@@ -513,37 +526,7 @@ func (e *OAuth2EmailService) renderShippingConfirmationTemplate(data ShippingCon
 	return buf.String(), nil
 }
 
-// Helper function to create service account credentials JSON from environment variables
-func CreateServiceAccountJSON() (string, error) {
-	// You can set individual environment variables or use a full JSON
-	serviceAccountJSON := os.Getenv("GOOGLE_SERVICE_ACCOUNT_KEY")
-	if serviceAccountJSON != "" {
-		return serviceAccountJSON, nil
-	}
-
-	// Alternative: construct from individual fields
-	key := ServiceAccountKey{
-		Type:                    "service_account",
-		ProjectID:               os.Getenv("GOOGLE_PROJECT_ID"),
-		PrivateKeyID:            os.Getenv("GOOGLE_PRIVATE_KEY_ID"),
-		PrivateKey:              strings.ReplaceAll(os.Getenv("GOOGLE_PRIVATE_KEY"), "\\n", "\n"),
-		ClientEmail:             os.Getenv("GOOGLE_CLIENT_EMAIL"),
-		ClientID:                os.Getenv("GOOGLE_CLIENT_ID"),
-		AuthURI:                 "https://accounts.google.com/o/oauth2/auth",
-		TokenURI:                "https://oauth2.googleapis.com/token",
-		AuthProviderX509CertURL: "https://www.googleapis.com/oauth2/v1/certs",
-	}
-
-	if key.ProjectID == "" || key.PrivateKey == "" || key.ClientEmail == "" {
-		return "", fmt.Errorf("missing required service account credentials")
-	}
-
-	key.ClientX509CertURL = fmt.Sprintf("https://www.googleapis.com/robot/v1/metadata/x509/%s", key.ClientEmail)
-
-	jsonBytes, err := json.Marshal(key)
-	if err != nil {
-		return "", fmt.Errorf("failed to marshal service account key: %v", err)
-	}
-
-	return string(jsonBytes), nil
+// SendRawEmail sends an email with custom content (for template testing)
+func (s *SendGridEmailService) SendRawEmail(toEmail, subject, htmlBody string) error {
+	return s.sendEmail(toEmail, "", subject, htmlBody)
 }

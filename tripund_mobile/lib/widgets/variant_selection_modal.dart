@@ -73,6 +73,9 @@ class _VariantSelectionModalState extends State<VariantSelectionModal> {
             : '';
 
     return Container(
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.85,
+      ),
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
@@ -172,158 +175,168 @@ class _VariantSelectionModalState extends State<VariantSelectionModal> {
           
           const Divider(height: 1),
           
-          // Variant selection
-          if (hasVariants) ...[
-            // Color selection
-            if (widget.product.availableColors != null && widget.product.availableColors!.isNotEmpty) ...[
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Color',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: widget.product.availableColors!.map((color) {
-                        final isSelected = selectedColor == color;
-                        // Check if this color has available sizes
-                        final hasAvailableSizes = widget.product.variants!
-                            .any((v) => v.color == color && v.available);
-                        
-                        return ChoiceChip(
-                          label: Text(color),
-                          selected: isSelected,
-                          onSelected: hasAvailableSizes ? (selected) {
-                            setState(() {
-                              selectedColor = selected ? color : null;
-                              _updateSelectedVariant();
-                            });
-                          } : null,
-                          backgroundColor: Colors.grey[200],
-                          selectedColor: AppTheme.primaryColor,
-                          labelStyle: TextStyle(
-                            color: isSelected ? Colors.white : Colors.black,
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-            
-            // Size selection
-            if (widget.product.availableSizes != null && widget.product.availableSizes!.isNotEmpty) ...[
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Size',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: widget.product.availableSizes!.map((size) {
-                        final isSelected = selectedSize == size;
-                        // Check if this size is available for selected color
-                        final isAvailable = selectedColor == null ||
-                            widget.product.variants!.any((v) => 
-                              v.color == selectedColor && v.size == size && v.available
-                            );
-                        
-                        return ChoiceChip(
-                          label: Text(size),
-                          selected: isSelected,
-                          onSelected: isAvailable ? (selected) {
-                            setState(() {
-                              selectedSize = selected ? size : null;
-                              _updateSelectedVariant();
-                            });
-                          } : null,
-                          backgroundColor: Colors.grey[200],
-                          selectedColor: AppTheme.primaryColor,
-                          labelStyle: TextStyle(
-                            color: isSelected ? Colors.white : Colors.black,
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-            const SizedBox(height: 16),
-          ],
-          
-          // Quantity selector
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: [
-                const Text(
-                  'Quantity',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const Spacer(),
-                Container(
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey[300]!),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.remove),
-                        onPressed: quantity > 1 
-                          ? () => setState(() => quantity--) 
-                          : null,
-                        padding: const EdgeInsets.all(8),
-                        constraints: const BoxConstraints(),
-                      ),
-                      Container(
+          // Scrollable content area
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Variant selection
+                  if (hasVariants) ...[
+                    // Color selection
+                    if (widget.product.availableColors != null && widget.product.availableColors!.isNotEmpty) ...[
+                      Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Text(
-                          quantity.toString(),
-                          style: const TextStyle(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Color',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: widget.product.availableColors!.map((color) {
+                                final isSelected = selectedColor == color;
+                                // Check if this color has available sizes
+                                final hasAvailableSizes = widget.product.variants!
+                                    .any((v) => v.color == color && v.available);
+                                
+                                return ChoiceChip(
+                                  label: Text(color),
+                                  selected: isSelected,
+                                  onSelected: hasAvailableSizes ? (selected) {
+                                    setState(() {
+                                      selectedColor = selected ? color : null;
+                                      _updateSelectedVariant();
+                                    });
+                                  } : null,
+                                  backgroundColor: Colors.grey[200],
+                                  selectedColor: AppTheme.primaryColor,
+                                  labelStyle: TextStyle(
+                                    color: isSelected ? Colors.white : Colors.black,
+                                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                    
+                    // Size selection
+                    if (widget.product.availableSizes != null && widget.product.availableSizes!.isNotEmpty) ...[
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Size',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: widget.product.availableSizes!.map((size) {
+                                final isSelected = selectedSize == size;
+                                // Check if this size is available for selected color
+                                final isAvailable = selectedColor == null ||
+                                    widget.product.variants!.any((v) => 
+                                      v.color == selectedColor && v.size == size && v.available
+                                    );
+                                
+                                return ChoiceChip(
+                                  label: Text(size),
+                                  selected: isSelected,
+                                  onSelected: isAvailable ? (selected) {
+                                    setState(() {
+                                      selectedSize = selected ? size : null;
+                                      _updateSelectedVariant();
+                                    });
+                                  } : null,
+                                  backgroundColor: Colors.grey[200],
+                                  selectedColor: AppTheme.primaryColor,
+                                  labelStyle: TextStyle(
+                                    color: isSelected ? Colors.white : Colors.black,
+                                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                  ],
+                  
+                  // Quantity selector
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                      children: [
+                        const Text(
+                          'Quantity',
+                          style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.add),
-                        onPressed: () => setState(() => quantity++),
-                        padding: const EdgeInsets.all(8),
-                        constraints: const BoxConstraints(),
-                      ),
-                    ],
+                        const Spacer(),
+                        Container(
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey[300]!),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.remove),
+                                onPressed: quantity > 1 
+                                  ? () => setState(() => quantity--) 
+                                  : null,
+                                padding: const EdgeInsets.all(8),
+                                constraints: const BoxConstraints(),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                                child: Text(
+                                  quantity.toString(),
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.add),
+                                onPressed: () => setState(() => quantity++),
+                                padding: const EdgeInsets.all(8),
+                                constraints: const BoxConstraints(),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
-          
-          const SizedBox(height: 16),
           
           // Add to cart button
           Padding(

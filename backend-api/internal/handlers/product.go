@@ -86,6 +86,9 @@ func (h *ProductHandler) GetProducts(c *gin.Context) {
 		}
 		product.ID = doc.Ref.ID
 		
+		// Validate variant consistency before returning
+		h.validateVariantConsistency(&product)
+		
 		// Apply subcategory filter in memory if needed
 		if subcategory != "" {
 			found := false
@@ -156,6 +159,9 @@ func (h *ProductHandler) CreateProduct(c *gin.Context) {
 		return
 	}
 
+	// Auto-correct hasVariants flag based on actual variants data
+	h.validateVariantConsistency(&product)
+
 	product.CreatedAt = time.Now()
 	product.UpdatedAt = time.Now()
 	product.Status = "active"
@@ -177,6 +183,32 @@ func (h *ProductHandler) UpdateProduct(c *gin.Context) {
 	if err := c.ShouldBindJSON(&updates); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
+	}
+
+	// If updating variants-related fields, validate consistency
+	if hasVariantsUpdate, hasVariants := updates["has_variants"]; hasVariants {
+		if variants, hasVariantsData := updates["variants"]; hasVariantsData {
+			// Check if hasVariants should be auto-corrected based on variants data
+			if variantsList, ok := variants.([]interface{}); ok {
+				hasValidVariants := len(variantsList) > 0
+				if hasValidVariants != hasVariantsUpdate.(bool) {
+					updates["has_variants"] = hasValidVariants
+				}
+				// Also update available colors/sizes if variants exist
+				if hasValidVariants {
+					colors, sizes := h.extractColorsAndSizes(variantsList)
+					if len(colors) > 0 {
+						updates["available_colors"] = colors
+					}
+					if len(sizes) > 0 {
+						updates["available_sizes"] = sizes
+					}
+				} else {
+					updates["available_colors"] = []string{}
+					updates["available_sizes"] = []string{}
+				}
+			}
+		}
 	}
 
 	updates["updated_at"] = time.Now()
@@ -243,5 +275,72 @@ func (h *ProductHandler) SearchProducts(c *gin.Context) {
 		"count":    len(products),
 		"query":    searchQuery,
 	})
+}
+
+// validateVariantConsistency ensures hasVariants flag matches actual variants data
+func (h *ProductHandler) validateVariantConsistency(product *models.Product) {
+	hasValidVariants := len(product.Variants) > 0
+	
+	// Auto-correct hasVariants flag
+	product.HasVariants = hasValidVariants
+	
+	if hasValidVariants {
+		// Extract and update available colors and sizes
+		colors := make(map[string]bool)
+		sizes := make(map[string]bool)
+		
+		for _, variant := range product.Variants {
+			if variant.Color != "" {
+				colors[variant.Color] = true
+			}
+			if variant.Size != "" {
+				sizes[variant.Size] = true
+			}
+		}
+		
+		// Convert to slices
+		product.AvailableColors = make([]string, 0, len(colors))
+		product.AvailableSizes = make([]string, 0, len(sizes))
+		
+		for color := range colors {
+			product.AvailableColors = append(product.AvailableColors, color)
+		}
+		for size := range sizes {
+			product.AvailableSizes = append(product.AvailableSizes, size)
+		}
+	} else {
+		// Clear arrays if no variants
+		product.AvailableColors = []string{}
+		product.AvailableSizes = []string{}
+	}
+}
+
+// extractColorsAndSizes helper for update operations
+func (h *ProductHandler) extractColorsAndSizes(variants []interface{}) ([]string, []string) {
+	colors := make(map[string]bool)
+	sizes := make(map[string]bool)
+	
+	for _, v := range variants {
+		if variant, ok := v.(map[string]interface{}); ok {
+			if color, hasColor := variant["color"].(string); hasColor && color != "" {
+				colors[color] = true
+			}
+			if size, hasSize := variant["size"].(string); hasSize && size != "" {
+				sizes[size] = true
+			}
+		}
+	}
+	
+	colorSlice := make([]string, 0, len(colors))
+	sizeSlice := make([]string, 0, len(sizes))
+	
+	for color := range colors {
+		colorSlice = append(colorSlice, color)
+	}
+	for size := range sizes {
+		sizeSlice = append(sizeSlice, size)
+	}
+	
+	return colorSlice, sizeSlice
 }
 

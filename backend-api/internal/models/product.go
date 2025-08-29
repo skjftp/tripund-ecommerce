@@ -2,15 +2,15 @@ package models
 
 // ProductVariant represents a product variation (size/color combination)
 type ProductVariant struct {
-	ID            string   `json:"id" firestore:"id"`
-	Color         string   `json:"color" firestore:"color"`
-	Size          string   `json:"size" firestore:"size"`
-	Price         float64  `json:"price" firestore:"price"`
-	SalePrice     float64  `json:"sale_price,omitempty" firestore:"sale_price,omitempty"`
-	SKU           string   `json:"sku" firestore:"sku"`
-	StockQuantity int      `json:"stock_quantity" firestore:"stock_quantity"`
-	Images        []string `json:"images,omitempty" firestore:"images,omitempty"`
-	Available     bool     `json:"available" firestore:"available"`
+	ID            string      `json:"id" firestore:"id"`
+	Color         string      `json:"color" firestore:"color"`
+	Size          string      `json:"size" firestore:"size"`
+	Price         interface{} `json:"price" firestore:"price"`
+	SalePrice     interface{} `json:"sale_price,omitempty" firestore:"sale_price,omitempty"`
+	SKU           string      `json:"sku" firestore:"sku"`
+	StockQuantity int         `json:"stock_quantity" firestore:"stock_quantity"`
+	Images        []string    `json:"images,omitempty" firestore:"images,omitempty"`
+	Available     bool        `json:"available" firestore:"available"`
 }
 
 type Product struct {

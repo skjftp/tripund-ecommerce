@@ -23,6 +23,12 @@ class UpdateService {
       'https://tripund-backend-665685012221.asia-south1.run.app/api/v1/app/latest-apk';
 
   Future<void> checkForUpdate(BuildContext context) async {
+    // Only check for updates on Android
+    if (!Platform.isAndroid) {
+      debugPrint('Update check skipped: Not on Android platform');
+      return;
+    }
+    
     try {
       // Get current app version
       final PackageInfo packageInfo = await PackageInfo.fromPlatform();

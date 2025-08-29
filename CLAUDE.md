@@ -122,7 +122,8 @@ RAZORPAY_KEY_ID=your-razorpay-key
 RAZORPAY_KEY_SECRET=your-razorpay-secret
 CORS_ORIGIN=http://localhost:3000
 EMAIL_FROM=orders@tripundlifestyle.com
-EMAIL_PASSWORD=your-google-app-password
+EMAIL_FROM_NAME=TRIPUND Lifestyle
+SENDGRID_API_KEY=your-sendgrid-api-key
 ```
 
 ### Frontend (.env)
@@ -362,27 +363,30 @@ git pull origin main
 
 ## Email System Setup
 
-### Google Workspace Configuration
-The platform uses `orders@tripundlifestyle.com` for automated email notifications.
+### SendGrid Configuration
+The platform uses SendGrid for reliable, scalable email delivery of automated notifications.
 
 #### Setup Steps:
-1. **Generate Google App Password**:
-   - Go to Google Admin Console → Security → 2-Step Verification
-   - Enable 2-Step Verification for orders@tripundlifestyle.com
-   - Generate App Password for "Mail" application
-   - Copy the 16-character password
+1. **SendGrid Account Setup**:
+   - Sign up at [sendgrid.com](https://sendgrid.com)
+   - Complete email verification
+   - Choose appropriate plan (Free tier: 100 emails/day)
 
-2. **Update Environment Variables**:
-   ```bash
-   EMAIL_FROM=orders@tripundlifestyle.com
-   EMAIL_PASSWORD=your-16-character-app-password
-   ```
+2. **Create API Key**:
+   - Go to Settings → API Keys in SendGrid dashboard
+   - Create new API key with "Mail Send" full access permissions
+   - Copy the API key securely
 
-3. **Deploy with Email Config**:
+3. **Sender Authentication**:
+   - **Single Sender**: Verify `orders@tripundlifestyle.com` in SendGrid
+   - **Domain Authentication**: Set up DNS records for `tripundlifestyle.com` domain
+
+4. **Deploy with SendGrid Config**:
    ```bash
    gcloud run services update tripund-backend \
      --set-env-vars EMAIL_FROM=orders@tripundlifestyle.com \
-     --set-env-vars EMAIL_PASSWORD=your-app-password \
+     --set-env-vars EMAIL_FROM_NAME="TRIPUND Lifestyle" \
+     --set-env-vars SENDGRID_API_KEY=your-sendgrid-api-key \
      --region=asia-south1
    ```
 
@@ -575,6 +579,10 @@ Add this A record to your DNS provider:
 15. **Cart persistence uses SharedPreferences with key 'cart_items'**
 16. **Auth token must be synchronized between AuthProvider and ApiService**
 17. **Payment settings (COD enabled/limit) fetched from /api/v1/settings/public**
+18. **iOS deployment requires Firebase 3.x+ and gRPC 1.69+ for Xcode 15+ compatibility**
+19. **iOS pods deployment target must be 13.0+ minimum - forced in Podfile post_install**
+20. **iOS release builds: use `flutter build ios --release` then `xcrun devicectl device install app`**
+21. **Flutter update service only runs on Android - Platform.isAndroid check prevents iOS issues**
 
 ## Quick Fixes
 
@@ -633,9 +641,15 @@ Add this A record to your DNS provider:
   - Cart persistence with SharedPreferences
   - Address persistence in database
   - Auth token synchronization
-- **iOS Support**:
-  - Location permissions configured
-  - Proper build configuration
+- **iOS Deployment (August 29, 2025)**:
+  - **Successfully resolved Firebase/gRPC compatibility issues** with Xcode 15+
+  - **Updated Firebase dependencies**: firebase_core ^3.15.2, cloud_firestore ^5.6.12
+  - **Fixed deployment targets**: All pods forced to iOS 13.0+ minimum
+  - **Platform-specific updates**: Android update modal now iOS-excluded
+  - **App icon updated**: Generated from new_app_icon.jpg for all iOS sizes
+  - **Release build deployed**: 54.6MB production build installed on iPhone 16 Pro Max
+  - **Xcode configuration**: Proper signing with team DKJP8LND7B, bundle ID com.tripundlifestyle.tripundMobile
+  - **Build commands verified**: `flutter build ios --release` and `xcrun devicectl device install app`
 
 ### Admin Panel
 - Product CRUD operations with multi-image support
@@ -657,12 +671,13 @@ Add this A record to your DNS provider:
 - Product filtering and search
 - Payment integration ready (Razorpay)
 - CORS configuration for multiple domains
-- **Email notifications system**:
+- **SendGrid email notifications system**:
   - Order confirmation emails (HTML templates)
   - Shipping confirmation emails with tracking
-  - Google Workspace integration (orders@tripundlifestyle.com)
+  - SendGrid API integration for reliable delivery
   - Variant-aware email content (color/size info)
   - Asynchronous sending to avoid blocking
+  - Scalable transactional email delivery
 
 ## Component Library
 
@@ -675,6 +690,7 @@ Add this A record to your DNS provider:
 - `ProductForm.tsx` - Comprehensive product management form
 
 ---
-Last Updated: August 28, 2025
+Last Updated: August 29, 2025
 Platform: TRIPUND E-Commerce
-Version: 1.0.0
+Version: 1.0.22
+iOS Build: Successfully deployed to iPhone 16 Pro Max

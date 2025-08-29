@@ -12,6 +12,6 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.1.0
 	github.com/joho/godotenv v1.5.1
 	github.com/razorpay/razorpay-go v1.2.0
+	github.com/sendgrid/sendgrid-go v3.14.0+incompatible
 	golang.org/x/crypto v0.15.0
-	google.golang.org/api v0.148.0
 )

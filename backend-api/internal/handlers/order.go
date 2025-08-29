@@ -19,18 +19,18 @@ import (
 type OrderHandler struct {
 	db                   *database.Firebase
 	notificationHandler  *NotificationHandler
-	emailService         *services.SimpleEmailService
+	emailService         *services.SendGridEmailService
 }
 
 func NewOrderHandler(db *database.Firebase) *OrderHandler {
-	// Initialize Simple email service (placeholder until SendGrid is configured)
-	log.Printf("Initializing Simple email service...")
-	emailService, err := services.NewSimpleEmailService()
+	// Initialize SendGrid email service
+	log.Printf("Initializing SendGrid email service...")
+	emailService, err := services.NewSendGridEmailService()
 	if err != nil {
-		log.Printf("WARNING: Failed to initialize email service: %v", err)
+		log.Printf("WARNING: Failed to initialize SendGrid email service: %v", err)
 		emailService = nil // Will disable email sending but not break the app
 	} else {
-		log.Printf("Simple email service initialized successfully (placeholder until SendGrid)")
+		log.Printf("SendGrid email service initialized successfully")
 	}
 	
 	return &OrderHandler{
@@ -156,7 +156,7 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 	// Send order confirmation email
 	go func() {
 		if h.emailService != nil {
-			if err := h.emailService.SendOrderConfirmation(&order); err != nil {
+			if err := h.emailService.SendOrderConfirmation(order); err != nil {
 				log.Printf("Failed to send order confirmation email for order %s: %v", orderID, err)
 			} else {
 				log.Printf("Order confirmation email sent successfully for order %s", orderID)
@@ -432,7 +432,7 @@ func (h *OrderHandler) UpdateOrderStatus(c *gin.Context) {
 		// Send shipping confirmation email
 		go func() {
 			if h.emailService != nil {
-				if err := h.emailService.SendShippingConfirmation(&order); err != nil {
+				if err := h.emailService.SendShippingConfirmation(order); err != nil {
 					log.Printf("Failed to send shipping confirmation email for order %s: %v", orderID, err)
 				} else {
 					log.Printf("Shipping confirmation email sent successfully for order %s", orderID)
@@ -538,7 +538,7 @@ func (h *OrderHandler) CreateGuestOrder(c *gin.Context) {
 	// Send order confirmation email
 	go func() {
 		if h.emailService != nil {
-			if err := h.emailService.SendOrderConfirmation(&order); err != nil {
+			if err := h.emailService.SendOrderConfirmation(order); err != nil {
 				log.Printf("Failed to send guest order confirmation email for order %s: %v", orderID, err)
 			} else {
 				log.Printf("Guest order confirmation email sent successfully for order %s", orderID)

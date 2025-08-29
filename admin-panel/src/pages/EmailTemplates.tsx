@@ -62,6 +62,7 @@ const EmailTemplates = () => {
   const [loading, setLoading] = useState(false);
   const [testEmail, setTestEmail] = useState('');
   const [testData, setTestData] = useState<Record<string, any>>({});
+  const [testDataText, setTestDataText] = useState('');
   const [activeTab, setActiveTab] = useState<'custom' | 'predefined'>('custom');
   const [editingTemplate, setEditingTemplate] = useState<Partial<EmailTemplate>>({
     name: '',
@@ -161,17 +162,27 @@ const EmailTemplates = () => {
       return;
     }
 
+    // Validate JSON before sending
+    let finalTestData;
+    try {
+      finalTestData = JSON.parse(testDataText);
+    } catch (error) {
+      alert('Invalid JSON in test data. Please check your syntax.');
+      return;
+    }
+
     setLoading(true);
     try {
       await api.post('/admin/email-templates/test', {
         template_id: selectedTemplate.id,
         to_email: testEmail,
-        test_data: testData
+        test_data: finalTestData
       });
       alert('Test email sent successfully!');
       setShowTestModal(false);
       setTestEmail('');
       setTestData({});
+      setTestDataText('');
     } catch (error) {
       console.error('Failed to send test email:', error);
       alert('Failed to send test email');
@@ -251,6 +262,7 @@ const EmailTemplates = () => {
       }
     });
     setTestData(data);
+    setTestDataText(JSON.stringify(data, null, 2));
   };
 
   return (
@@ -671,16 +683,19 @@ const EmailTemplates = () => {
                   Test Data (JSON)
                 </label>
                 <textarea
-                  value={JSON.stringify(testData, null, 2)}
+                  value={testDataText}
                   onChange={(e) => {
+                    setTestDataText(e.target.value);
                     try {
                       setTestData(JSON.parse(e.target.value));
                     } catch (error) {
-                      // Invalid JSON, ignore
+                      // Invalid JSON, keep the text but don't update testData
+                      console.log('Invalid JSON, will validate on send');
                     }
                   }}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brown-500 focus:border-brown-500 font-mono text-sm"
                   rows={10}
+                  placeholder="Enter valid JSON for test data..."
                 />
                 <p className="text-xs text-gray-500 mt-1">
                   Edit the test data to customize the email content
@@ -694,6 +709,7 @@ const EmailTemplates = () => {
                   setShowTestModal(false);
                   setTestEmail('');
                   setTestData({});
+                  setTestDataText('');
                 }}
                 className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
               >
