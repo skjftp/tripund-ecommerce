@@ -28,7 +28,7 @@ func (h *AppHandler) GetVersion(c *gin.Context) {
 	// Get version info from environment variables with defaults
 	version := os.Getenv("APP_VERSION")
 	if version == "" {
-		version = "1.0.21"
+		version = "1.0.22"
 	}
 	
 	buildNumberStr := os.Getenv("APP_BUILD_NUMBER")
@@ -47,14 +47,13 @@ func (h *AppHandler) GetVersion(c *gin.Context) {
 	releaseNotes := os.Getenv("APP_RELEASE_NOTES")
 	if releaseNotes == "" {
 		releaseNotes = "🎉 Major Update v" + version + "!\n" +
-			"✅ Complete cart persistence - never lose your items\n" +
-			"✅ Fixed authentication tokens for all API calls\n" +
-			"✅ Dynamic payment settings from backend\n" +
-			"✅ Cash on Delivery (COD) option with limits\n" +
-			"✅ GPS location for easy address filling\n" +
-			"✅ Fixed order creation flow\n" +
-			"✅ Improved checkout experience\n" +
-			"🔧 Fixed critical bugs in payment processing"
+			"✨ Brand new app icon\n" +
+			"🎁 Real promo codes from backend\n" +
+			"🔄 Smooth tab switching animation\n" +
+			"🛒 Improved cart and wishlist functionality\n" +
+			"📱 Better share functionality\n" +
+			"✅ All previous fixes included\n" +
+			"🚀 Enhanced performance and stability"
 	}
 	
 	forceUpdateStr := os.Getenv("APP_FORCE_UPDATE")

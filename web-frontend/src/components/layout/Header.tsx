@@ -12,7 +12,12 @@ export default function Header() {
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [activePromotions, setActivePromotions] = useState<any[]>([]);
+  const [activePromotions, setActivePromotions] = useState<any[]>([{
+    code: 'TRIPUND20',
+    description: '20% off on first order',
+    type: 'percentage',
+    discount: 20
+  }]);
   const [currentPromoIndex, setCurrentPromoIndex] = useState(0);
   const profileDropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
