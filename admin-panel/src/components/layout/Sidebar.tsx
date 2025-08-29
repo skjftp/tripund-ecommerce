@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { useDispatch } from 'react-redux';
 import { logout } from '../../store/slices/authSlice';
+import { usePermissions } from '../../hooks/usePermissions';
 
 interface SidebarProps {
   isOpen?: boolean;
@@ -28,25 +29,29 @@ interface SidebarProps {
 
 export default function Sidebar({ isOpen = true, onClose }: SidebarProps) {
   const dispatch = useDispatch();
+  const { canAccessPage } = usePermissions();
 
-  const menuItems = [
-    { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
-    { icon: Package, label: 'Products', path: '/products' },
-    { icon: ShoppingCart, label: 'Orders', path: '/orders' },
-    { icon: Receipt, label: 'Invoices', path: '/invoices' },
-    { icon: Users, label: 'Customers', path: '/customers' },
-    { icon: UserCog, label: 'Admin Users', path: '/users' },
-    { icon: MessageSquare, label: 'Messages', path: '/contact-messages' },
-    { icon: FolderTree, label: 'Categories', path: '/categories' },
-    { icon: FileText, label: 'Content', path: '/content' },
-    { icon: Shield, label: 'Legal', path: '/legal' },
-    { icon: Tag, label: 'Promotions', path: '/promotions' },
-    { icon: CreditCard, label: 'Payments', path: '/payments' },
-    { icon: Mail, label: 'Email Templates', path: '/email-templates' },
-    { icon: BarChart3, label: 'Analytics', path: '/analytics' },
-    { icon: Bell, label: 'Notifications', path: '/notifications' },
-    { icon: Settings, label: 'Settings', path: '/settings' },
+  const allMenuItems = [
+    { icon: LayoutDashboard, label: 'Dashboard', path: '/', pageId: 'dashboard' },
+    { icon: Package, label: 'Products', path: '/products', pageId: 'products' },
+    { icon: ShoppingCart, label: 'Orders', path: '/orders', pageId: 'orders' },
+    { icon: Receipt, label: 'Invoices', path: '/invoices', pageId: 'invoices' },
+    { icon: Users, label: 'Customers', path: '/customers', pageId: 'customers' },
+    { icon: UserCog, label: 'Admin Users', path: '/users', pageId: 'users' },
+    { icon: MessageSquare, label: 'Messages', path: '/contact-messages', pageId: 'contact-messages' },
+    { icon: FolderTree, label: 'Categories', path: '/categories', pageId: 'categories' },
+    { icon: FileText, label: 'Content', path: '/content', pageId: 'content' },
+    { icon: Shield, label: 'Legal', path: '/legal', pageId: 'legal' },
+    { icon: Tag, label: 'Promotions', path: '/promotions', pageId: 'promotions' },
+    { icon: CreditCard, label: 'Payments', path: '/payments', pageId: 'payments' },
+    { icon: Mail, label: 'Email Templates', path: '/email-templates', pageId: 'email-templates' },
+    { icon: BarChart3, label: 'Analytics', path: '/analytics', pageId: 'analytics' },
+    { icon: Bell, label: 'Notifications', path: '/notifications', pageId: 'notifications' },
+    { icon: Settings, label: 'Settings', path: '/settings', pageId: 'settings' },
   ];
+
+  // Filter menu items based on user permissions
+  const menuItems = allMenuItems.filter(item => canAccessPage(item.pageId));
 
   const handleLogout = () => {
     dispatch(logout());

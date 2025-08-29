@@ -15,6 +15,7 @@ import toast from 'react-hot-toast';
 import api, { productAPI } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import ProductForm from '../components/ProductForm';
+import { usePermissions, PermissionWrapper, PERMISSIONS } from '../hooks/usePermissions';
 
 interface Product {
   id: string;
@@ -198,13 +199,15 @@ export default function Products() {
             <Download size={20} />
             <span>Export</span>
           </button>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="flex items-center space-x-2 admin-button"
-          >
-            <Plus size={20} />
-            <span>Add Product</span>
-          </button>
+          <PermissionWrapper permission={PERMISSIONS.PRODUCTS_CREATE}>
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="flex items-center space-x-2 admin-button"
+            >
+              <Plus size={20} />
+              <span>Add Product</span>
+            </button>
+          </PermissionWrapper>
         </div>
       </div>
 
@@ -372,18 +375,22 @@ export default function Products() {
                         >
                           <Eye size={18} />
                         </button>
-                        <button 
-                          onClick={() => handleEdit(product)}
-                          className="text-blue-600 hover:text-blue-900"
-                        >
-                          <Edit size={18} />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(product.id)}
-                          className="text-red-600 hover:text-red-900"
-                        >
-                          <Trash2 size={18} />
-                        </button>
+                        <PermissionWrapper permission={PERMISSIONS.PRODUCTS_EDIT}>
+                          <button 
+                            onClick={() => handleEdit(product)}
+                            className="text-blue-600 hover:text-blue-900"
+                          >
+                            <Edit size={18} />
+                          </button>
+                        </PermissionWrapper>
+                        <PermissionWrapper permission={PERMISSIONS.PRODUCTS_DELETE}>
+                          <button
+                            onClick={() => handleDelete(product.id)}
+                            className="text-red-600 hover:text-red-900"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </PermissionWrapper>
                       </div>
                     </td>
                   </tr>

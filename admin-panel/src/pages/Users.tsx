@@ -13,6 +13,7 @@ import {
   Filter
 } from 'lucide-react';
 import api from '../services/api';
+import { usePermissions, PermissionWrapper, PERMISSIONS } from '../hooks/usePermissions';
 
 interface AdminUser {
   id: string;
@@ -64,6 +65,7 @@ interface ChangePasswordForm {
 }
 
 const Users: React.FC = () => {
+  const { hasPermission } = usePermissions();
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
   const [permissions, setPermissions] = useState<Permission[]>([]);
@@ -291,13 +293,15 @@ const Users: React.FC = () => {
               <Key className="h-4 w-4" />
               Change Password
             </button>
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="bg-brown-600 text-white px-4 py-2 rounded-md hover:bg-brown-700 flex items-center gap-2"
-            >
-              <UserPlus className="h-4 w-4" />
-              Create Admin User
-            </button>
+            <PermissionWrapper permission={PERMISSIONS.USERS_CREATE}>
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700 flex items-center gap-2"
+              >
+                <UserPlus className="h-4 w-4" />
+                Create Admin User
+              </button>
+            </PermissionWrapper>
           </div>
         </div>
 
@@ -311,7 +315,7 @@ const Users: React.FC = () => {
                 placeholder="Search by name or email..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brown-500 focus:border-brown-500"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
               />
             </div>
           </div>
@@ -319,7 +323,7 @@ const Users: React.FC = () => {
           <select
             value={filterRole}
             onChange={(e) => setFilterRole(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brown-500 focus:border-brown-500"
+            className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
           >
             <option value="">All Roles</option>
             {roles.map(role => (
@@ -332,7 +336,7 @@ const Users: React.FC = () => {
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brown-500 focus:border-brown-500"
+            className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
           >
             <option value="">All Status</option>
             <option value="active">Active</option>
@@ -406,24 +410,28 @@ const Users: React.FC = () => {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                   <div className="flex gap-2">
-                    <button
-                      onClick={() => {
-                        setSelectedUser(user);
-                        setShowEditModal(true);
-                      }}
-                      className="text-blue-600 hover:text-blue-900"
-                      title="Edit User"
-                    >
-                      <Edit2 className="h-4 w-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteUser(user)}
-                      className="text-red-600 hover:text-red-900"
-                      title="Delete User"
-                      disabled={user.role === 'super_admin'}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+                    <PermissionWrapper permission={PERMISSIONS.USERS_EDIT}>
+                      <button
+                        onClick={() => {
+                          setSelectedUser(user);
+                          setShowEditModal(true);
+                        }}
+                        className="text-blue-600 hover:text-blue-900"
+                        title="Edit User"
+                      >
+                        <Edit2 className="h-4 w-4" />
+                      </button>
+                    </PermissionWrapper>
+                    <PermissionWrapper permission={PERMISSIONS.USERS_DELETE}>
+                      <button
+                        onClick={() => handleDeleteUser(user)}
+                        className="text-red-600 hover:text-red-900"
+                        title="Delete User"
+                        disabled={user.role === 'super_admin'}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </PermissionWrapper>
                   </div>
                 </td>
               </tr>
@@ -460,7 +468,7 @@ const Users: React.FC = () => {
                     type="text"
                     value={createForm.first_name}
                     onChange={(e) => setCreateForm({...createForm, first_name: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brown-500 focus:border-brown-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                     required
                   />
                 </div>
@@ -472,7 +480,7 @@ const Users: React.FC = () => {
                     type="text"
                     value={createForm.last_name}
                     onChange={(e) => setCreateForm({...createForm, last_name: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brown-500 focus:border-brown-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                     required
                   />
                 </div>
@@ -486,7 +494,7 @@ const Users: React.FC = () => {
                   type="email"
                   value={createForm.email}
                   onChange={(e) => setCreateForm({...createForm, email: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brown-500 focus:border-brown-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                   required
                 />
               </div>
@@ -499,7 +507,7 @@ const Users: React.FC = () => {
                   type="text"
                   value={createForm.department}
                   onChange={(e) => setCreateForm({...createForm, department: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brown-500 focus:border-brown-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                   placeholder="e.g., Operations, Marketing, IT"
                 />
               </div>
@@ -513,7 +521,7 @@ const Users: React.FC = () => {
                   type="password"
                   value={createForm.password}
                   onChange={(e) => setCreateForm({...createForm, password: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brown-500 focus:border-brown-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                   placeholder="Min 8 chars, include uppercase, lowercase, number, special char"
                   required
                 />
@@ -527,7 +535,7 @@ const Users: React.FC = () => {
                   type="password"
                   value={createForm.confirmPassword}
                   onChange={(e) => setCreateForm({...createForm, confirmPassword: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brown-500 focus:border-brown-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                   required
                 />
               </div>
@@ -540,7 +548,7 @@ const Users: React.FC = () => {
                 <select
                   value={createForm.role}
                   onChange={(e) => setCreateForm({...createForm, role: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brown-500 focus:border-brown-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                   required
                 >
                   {roles.filter(role => role.name !== 'super_admin').map(role => (
@@ -575,7 +583,7 @@ const Users: React.FC = () => {
                             });
                           }
                         }}
-                        className="rounded border-gray-300 text-brown-600 focus:ring-brown-500"
+                        className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                       />
                       <span className="text-sm">
                         {permission.display_name}
@@ -596,7 +604,7 @@ const Users: React.FC = () => {
               </button>
               <button
                 onClick={handleCreateUser}
-                className="bg-brown-600 text-white px-4 py-2 rounded-md hover:bg-brown-700"
+                className="bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700"
               >
                 Create User
               </button>
@@ -626,7 +634,7 @@ const Users: React.FC = () => {
                     type="text"
                     value={selectedUser.first_name}
                     onChange={(e) => setSelectedUser({...selectedUser, first_name: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brown-500 focus:border-brown-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                   />
                 </div>
                 <div>
@@ -637,7 +645,7 @@ const Users: React.FC = () => {
                     type="text"
                     value={selectedUser.last_name}
                     onChange={(e) => setSelectedUser({...selectedUser, last_name: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brown-500 focus:border-brown-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                   />
                 </div>
               </div>
@@ -649,7 +657,7 @@ const Users: React.FC = () => {
                 <select
                   value={selectedUser.role}
                   onChange={(e) => setSelectedUser({...selectedUser, role: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brown-500 focus:border-brown-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                   disabled={selectedUser.role === 'super_admin'}
                 >
                   {roles.map(role => (
@@ -667,7 +675,7 @@ const Users: React.FC = () => {
                 <select
                   value={selectedUser.status}
                   onChange={(e) => setSelectedUser({...selectedUser, status: e.target.value as any})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brown-500 focus:border-brown-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                   disabled={selectedUser.role === 'super_admin'}
                 >
                   <option value="active">Active</option>
@@ -684,7 +692,7 @@ const Users: React.FC = () => {
                   type="text"
                   value={selectedUser.department || ''}
                   onChange={(e) => setSelectedUser({...selectedUser, department: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brown-500 focus:border-brown-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                 />
               </div>
             </div>
@@ -701,7 +709,7 @@ const Users: React.FC = () => {
               </button>
               <button
                 onClick={handleUpdateUser}
-                className="bg-brown-600 text-white px-4 py-2 rounded-md hover:bg-brown-700"
+                className="bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700"
               >
                 Update User
               </button>
@@ -730,7 +738,7 @@ const Users: React.FC = () => {
                   type="password"
                   value={passwordForm.current_password}
                   onChange={(e) => setPasswordForm({...passwordForm, current_password: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brown-500 focus:border-brown-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                   required
                 />
               </div>
@@ -743,7 +751,7 @@ const Users: React.FC = () => {
                   type="password"
                   value={passwordForm.new_password}
                   onChange={(e) => setPasswordForm({...passwordForm, new_password: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brown-500 focus:border-brown-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                   placeholder="Min 8 chars with uppercase, lowercase, number, special char"
                   required
                 />
@@ -757,7 +765,7 @@ const Users: React.FC = () => {
                   type="password"
                   value={passwordForm.confirm_password}
                   onChange={(e) => setPasswordForm({...passwordForm, confirm_password: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brown-500 focus:border-brown-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                   required
                 />
               </div>
@@ -789,7 +797,7 @@ const Users: React.FC = () => {
               </button>
               <button
                 onClick={handleChangePassword}
-                className="bg-brown-600 text-white px-4 py-2 rounded-md hover:bg-brown-700"
+                className="bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700"
               >
                 Change Password
               </button>
