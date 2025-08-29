@@ -27,6 +27,7 @@ import ContentManagement from './pages/ContentManagement';
 import Legal from './pages/Legal';
 import ContactMessages from './pages/ContactMessages';
 import EmailTemplates from './pages/EmailTemplates';
+import Users from './pages/Users';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useSelector((state: RootState) => state.auth);
@@ -102,6 +103,16 @@ function App() {
               <PrivateRoute>
                 <AdminLayout>
                   <Customers />
+                </AdminLayout>
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/users"
+            element={
+              <PrivateRoute>
+                <AdminLayout>
+                  <Users />
                 </AdminLayout>
               </PrivateRoute>
             }

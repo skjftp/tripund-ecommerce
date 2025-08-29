@@ -8,6 +8,7 @@ import (
 	"tripund-api/internal/database"
 	"tripund-api/internal/handlers"
 	"tripund-api/internal/middleware"
+	"tripund-api/internal/models"
 )
 
 func main() {
@@ -42,6 +43,7 @@ func main() {
 	
 	promotionHandler := handlers.NewPromotionHandler(db)
 	invoiceHandler := handlers.NewInvoiceHandler(db)
+	adminUserHandler := handlers.NewAdminUserHandler(db, cfg.JWTSecret)
 
 	api := r.Group("/api/v1")
 	{
@@ -133,33 +135,51 @@ func main() {
 		// Admin auth routes (no middleware)
 		adminAuth := api.Group("/admin/auth")
 		{
-			adminAuth.POST("/login", authHandler.AdminLogin)
+			adminAuth.POST("/login", adminUserHandler.AdminLogin)
 		}
 
 		// Protected admin routes
 		admin := api.Group("/admin")
-		admin.Use(middleware.AuthMiddleware(cfg.JWTSecret), middleware.AdminMiddleware())
+		admin.Use(middleware.ValidateTokenEnhanced(cfg.JWTSecret), middleware.AdminOnly())
 		{
-			admin.POST("/products", productHandler.CreateProduct)
-			admin.PUT("/products/:id", productHandler.UpdateProduct)
-			admin.DELETE("/products/:id", productHandler.DeleteProduct)
+			// Admin user management routes with RBAC
+			users := admin.Group("/users")
+			{
+				users.GET("", middleware.RequirePermission(models.PermissionUsersView), adminUserHandler.GetAdminUsers)
+				users.GET("/:id", middleware.RequireOwnershipOrPermission(models.PermissionUsersView, "id"), adminUserHandler.GetAdminUser)
+				users.POST("", middleware.RequirePermission(models.PermissionUsersCreate), adminUserHandler.CreateAdminUser)
+				users.PUT("/:id", middleware.RequireOwnershipOrPermission(models.PermissionUsersEdit, "id"), adminUserHandler.UpdateAdminUser)
+				users.DELETE("/:id", middleware.RequirePermission(models.PermissionUsersDelete), adminUserHandler.DeleteAdminUser)
+			}
 
-			admin.POST("/categories", categoryHandler.CreateCategory)
-			admin.PUT("/categories/:id", categoryHandler.UpdateCategory)
-			admin.DELETE("/categories/:id", categoryHandler.DeleteCategory)
-			admin.POST("/categories/initialize", categoryHandler.InitializeDefaultCategories)
+			// Password change (any authenticated admin)
+			admin.POST("/change-password", adminUserHandler.ChangePassword)
 
-			// Order management (admin only)
-			admin.GET("/orders", orderHandler.GetAllOrders)
-			admin.PUT("/orders/:id/status", orderHandler.UpdateOrderStatus)
-			admin.PATCH("/orders/:id/status", orderHandler.UpdateOrderStatus)
+			// Role and permission management
+			admin.GET("/roles", middleware.RequirePermission(models.PermissionUsersView), adminUserHandler.GetRoles)
+			admin.GET("/permissions", middleware.RequirePermission(models.PermissionUsersView), adminUserHandler.GetPermissions)
+			// Product management with RBAC
+			admin.POST("/products", middleware.RequirePermission(models.PermissionProductsCreate), productHandler.CreateProduct)
+			admin.PUT("/products/:id", middleware.RequirePermission(models.PermissionProductsEdit), productHandler.UpdateProduct)
+			admin.DELETE("/products/:id", middleware.RequirePermission(models.PermissionProductsDelete), productHandler.DeleteProduct)
 
-			// User/Customer management (admin only)
-			admin.GET("/users", authHandler.GetAllUsers)
-			admin.GET("/users/:id", authHandler.GetUserDetails)
+			// Category management with RBAC
+			admin.POST("/categories", middleware.RequirePermission(models.PermissionCategoriesCreate), categoryHandler.CreateCategory)
+			admin.PUT("/categories/:id", middleware.RequirePermission(models.PermissionCategoriesEdit), categoryHandler.UpdateCategory)
+			admin.DELETE("/categories/:id", middleware.RequirePermission(models.PermissionCategoriesDelete), categoryHandler.DeleteCategory)
+			admin.POST("/categories/initialize", middleware.RequirePermission(models.PermissionCategoriesCreate), categoryHandler.InitializeDefaultCategories)
 
-			// Payment management (admin only)
-			admin.GET("/payments", paymentHandler.GetAllPayments)
+			// Order management with RBAC
+			admin.GET("/orders", middleware.RequirePermission(models.PermissionOrdersView), orderHandler.GetAllOrders)
+			admin.PUT("/orders/:id/status", middleware.RequirePermission(models.PermissionOrdersEdit), orderHandler.UpdateOrderStatus)
+			admin.PATCH("/orders/:id/status", middleware.RequirePermission(models.PermissionOrdersEdit), orderHandler.UpdateOrderStatus)
+
+			// Customer management with RBAC (different from admin users)
+			admin.GET("/customers", middleware.RequirePermission(models.PermissionUsersView), authHandler.GetAllUsers)
+			admin.GET("/customers/:id", middleware.RequirePermission(models.PermissionUsersView), authHandler.GetUserDetails)
+
+			// Payment management with RBAC
+			admin.GET("/payments", middleware.RequirePermission(models.PermissionOrdersView), paymentHandler.GetAllPayments)
 
 			// Content management endpoints (admin only)
 			admin.GET("/content/:type", contentHandler.GetContentAdmin)
