@@ -174,7 +174,7 @@ func main() {
 			admin.PUT("/orders/:id/status", middleware.RequirePermission(models.PermissionOrdersEdit), orderHandler.UpdateOrderStatus)
 			admin.PATCH("/orders/:id/status", middleware.RequirePermission(models.PermissionOrdersEdit), orderHandler.UpdateOrderStatus)
 
-			// Customer management with RBAC (different from admin users)
+			// Customer management with RBAC (regular customers from users collection)
 			admin.GET("/customers", middleware.RequirePermission(models.PermissionUsersView), authHandler.GetAllUsers)
 			admin.GET("/customers/:id", middleware.RequirePermission(models.PermissionUsersView), authHandler.GetUserDetails)
 

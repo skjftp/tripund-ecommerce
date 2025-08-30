@@ -75,14 +75,14 @@ export const orderAPI = {
     api.post(`/admin/orders/${id}/refund`, { amount }),
 };
 
-// User APIs
+// Customer APIs (regular customers, not admin users)
 export const userAPI = {
-  getAll: (params?: any) => api.get('/admin/users', { params }),
-  getById: (id: string) => api.get(`/admin/users/${id}`),
-  update: (id: string, data: any) => api.put(`/admin/users/${id}`, data),
+  getAll: (params?: any) => api.get('/admin/customers', { params }),
+  getById: (id: string) => api.get(`/admin/customers/${id}`),
+  update: (id: string, data: any) => api.put(`/admin/customers/${id}`, data),
   updateStatus: (id: string, status: string) =>
-    api.patch(`/admin/users/${id}/status`, { status }),
-  delete: (id: string) => api.delete(`/admin/users/${id}`),
+    api.patch(`/admin/customers/${id}/status`, { status }),
+  delete: (id: string) => api.delete(`/admin/customers/${id}`),
 };
 
 // Category APIs

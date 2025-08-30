@@ -113,17 +113,22 @@ adb logcat -s flutter
 ## Environment Variables
 
 ### Backend (.env)
+**PRODUCTION ENVIRONMENT VARIABLES (DO NOT OVERWRITE):**
 ```
-PORT=8080
-GIN_MODE=debug
+GIN_MODE=release
 FIREBASE_PROJECT_ID=tripund-ecommerce-1755860933
-JWT_SECRET=your-secret-key
-RAZORPAY_KEY_ID=your-razorpay-key
-RAZORPAY_KEY_SECRET=your-razorpay-secret
-CORS_ORIGIN=http://localhost:3000
-EMAIL_FROM=orders@tripundlifestyle.com
+JWT_SECRET=[CONFIGURED_IN_CLOUD_RUN]
+CORS_ORIGIN=https://tripundlifestyle.com
+STORAGE_BUCKET=tripund-ecommerce-1755860933.appspot.com
+RAZORPAY_KEY_ID=[CONFIGURED_IN_CLOUD_RUN]
+RAZORPAY_KEY_SECRET=[CONFIGURED_IN_CLOUD_RUN]
+RAZORPAY_WEBHOOK_SECRET=[CONFIGURED_IN_CLOUD_RUN]
+SENDGRID_API_KEY=[CONFIGURED_IN_CLOUD_RUN]
 EMAIL_FROM_NAME=TRIPUND Lifestyle
-SENDGRID_API_KEY=your-sendgrid-api-key
+EMAIL_FROM=orders@tripundlifestyle.com
+```
+
+**IMPORTANT**: All sensitive values (API keys, secrets, tokens) are already configured in Cloud Run. Never overwrite them during deployments. Use `gcloud run services describe` to view current configuration if needed.
 ```
 
 ### Frontend (.env)
@@ -583,6 +588,9 @@ Add this A record to your DNS provider:
 19. **iOS pods deployment target must be 13.0+ minimum - forced in Podfile post_install**
 20. **iOS release builds: use `flutter build ios --release` then `xcrun devicectl device install app`**
 21. **Flutter update service only runs on Android - Platform.isAndroid check prevents iOS issues**
+22. **NEVER overwrite production environment variables during deployments - they are configured in Cloud Run**
+23. **Current admin credentials: admin@tripund.com / password (change immediately after login)**
+24. **RBAC system active: 5 roles, 23 permissions, permission-based UI controls implemented**
 
 ## Quick Fixes
 
