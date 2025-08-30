@@ -141,7 +141,8 @@ export default function Header() {
 
             {/* Desktop Navigation - Center */}
             <nav className="hidden lg:flex items-center space-x-6 flex-1 justify-center">
-              {categories.map((category) => (
+              {/* Show first 6 categories normally */}
+              {categories.slice(0, 6).map((category) => (
                 <div key={category.id} className="relative group">
                   <Link
                     to={`/category/${category.slug}`}
@@ -182,6 +183,39 @@ export default function Header() {
                   )}
                 </div>
               ))}
+              
+              {/* More dropdown for remaining categories */}
+              {categories.length > 6 && (
+                <div className="relative group">
+                  <button className="text-gray-700 hover:text-[#96865d] font-medium text-xs tracking-wider uppercase transition-colors duration-200 whitespace-nowrap flex items-center">
+                    More
+                    <ChevronDown size={14} className="ml-1" />
+                  </button>
+                  
+                  {/* More Categories Dropdown */}
+                  <div className="absolute left-1/2 transform -translate-x-1/2 mt-0 w-64 bg-white shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                    <div className="relative">
+                      <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#96865d] to-[#f37a1f]"></div>
+                      <div className="p-4">
+                        <div className="grid grid-cols-1 gap-2">
+                          {categories.slice(6).map((category) => (
+                            <Link
+                              key={category.id}
+                              to={`/category/${category.slug}`}
+                              className="text-sm text-gray-700 hover:text-[#96865d] hover:bg-gray-50 px-3 py-2 rounded transition-colors"
+                            >
+                              {category.name}
+                              {category.children && category.children.length > 0 && (
+                                <span className="text-xs text-gray-500 ml-2">({category.children.length})</span>
+                              )}
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
               
               <Link to="/about" className="text-gray-700 hover:text-[#96865d] font-medium text-xs tracking-wider uppercase transition-colors duration-200 whitespace-nowrap">
                 About
