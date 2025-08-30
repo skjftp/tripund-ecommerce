@@ -12,12 +12,7 @@ export default function Header() {
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [activePromotions, setActivePromotions] = useState<any[]>([{
-    code: 'TRIPUND20',
-    description: '20% off on first order',
-    type: 'percentage',
-    discount: 20
-  }]);
+  const [activePromotions, setActivePromotions] = useState<any[]>([]);
   const [currentPromoIndex, setCurrentPromoIndex] = useState(0);
   const profileDropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
@@ -46,24 +41,14 @@ export default function Header() {
           if (data.promotions && data.promotions.length > 0) {
             setActivePromotions(data.promotions);
           } else {
-            // Fallback promotion
-            setActivePromotions([{
-              code: 'TRIPUND20',
-              description: '20% off on first order',
-              type: 'percentage',
-              discount: 20
-            }]);
+            // No active promotions - hide the banner
+            setActivePromotions([]);
           }
         }
       } catch (error) {
         console.error('Error fetching promotions:', error);
-        // Fallback promotion
-        setActivePromotions([{
-          code: 'TRIPUND20',
-          description: '20% off on first order',
-          type: 'percentage',
-          discount: 20
-        }]);
+        // No promotions if API fails
+        setActivePromotions([]);
       }
     };
 
@@ -108,7 +93,7 @@ export default function Header() {
                 <span className="text-xs sm:text-sm font-medium tracking-wide sm:tracking-wider uppercase">
                   <span className="hidden sm:inline">USE CODE </span>
                   <span className="bg-white/20 px-2 py-0.5 mx-1 rounded font-bold">
-                    {activePromotions[currentPromoIndex]?.code || 'TRIPUND20'}
+                    {activePromotions[currentPromoIndex]?.code}
                   </span>
                   <span className="hidden sm:inline">
                     {' FOR '}
