@@ -353,7 +353,7 @@ export default function Categories() {
           <div className="bg-white p-4 rounded-lg border border-gray-200">
             <div className="text-sm font-medium text-gray-500">Total Subcategories</div>
             <div className="mt-1 text-2xl font-bold text-gray-900">
-              {categories.reduce((sum, cat) => sum + cat.children.length, 0)}
+              {categories.reduce((sum, cat) => sum + (cat.children?.length || 0), 0)}
             </div>
           </div>
           <div className="bg-white p-4 rounded-lg border border-gray-200">
