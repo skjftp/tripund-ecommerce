@@ -120,7 +120,7 @@ export default function Categories() {
     setExpandedCategories(newExpanded);
   };
 
-  const filteredCategories = categories.filter(category => {
+  const filteredCategories = (categories || []).filter(category => {
     const matchesSearch = category.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           category.sku.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesSearch;
@@ -236,7 +236,7 @@ export default function Categories() {
           <p className="text-gray-600">Manage product categories dynamically from database</p>
         </div>
         <div className="flex items-center space-x-3">
-          {categories.length === 0 && !loading && (
+          {(categories || []).length === 0 && !loading && (
             <button
               onClick={handleInitializeCategories}
               disabled={isInitializing}
@@ -326,7 +326,7 @@ export default function Categories() {
                   <div className="flex flex-col items-center">
                     <Folder className="text-gray-400 mb-3" size={48} />
                     <p className="text-gray-500 mb-2">No categories found</p>
-                    {categories.length === 0 && (
+                    {(categories || []).length === 0 && (
                       <p className="text-sm text-gray-400">
                         Click "Initialize Categories" to load the default TRIPUND categories
                       </p>
@@ -344,16 +344,16 @@ export default function Categories() {
       </div>
 
       {/* Stats */}
-      {categories.length > 0 && (
+      {(categories || []).length > 0 && (
         <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-white p-4 rounded-lg border border-gray-200">
             <div className="text-sm font-medium text-gray-500">Total Categories</div>
-            <div className="mt-1 text-2xl font-bold text-gray-900">{categories.length}</div>
+            <div className="mt-1 text-2xl font-bold text-gray-900">{(categories || []).length}</div>
           </div>
           <div className="bg-white p-4 rounded-lg border border-gray-200">
             <div className="text-sm font-medium text-gray-500">Total Subcategories</div>
             <div className="mt-1 text-2xl font-bold text-gray-900">
-              {categories.reduce((sum, cat) => sum + (cat.children?.length || 0), 0)}
+              {(categories || []).reduce((sum, cat) => sum + (cat.children?.length || 0), 0)}
             </div>
           </div>
           <div className="bg-white p-4 rounded-lg border border-gray-200">
