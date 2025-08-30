@@ -1,5 +1,18 @@
 import { Link } from 'react-router-dom';
-import { Home, Palette, Sparkles, Lightbulb, Gift, Package } from 'lucide-react';
+import { 
+  Home, 
+  Palette, 
+  Sparkles, 
+  Lightbulb, 
+  Gift, 
+  Package, 
+  Archive, 
+  Star,
+  TrendingUp,
+  Tag,
+  Plus,
+  ShoppingBag
+} from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useEffect } from 'react';
 import { RootState, AppDispatch } from '../../store';
@@ -15,14 +28,18 @@ interface CategoryIcon {
 // Icon mapping for categories
 const getIconForCategory = (slug: string) => {
   const iconMap: { [key: string]: React.ReactNode } = {
-    'divine-collections': <Sparkles size={24} />,
-    'wall-decor': <Palette size={24} />,
-    'festivals': <Home size={24} />,
-    'lighting': <Lightbulb size={24} />,
-    'home-accent': <Package size={24} />,
-    'gifting': <Gift size={24} />
+    'festivals': <Home size={24} />,              // 1. Festivals
+    'wall-decor': <Palette size={24} />,          // 2. Wall Décor
+    'lighting': <Lightbulb size={24} />,          // 3. Lighting  
+    'home-accent': <Package size={24} />,         // 4. Home Accent
+    'divine-collections': <Sparkles size={24} />, // 5. Divine Collections
+    'storage-bags': <Archive size={24} />,        // 6. Storage & Bags
+    'gifting': <Gift size={24} />,                // 7. Gifting
+    'Bestsellers': <Star size={24} />,            // 8. Bestsellers
+    'new-in': <Plus size={24} />,                 // 9. NEW In
+    'sale': <Tag size={24} />                     // 10. Sale
   };
-  return iconMap[slug] || <Package size={24} />;
+  return iconMap[slug] || <ShoppingBag size={24} />;
 };
 
 export default function CategoryIcons() {

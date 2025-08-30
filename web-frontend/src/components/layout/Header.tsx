@@ -140,7 +140,7 @@ export default function Header() {
             </div>
 
             {/* Desktop Navigation - Center */}
-            <nav className="hidden lg:flex items-center space-x-6 flex-1 justify-center">
+            <nav className="hidden lg:flex items-baseline space-x-6 flex-1 justify-center">
               {/* Show first 6 categories normally */}
               {categories.slice(0, 6).map((category) => (
                 <div key={category.id} className="relative group">
@@ -187,10 +187,10 @@ export default function Header() {
               {/* More dropdown for remaining categories */}
               {categories.length > 6 && (
                 <div className="relative group">
-                  <button className="text-gray-700 hover:text-[#96865d] font-medium text-xs tracking-wider uppercase transition-colors duration-200 whitespace-nowrap flex items-center">
+                  <span className="text-gray-700 hover:text-[#96865d] font-medium text-xs tracking-wider uppercase transition-colors duration-200 whitespace-nowrap cursor-pointer">
                     More
-                    <ChevronDown size={14} className="ml-1" />
-                  </button>
+                    <ChevronDown size={12} className="inline ml-1 relative -top-0.5" />
+                  </span>
                   
                   {/* More Categories Dropdown */}
                   <div className="absolute left-1/2 transform -translate-x-1/2 mt-0 w-64 bg-white shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
