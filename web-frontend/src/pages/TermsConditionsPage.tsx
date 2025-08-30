@@ -16,9 +16,11 @@ export default function TermsConditionsPage() {
       const response = await api.get('/content/legal');
       if (response.data?.terms_conditions) {
         setContent(response.data.terms_conditions);
+        console.log('✅ Loaded dynamic terms content from API');
       } else {
         // Fallback content if API doesn't return terms
         setContent(getDefaultContent());
+        console.log('⚠️ Using fallback terms content');
       }
     } catch (error) {
       console.error('Failed to fetch terms and conditions:', error);

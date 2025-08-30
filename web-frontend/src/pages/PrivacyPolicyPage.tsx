@@ -16,9 +16,11 @@ export default function PrivacyPolicyPage() {
       const response = await api.get('/content/legal');
       if (response.data?.privacy_policy) {
         setContent(response.data.privacy_policy);
+        console.log('✅ Loaded dynamic privacy content from API');
       } else {
         // Fallback content if API doesn't return privacy policy
         setContent(getDefaultContent());
+        console.log('⚠️ Using fallback privacy content');
       }
     } catch (error) {
       console.error('Failed to fetch privacy policy:', error);
