@@ -257,7 +257,40 @@ func (h *PromotionHandler) GetActivePromotions(c *gin.Context) {
 		}
 		
 		// Check if promotion is within date range
-		if now.Before(promo.StartDate) || now.After(promo.EndDate) {
+		// Handle both time.Time and string date formats from Firestore
+		var startDate, endDate time.Time
+		var err error
+		
+		// Try to parse start date
+		if !promo.StartDate.IsZero() {
+			startDate = promo.StartDate
+		} else {
+			// Fallback: try to get from raw document data
+			rawData := doc.Data()
+			if startDateStr, ok := rawData["start_date"].(string); ok {
+				startDate, err = time.Parse(time.RFC3339, startDateStr)
+				if err != nil {
+					continue // Skip if can't parse date
+				}
+			}
+		}
+		
+		// Try to parse end date  
+		if !promo.EndDate.IsZero() {
+			endDate = promo.EndDate
+		} else {
+			// Fallback: try to get from raw document data
+			rawData := doc.Data()
+			if endDateStr, ok := rawData["end_date"].(string); ok {
+				endDate, err = time.Parse(time.RFC3339, endDateStr)
+				if err != nil {
+					continue // Skip if can't parse date
+				}
+			}
+		}
+		
+		// Check if promotion is within date range
+		if now.Before(startDate) || now.After(endDate) {
 			continue
 		}
 		
