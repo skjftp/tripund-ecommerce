@@ -77,8 +77,9 @@ export default function AboutPage() {
   const fetchContent = async () => {
     try {
       const response = await axios.get(`${API_URL}/content/about`);
-      if (response.data?.content?.data) {
-        setContent(response.data.content.data);
+      if (response.data) {
+        // API returns data directly from Firestore document
+        setContent(response.data);
       }
     } catch (error) {
       console.error('Error fetching about content:', error);

@@ -177,17 +177,27 @@ export default function ContentManagement() {
       setLoading(true);
       const token = localStorage.getItem('adminToken');
       
-      // Fetch all content types
+      // Fetch all content types using admin endpoints
       const [aboutRes, footerRes, contactRes, shippingRes, returnsRes] = await Promise.all([
-        axios.get(`${API_URL}/content/about`).catch(() => null),
-        axios.get(`${API_URL}/content/footer`).catch(() => null),
-        axios.get(`${API_URL}/content/contact`).catch(() => null),
-        axios.get(`${API_URL}/content/shipping`).catch(() => null),
-        axios.get(`${API_URL}/content/returns`).catch(() => null)
+        axios.get(`${API_URL}/admin/content/about`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }).catch(() => null),
+        axios.get(`${API_URL}/admin/content/footer`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }).catch(() => null),
+        axios.get(`${API_URL}/admin/content/contact`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }).catch(() => null),
+        axios.get(`${API_URL}/admin/content/shipping`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }).catch(() => null),
+        axios.get(`${API_URL}/admin/content/returns`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }).catch(() => null)
       ]);
 
-      if (aboutRes?.data?.content?.data) {
-        const data = aboutRes.data.content.data;
+      if (aboutRes?.data) {
+        const data = aboutRes.data;
         // Ensure values have the right structure
         if (data.values && Array.isArray(data.values)) {
           // Check if values are strings (old format) or objects (new format)
@@ -235,8 +245,8 @@ export default function ContentManagement() {
           heroImage: ''
         });
       }
-      if (footerRes?.data?.content?.data) {
-        setFooterContent(footerRes.data.content.data);
+      if (footerRes?.data) {
+        setFooterContent(footerRes.data);
       } else {
         // Set default footer content
         setFooterContent({
@@ -273,8 +283,8 @@ export default function ContentManagement() {
           ]
         });
       }
-      if (contactRes?.data?.content?.data) {
-        setContactContent(contactRes.data.content.data);
+      if (contactRes?.data) {
+        setContactContent(contactRes.data);
       } else {
         // Set default contact content
         setContactContent({
@@ -373,7 +383,10 @@ export default function ContentManagement() {
 
   const fetchFAQs = async () => {
     try {
-      const response = await axios.get(`${API_URL}/content/faqs/list`);
+      const token = localStorage.getItem('adminToken');
+      const response = await axios.get(`${API_URL}/admin/content/faqs`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       // Handle the response which has faqs property
       const faqData = response.data?.faqs || response.data || [];
       // Ensure it's an array

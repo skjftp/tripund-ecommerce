@@ -38,8 +38,9 @@ export default function Footer() {
   const fetchContent = async () => {
     try {
       const response = await axios.get(`${API_URL}/content/footer`);
-      if (response.data?.content?.data) {
-        setContent(response.data.content.data);
+      if (response.data) {
+        // API returns data directly from Firestore document
+        setContent(response.data);
       }
     } catch (error) {
       console.error('Error fetching footer content:', error);
