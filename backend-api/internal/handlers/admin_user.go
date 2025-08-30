@@ -747,7 +747,7 @@ func (h *AdminUserHandler) getSystemPermissions() []models.Permission {
 }
 
 func (h *AdminUserHandler) generateAdminJWT(user models.AdminUser) (string, int64, error) {
-	expirationTime := time.Now().Add(24 * time.Hour)
+	expirationTime := time.Now().Add(30 * 24 * time.Hour) // 30 days
 	expiresIn := expirationTime.Unix() - time.Now().Unix()
 
 	claims := jwt.MapClaims{

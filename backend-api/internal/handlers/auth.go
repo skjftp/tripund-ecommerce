@@ -124,7 +124,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 }
 
 func (h *AuthHandler) generateToken(user models.User) (string, int64, error) {
-	expiresIn := time.Now().Add(7 * 24 * time.Hour) // 7 days
+	expiresIn := time.Now().Add(30 * 24 * time.Hour) // 30 days
 	claims := middleware.Claims{
 		UserID: user.ID,
 		Email:  user.Email,
