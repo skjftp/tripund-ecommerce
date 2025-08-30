@@ -231,13 +231,10 @@ func (h *PromotionHandler) isReturningCustomer(userID string) bool {
 // GetActivePromotions returns public active promo codes for display in frontend
 func (h *PromotionHandler) GetActivePromotions(c *gin.Context) {
 	now := time.Now()
+	fmt.Printf("GetActivePromotions: Starting fetch at %v\n", now)
 	
-	// Query for active promotions that should show in banner
-	iter := h.db.Client.Collection("promotions").
-		Where("status", "==", models.PromotionStatusActive).
-		Where("show_in_banner", "==", true).
-		OrderBy("created_at", firestore.Desc).
-		Documents(h.db.Context)
+	// Query for all promotions - filter in memory to avoid index requirements
+	iter := h.db.Client.Collection("promotions").Documents(h.db.Context)
 	
 	docs, err := iter.GetAll()
 	if err != nil {
@@ -248,11 +245,30 @@ func (h *PromotionHandler) GetActivePromotions(c *gin.Context) {
 		})
 		return
 	}
+	
+	fmt.Printf("GetActivePromotions: Found %d total promotions\n", len(docs))
 
 	var activePromotions []map[string]interface{}
 	for _, doc := range docs {
 		var promo models.Promotion
 		if err := doc.DataTo(&promo); err != nil {
+			continue
+		}
+		
+		fmt.Printf("GetActivePromotions: Processing promotion %s, status: %s\n", promo.Code, promo.Status)
+		
+		// Check if promotion is active
+		if promo.Status != models.PromotionStatusActive {
+			fmt.Printf("GetActivePromotions: Skipping %s - not active\n", promo.Code)
+			continue
+		}
+		
+		// Check if promotion should show in banner
+		rawData := doc.Data()
+		showInBanner, _ := rawData["show_in_banner"].(bool)
+		fmt.Printf("GetActivePromotions: Promotion %s, show_in_banner: %v\n", promo.Code, showInBanner)
+		if !showInBanner {
+			fmt.Printf("GetActivePromotions: Skipping %s - not marked for banner\n", promo.Code)
 			continue
 		}
 		
