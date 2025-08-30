@@ -55,7 +55,12 @@ func (h *CategoryHandler) GetCategories(c *gin.Context) {
 				if landscapeImage, ok := data["landscape_image"].(string); ok {
 					category.LandscapeImage = landscapeImage
 				}
+				// Handle order field - can be int64, int, or float64 from Firestore
 				if order, ok := data["order"].(int64); ok {
+					category.Order = int(order)
+				} else if order, ok := data["order"].(int); ok {
+					category.Order = order
+				} else if order, ok := data["order"].(float64); ok {
 					category.Order = int(order)
 				}
 				
@@ -166,7 +171,12 @@ func (h *CategoryHandler) GetCategory(c *gin.Context) {
 	if landscapeImage, ok := data["landscape_image"].(string); ok {
 		category.LandscapeImage = landscapeImage
 	}
+	// Handle order field - can be int64, int, or float64 from Firestore
 	if order, ok := data["order"].(int64); ok {
+		category.Order = int(order)
+	} else if order, ok := data["order"].(int); ok {
+		category.Order = order
+	} else if order, ok := data["order"].(float64); ok {
 		category.Order = int(order)
 	}
 	
@@ -298,7 +308,12 @@ func (h *CategoryHandler) UpdateCategory(c *gin.Context) {
 	if landscapeImage, ok := data["landscape_image"].(string); ok {
 		category.LandscapeImage = landscapeImage
 	}
+	// Handle order field - can be int64, int, or float64 from Firestore
 	if order, ok := data["order"].(int64); ok {
+		category.Order = int(order)
+	} else if order, ok := data["order"].(int); ok {
+		category.Order = order
+	} else if order, ok := data["order"].(float64); ok {
 		category.Order = int(order)
 	}
 	

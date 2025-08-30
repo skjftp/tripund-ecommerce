@@ -141,7 +141,7 @@ export default function Header() {
 
             {/* Desktop Navigation - Center */}
             <nav className="hidden lg:flex items-center space-x-6 flex-1 justify-center">
-              {categories.slice(0, 6).map((category) => (
+              {categories.map((category) => (
                 <div key={category.id} className="relative group">
                   <Link
                     to={`/category/${category.slug}`}

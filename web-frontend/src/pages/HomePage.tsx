@@ -52,7 +52,7 @@ export default function HomePage() {
   // Memoize categoryShowcase to ensure proper re-rendering when categories change
   const categoryShowcase = useMemo(() => {
     if (categories.length > 0) {
-      return categories.slice(0, 6).map((category) => ({
+      return categories.map((category) => ({
         id: category.id,
         name: category.name,
         image: category.image || `https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&h=600&fit=crop`,

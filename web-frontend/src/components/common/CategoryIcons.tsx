@@ -37,7 +37,7 @@ export default function CategoryIcons() {
 
   // Map categories from API with fallback to hardcoded data
   const categoryIcons: CategoryIcon[] = categories.length > 0 
-    ? categories.slice(0, 6).map(category => ({
+    ? categories.map(category => ({
         id: category.id,
         name: category.name.length > 8 ? category.name.split(' ')[0] : category.name,
         icon: getIconForCategory(category.slug),
