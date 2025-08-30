@@ -18,6 +18,8 @@ export default function ProductsPage() {
   const { products, loading, filters } = useSelector((state: RootState) => state.products);
   const { categories } = useSelector((state: RootState) => state.categories);
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [selectedSubcategory, setSelectedSubcategory] = useState('');
+  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState('newest');
   const [showFilters, setShowFilters] = useState(false);
   const [priceRange, setPriceRange] = useState(50000);
@@ -29,8 +31,16 @@ export default function ProductsPage() {
 
   const handleCategoryChange = (category: string) => {
     setSelectedCategory(category);
+    setSelectedSubcategory(''); // Reset subcategory when category changes
+    setExpandedCategory(expandedCategory === category ? null : category);
     dispatch(setFilters({ category: category === 'All' ? '' : category }));
     dispatch(fetchProducts({ category: category === 'All' ? undefined : category }));
+  };
+
+  const handleSubcategoryChange = (subcategory: string) => {
+    setSelectedSubcategory(subcategory);
+    dispatch(setFilters({ subcategory }));
+    dispatch(fetchProducts({ category: selectedCategory, subcategory }));
   };
 
   const handleSortChange = (value: string) => {
@@ -82,31 +92,67 @@ export default function ProductsPage() {
                 <X size={20} />
               </button>
               <h3 className="font-semibold mb-4">Categories</h3>
-              <ul className="space-y-2">
+              <ul className="space-y-1">
                 <li>
                   <button
-                    onClick={() => handleCategoryChange('All')}
+                    onClick={() => {
+                      setSelectedCategory('All');
+                      setSelectedSubcategory('');
+                      setExpandedCategory(null);
+                      dispatch(setFilters({ category: '', subcategory: '' }));
+                      dispatch(fetchProducts());
+                    }}
                     className={`w-full text-left px-3 py-2 rounded-md transition-colors ${
                       selectedCategory === 'All'
                         ? 'bg-primary-100 text-primary-700 font-semibold'
                         : 'text-gray-700 hover:bg-gray-100'
                     }`}
                   >
-                    All
+                    All Products
                   </button>
                 </li>
+                
                 {Array.isArray(categories) && categories.map((category) => (
                   <li key={category.slug}>
+                    {/* Main Category */}
                     <button
                       onClick={() => handleCategoryChange(category.slug)}
-                      className={`w-full text-left px-3 py-2 rounded-md transition-colors ${
+                      className={`w-full flex items-center justify-between px-3 py-2 rounded-md transition-colors ${
                         selectedCategory === category.slug
                           ? 'bg-primary-100 text-primary-700 font-semibold'
                           : 'text-gray-700 hover:bg-gray-100'
                       }`}
                     >
-                      {category.name}
+                      <span>{category.name}</span>
+                      {category.children && category.children.length > 0 && (
+                        <ChevronDown 
+                          size={16} 
+                          className={`transform transition-transform text-gray-400 ${
+                            expandedCategory === category.slug ? 'rotate-180' : ''
+                          }`}
+                        />
+                      )}
                     </button>
+                    
+                    {/* Subcategories */}
+                    {category.children && category.children.length > 0 && expandedCategory === category.slug && (
+                      <ul className="mt-1 ml-4 space-y-1 border-l-2 border-primary-200 pl-2">
+                        {category.children.map((subcat, index) => (
+                          <li key={index}>
+                            <button
+                              onClick={() => handleSubcategoryChange(subcat.name)}
+                              className={`w-full text-left px-3 py-1.5 text-sm rounded-md transition-colors ${
+                                selectedSubcategory === subcat.name
+                                  ? 'bg-primary-50 text-primary-600 font-medium'
+                                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-800'
+                              }`}
+                            >
+                              {subcat.name}
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </li>
                 ))}
               </ul>

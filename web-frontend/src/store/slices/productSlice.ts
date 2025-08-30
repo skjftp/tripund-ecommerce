@@ -11,6 +11,7 @@ interface ProductState {
   error: string | null;
   filters: {
     category: string;
+    subcategory: string;
     minPrice: number;
     maxPrice: number;
     sortBy: string;
@@ -25,6 +26,7 @@ const initialState: ProductState = {
   error: null,
   filters: {
     category: '',
+    subcategory: '',
     minPrice: 0,
     maxPrice: 100000,
     sortBy: 'newest',
@@ -33,7 +35,7 @@ const initialState: ProductState = {
 
 export const fetchProducts = createAsyncThunk(
   'products/fetchProducts',
-  async (params?: { category?: string; featured?: boolean; limit?: number }) => {
+  async (params?: { category?: string; subcategory?: string; featured?: boolean; limit?: number }) => {
     try {
       const response = await api.get('/products', { params });
       const products = response.data.products;
