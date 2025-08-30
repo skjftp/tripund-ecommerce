@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import {
   Search,
   Filter,
@@ -17,6 +18,7 @@ import toast from 'react-hot-toast';
 import { orderAPI } from '../services/api';
 
 export default function Orders() {
+  const { id: orderId } = useParams<{ id?: string }>();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -29,6 +31,17 @@ export default function Orders() {
   useEffect(() => {
     fetchOrders();
   }, []);
+
+  // Handle direct order navigation from notifications
+  useEffect(() => {
+    if (orderId && orders.length > 0) {
+      const order = orders.find(o => o.id === orderId);
+      if (order) {
+        setSelectedOrder(order);
+        setShowDetailModal(true);
+      }
+    }
+  }, [orderId, orders]);
 
   const fetchOrders = async () => {
     try {

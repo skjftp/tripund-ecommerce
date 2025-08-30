@@ -18,10 +18,44 @@ export default function ProductDetailPage() {
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedVariant, setSelectedVariant] = useState<any>(null);
   const [displayImages, setDisplayImages] = useState<string[]>([]);
+  const [showZoomModal, setShowZoomModal] = useState(false);
 
   const { currentProduct: product, loading } = useSelector((state: RootState) => state.products);
   const wishlistItems = useSelector((state: RootState) => state.wishlist.items);
   const isInWishlist = Array.isArray(wishlistItems) ? wishlistItems.some((item) => item.id === product?.id) : false;
+
+  // Image navigation functions
+  const goToPreviousImage = () => {
+    setSelectedImage((prev) => (prev === 0 ? displayImages.length - 1 : prev - 1));
+  };
+
+  const goToNextImage = () => {
+    setSelectedImage((prev) => (prev === displayImages.length - 1 ? 0 : prev + 1));
+  };
+
+  // Handle keyboard navigation
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (showZoomModal) {
+      if (e.key === 'ArrowLeft') goToPreviousImage();
+      if (e.key === 'ArrowRight') goToNextImage();
+      if (e.key === 'Escape') setShowZoomModal(false);
+    }
+  };
+
+  useEffect(() => {
+    if (showZoomModal) {
+      document.addEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = '';
+    }
+    
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = '';
+    };
+  }, [showZoomModal]);
 
   useEffect(() => {
     if (id) {
@@ -157,12 +191,41 @@ export default function ProductDetailPage() {
         <div className="bg-white rounded-lg shadow-md p-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
-              <div className="aspect-square relative mb-4">
+              <div className="aspect-square relative mb-4 group">
                 <img
                   src={allImages[selectedImage]}
                   alt={product.title}
-                  className="w-full h-full object-cover rounded-lg"
+                  className="w-full h-full object-cover rounded-lg cursor-zoom-in transition-transform hover:scale-105"
+                  onClick={() => setShowZoomModal(true)}
                 />
+                
+                {/* Navigation Arrows */}
+                {allImages.length > 1 && (
+                  <>
+                    <button
+                      onClick={goToPreviousImage}
+                      className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-opacity-75"
+                      aria-label="Previous image"
+                    >
+                      <ChevronLeft size={20} />
+                    </button>
+                    <button
+                      onClick={goToNextImage}
+                      className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-opacity-75"
+                      aria-label="Next image"
+                    >
+                      <ChevronRight size={20} />
+                    </button>
+                  </>
+                )}
+                
+                {/* Image counter */}
+                {allImages.length > 1 && (
+                  <div className="absolute bottom-4 right-4 bg-black bg-opacity-50 text-white px-2 py-1 text-sm rounded">
+                    {selectedImage + 1} / {allImages.length}
+                  </div>
+                )}
+                
                 {discountPercentage > 0 && (
                   <div className="absolute top-4 left-4 bg-red-500 text-white px-3 py-1 text-sm rounded">
                     -{discountPercentage}%
@@ -304,6 +367,57 @@ export default function ProductDetailPage() {
           {/* Artisan story section removed - not in new structure */}
         </div>
       </div>
+
+      {/* Image Zoom Modal */}
+      {showZoomModal && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center"
+          onClick={() => setShowZoomModal(false)}
+        >
+          <div className="relative max-w-4xl max-h-full p-4">
+            <img
+              src={allImages[selectedImage]}
+              alt={product.title}
+              className="max-w-full max-h-full object-contain"
+              onClick={(e) => e.stopPropagation()}
+            />
+            
+            {/* Close button */}
+            <button
+              onClick={() => setShowZoomModal(false)}
+              className="absolute top-4 right-4 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-75"
+              aria-label="Close zoom"
+            >
+              ✕
+            </button>
+            
+            {/* Navigation in zoom modal */}
+            {allImages.length > 1 && (
+              <>
+                <button
+                  onClick={(e) => { e.stopPropagation(); goToPreviousImage(); }}
+                  className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-3 rounded-full hover:bg-opacity-75"
+                  aria-label="Previous image"
+                >
+                  <ChevronLeft size={24} />
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); goToNextImage(); }}
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-3 rounded-full hover:bg-opacity-75"
+                  aria-label="Next image"
+                >
+                  <ChevronRight size={24} />
+                </button>
+                
+                {/* Image counter in zoom */}
+                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-50 text-white px-3 py-1 rounded">
+                  {selectedImage + 1} / {allImages.length}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
     </>
   );

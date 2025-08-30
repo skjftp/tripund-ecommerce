@@ -88,6 +88,16 @@ function App() {
             }
           />
           <Route
+            path="/orders/:id"
+            element={
+              <PrivateRoute>
+                <AdminLayout>
+                  <Orders />
+                </AdminLayout>
+              </PrivateRoute>
+            }
+          />
+          <Route
             path="/invoices"
             element={
               <PrivateRoute>
