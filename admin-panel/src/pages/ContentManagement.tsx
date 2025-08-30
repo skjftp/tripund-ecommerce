@@ -80,9 +80,9 @@ export default function ContentManagement() {
     title: 'Get in Touch',
     subtitle: "We'd love to hear from you. Let us know how we can help!",
     description: 'Have questions about our products or want to know more about our artisan partners? Feel free to reach out!',
-    email: 'support@tripundlifestyle.com',
-    phone: '+91 98765 43210',
-    whatsapp: '+91 98765 43210',
+    email: 'home@tripundlifestyle.com',
+    phone: '+91 9711441830',
+    whatsapp: '+91 9711441830',
     address: {
       street: '123 Artisan Street, Connaught Place',
       city: 'New Delhi',
@@ -291,9 +291,9 @@ export default function ContentManagement() {
           title: 'Get in Touch',
           subtitle: "We'd love to hear from you. Let us know how we can help!",
           description: 'Have questions about our products or want to know more about our artisan partners? Feel free to reach out!',
-          email: 'support@tripundlifestyle.com',
-          phone: '+91 98765 43210',
-          whatsapp: '+91 98765 43210',
+          email: 'home@tripundlifestyle.com',
+          phone: '+91 9711441830',
+          whatsapp: '+91 9711441830',
           address: {
             street: '123 Artisan Street, Connaught Place',
             city: 'New Delhi',
@@ -1112,6 +1112,73 @@ export default function ContentManagement() {
         >
           <Plus size={16} /> Add Business Hours
         </button>
+      </div>
+
+      <div>
+        <h3 className="text-lg font-medium text-gray-900 mb-3">Address</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <input
+            type="text"
+            placeholder="Street"
+            value={contactContent.address.street}
+            onChange={(e) => setContactContent({ 
+              ...contactContent, 
+              address: { ...contactContent.address, street: e.target.value }
+            })}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md"
+          />
+          <input
+            type="text"
+            placeholder="City"
+            value={contactContent.address.city}
+            onChange={(e) => setContactContent({ 
+              ...contactContent, 
+              address: { ...contactContent.address, city: e.target.value }
+            })}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md"
+          />
+          <input
+            type="text"
+            placeholder="State"
+            value={contactContent.address.state}
+            onChange={(e) => setContactContent({ 
+              ...contactContent, 
+              address: { ...contactContent.address, state: e.target.value }
+            })}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md"
+          />
+          <input
+            type="text"
+            placeholder="Pincode"
+            value={contactContent.address.pincode}
+            onChange={(e) => setContactContent({ 
+              ...contactContent, 
+              address: { ...contactContent.address, pincode: e.target.value }
+            })}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md"
+          />
+          <input
+            type="text"
+            placeholder="Country"
+            value={contactContent.address.country}
+            onChange={(e) => setContactContent({ 
+              ...contactContent, 
+              address: { ...contactContent.address, country: e.target.value }
+            })}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md"
+          />
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Social Media Text</label>
+        <textarea
+          value={contactContent.socialMediaText}
+          onChange={(e) => setContactContent({ ...contactContent, socialMediaText: e.target.value })}
+          rows={2}
+          placeholder="Follow us on social media for updates, new arrivals, and artisan stories"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md"
+        />
       </div>
 
       <div>
