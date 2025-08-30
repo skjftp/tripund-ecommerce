@@ -11,7 +11,7 @@ interface AboutContent {
   mainContent?: string;
   mission?: string;
   vision?: string;
-  values?: string[];
+  values?: Array<{ title: string; description: string }> | string[];
   stats?: Array<{ number: string; label: string }>;
   teamMembers?: Array<{ name: string; position: string; bio?: string; image?: string }>;
   whyChooseUs?: string[];
@@ -101,8 +101,8 @@ When you purchase from TRIPUND, you're not just buying a product – you're supp
   const values = content.values && content.values.length > 0 ? 
     content.values.map((value, index) => ({
       icon: defaultValues[index % defaultValues.length].icon,
-      title: value,
-      description: defaultValues[index % defaultValues.length].description
+      title: typeof value === 'string' ? value : value.title,
+      description: typeof value === 'string' ? defaultValues[index % defaultValues.length].description : value.description
     })) : defaultValues;
 
   const stats = content.stats && content.stats.length > 0 ? content.stats : defaultStats;
