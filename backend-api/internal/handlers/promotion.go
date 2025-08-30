@@ -232,9 +232,10 @@ func (h *PromotionHandler) isReturningCustomer(userID string) bool {
 func (h *PromotionHandler) GetActivePromotions(c *gin.Context) {
 	now := time.Now()
 	
-	// Query for active promotions
+	// Query for active promotions that should show in banner
 	iter := h.db.Client.Collection("promotions").
 		Where("status", "==", models.PromotionStatusActive).
+		Where("show_in_banner", "==", true).
 		OrderBy("created_at", firestore.Desc).
 		Documents(h.db.Context)
 	
