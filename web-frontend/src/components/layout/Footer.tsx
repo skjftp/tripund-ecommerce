@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Facebook, Instagram, Twitter, Mail, Phone, MapPin } from 'lucide-react';
 import axios from 'axios';
+import tripundLogo from '../../assets/tripund-logo.png';
 
 const API_URL = 'https://tripund-backend-665685012221.asia-south1.run.app/api/v1';
 
@@ -68,7 +69,13 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
-            <h3 className="text-2xl font-bold text-primary-400 mb-4">{companyName}</h3>
+            <Link to="/" className="inline-block mb-4">
+              <img 
+                src={tripundLogo} 
+                alt="TRIPUND LIFESTYLE" 
+                className="h-12 w-auto max-w-[180px] object-contain brightness-0 invert"
+              />
+            </Link>
             <p className="text-gray-400">
               {companyDescription}
             </p>
