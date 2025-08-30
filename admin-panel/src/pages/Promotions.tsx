@@ -33,6 +33,7 @@ interface Promotion {
   start_date: string;
   end_date: string;
   new_customers_only: boolean;
+  show_in_banner: boolean;
   allowed_user_ids: string[];
   created_at: string;
   updated_at: string;
@@ -52,6 +53,7 @@ interface PromotionFormData {
   start_date: string;
   end_date: string;
   new_customers_only: boolean;
+  show_in_banner: boolean;
 }
 
 export default function Promotions() {
@@ -74,6 +76,7 @@ export default function Promotions() {
     start_date: new Date().toISOString().slice(0, 16),
     end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16),
     new_customers_only: false,
+    show_in_banner: false,
   });
 
   useEffect(() => {
@@ -135,6 +138,7 @@ export default function Promotions() {
       start_date: new Date(promotion.start_date).toISOString().slice(0, 16),
       end_date: new Date(promotion.end_date).toISOString().slice(0, 16),
       new_customers_only: promotion.new_customers_only,
+      show_in_banner: promotion.show_in_banner,
     });
     setShowForm(true);
   };
@@ -165,6 +169,7 @@ export default function Promotions() {
       start_date: new Date().toISOString().slice(0, 16),
       end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16),
       new_customers_only: false,
+      show_in_banner: false,
     });
   };
 
@@ -575,17 +580,33 @@ export default function Promotions() {
                     <option value="inactive">Inactive</option>
                   </select>
                 </div>
-                <div className="flex items-center pt-8">
-                  <input
-                    type="checkbox"
-                    id="new_customers_only"
-                    checked={formData.new_customers_only}
-                    onChange={(e) => setFormData({...formData, new_customers_only: e.target.checked})}
-                    className="mr-2"
-                  />
-                  <label htmlFor="new_customers_only" className="text-sm text-gray-700">
-                    New customers only
-                  </label>
+                <div className="space-y-3 pt-6">
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id="new_customers_only"
+                      checked={formData.new_customers_only}
+                      onChange={(e) => setFormData({...formData, new_customers_only: e.target.checked})}
+                      className="mr-2 text-primary-600 focus:ring-primary-500"
+                    />
+                    <label htmlFor="new_customers_only" className="text-sm text-gray-700">
+                      New customers only
+                    </label>
+                  </div>
+                  
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id="show_in_banner"
+                      checked={formData.show_in_banner}
+                      onChange={(e) => setFormData({...formData, show_in_banner: e.target.checked})}
+                      className="mr-2 text-primary-600 focus:ring-primary-500"
+                    />
+                    <label htmlFor="show_in_banner" className="text-sm text-gray-700">
+                      <span className="font-medium">Show in website banner</span>
+                      <span className="text-gray-500 block text-xs">Display this promotion in the website header</span>
+                    </label>
+                  </div>
                 </div>
               </div>
 
