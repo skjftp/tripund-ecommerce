@@ -128,7 +128,7 @@ export default function Categories() {
 
   const CategoryRow = ({ category }: { category: Category }) => {
     const isExpanded = expandedCategories.has(category.id);
-    const hasChildren = category.children && category.children.length > 0;
+    const hasChildren = Array.isArray(category.children) && category.children.length > 0;
 
     return (
       <>
@@ -353,15 +353,34 @@ export default function Categories() {
           <div className="bg-white p-4 rounded-lg border border-gray-200">
             <div className="text-sm font-medium text-gray-500">Total Subcategories</div>
             <div className="mt-1 text-2xl font-bold text-gray-900">
-              {(categories || []).reduce((sum, cat) => sum + (cat.children?.length || 0), 0)}
+              {(() => {
+                try {
+                  return (categories || []).reduce((sum, cat) => {
+                    if (!cat || cat.children === null || cat.children === undefined) return sum;
+                    return sum + (Array.isArray(cat.children) ? cat.children.length : 0);
+                  }, 0);
+                } catch {
+                  return 0;
+                }
+              })()}
             </div>
           </div>
           <div className="bg-white p-4 rounded-lg border border-gray-200">
             <div className="text-sm font-medium text-gray-500">Total Products</div>
             <div className="mt-1 text-2xl font-bold text-gray-900">
-              {(categories || []).reduce((sum, cat) => 
-                sum + (cat.children || []).reduce((childSum, child) => childSum + (child.product_count || 0), 0), 0
-              )}
+              {(() => {
+                try {
+                  return (categories || []).reduce((sum, cat) => {
+                    if (!cat || cat.children === null || cat.children === undefined) return sum;
+                    if (!Array.isArray(cat.children)) return sum;
+                    return sum + cat.children.reduce((childSum, child) => {
+                      return childSum + (child?.product_count || 0);
+                    }, 0);
+                  }, 0);
+                } catch {
+                  return 0;
+                }
+              })()}
             </div>
           </div>
         </div>
