@@ -113,23 +113,48 @@ adb logcat -s flutter
 ## Environment Variables
 
 ### Backend (.env)
-**PRODUCTION ENVIRONMENT VARIABLES (DO NOT OVERWRITE):**
+
+## ⚠️ CRITICAL WARNING - NEVER OVERRIDE ENVIRONMENT VARIABLES ⚠️
+
+**STRICT PROHIBITION**: Under NO circumstances should ANY deployment or update EVER override, modify, or remove the production environment variables listed below. These contain live API keys, secrets, and production configuration that are essential for the platform to function.
+
+**CURRENT PRODUCTION ENVIRONMENT VARIABLES (AS OF AUGUST 30, 2025):**
 ```
-GIN_MODE=release
-FIREBASE_PROJECT_ID=tripund-ecommerce-1755860933
-JWT_SECRET=[CONFIGURED_IN_CLOUD_RUN]
+APP_BUILD_NUMBER=22
+APP_DOWNLOAD_URL=https://github.com/skjftp/tripund-ecommerce/releases/download/v1.0.21/tripund-v1.0.21.apk
+APP_VERSION=1.0.21
 CORS_ORIGIN=https://tripundlifestyle.com
-STORAGE_BUCKET=tripund-ecommerce-1755860933.appspot.com
-RAZORPAY_KEY_ID=[CONFIGURED_IN_CLOUD_RUN]
-RAZORPAY_KEY_SECRET=[CONFIGURED_IN_CLOUD_RUN]
-RAZORPAY_WEBHOOK_SECRET=[CONFIGURED_IN_CLOUD_RUN]
-SENDGRID_API_KEY=[CONFIGURED_IN_CLOUD_RUN]
-EMAIL_FROM_NAME=TRIPUND Lifestyle
 EMAIL_FROM=orders@tripundlifestyle.com
+EMAIL_FROM_NAME=TRIPUND Lifestyle
+FIREBASE_PROJECT_ID=tripund-ecommerce-1755860933
+GIN_MODE=release
+JWT_SECRET=[LIVE_PRODUCTION_SECRET]
+RAZORPAY_KEY_ID=[LIVE_RAZORPAY_KEY]
+RAZORPAY_KEY_SECRET=[LIVE_RAZORPAY_SECRET]
+RAZORPAY_WEBHOOK_SECRET=[LIVE_WEBHOOK_SECRET]
+SENDGRID_API_KEY=[LIVE_SENDGRID_KEY]
+STORAGE_BUCKET=tripund-ecommerce-1755860933.appspot.com
 ```
 
-**IMPORTANT**: All sensitive values (API keys, secrets, tokens) are already configured in Cloud Run. Never overwrite them during deployments. Use `gcloud run services describe` to view current configuration if needed.
+**NOTE**: Actual secret values are masked above for security. Use `gcloud run services describe tripund-backend --region=asia-south1` to view current values when needed.
+
+**DEPLOYMENT SAFETY RULES:**
+1. **NEVER use `--set-env-vars` flag during deployments**
+2. **NEVER use `--env-vars-file` during deployments**
+3. **NEVER clear or reset environment variables**
+4. **ALWAYS verify env vars are intact after deployments**
+5. **Use `gcloud run services describe tripund-backend --region=asia-south1` to verify**
+
+**SAFE DEPLOYMENT COMMAND:**
+```bash
+cd backend-api
+./deploy.sh  # This script preserves environment variables
 ```
+
+**EMERGENCY RECOVERY**: If environment variables are accidentally overwritten:
+1. Immediately restore using the values listed above
+2. Redeploy the service with correct variables
+3. Test all functionality (payments, emails, authentication)
 
 ### Frontend (.env)
 ```
@@ -567,6 +592,17 @@ Add this A record to your DNS provider:
 - `test-products.js` - Test Firestore product queries
 
 ## Notes for AI Assistants
+
+### 🚨 CRITICAL DEPLOYMENT SAFETY 🚨
+**NEVER OVERRIDE ENVIRONMENT VARIABLES**: The backend service contains live production secrets including:
+- Razorpay API keys for payment processing
+- SendGrid API key for email delivery
+- JWT secret for authentication
+- Webhook secrets for security
+
+**ANY deployment that overwrites these variables will BREAK the production system.**
+
+### General Guidelines
 1. **NEVER run or test anything on localhost - work directly in code**
 2. **NEVER implement temporary workarounds - always fix the root issue properly**
 3. **IMPORTANT: Both https://tripund-backend-665685012221.asia-south1.run.app and https://tripund-backend-rafqv5m7ga-el.a.run.app are aliases for the same Cloud Run service - DO NOT change between them**
@@ -588,7 +624,9 @@ Add this A record to your DNS provider:
 19. **iOS pods deployment target must be 13.0+ minimum - forced in Podfile post_install**
 20. **iOS release builds: use `flutter build ios --release` then `xcrun devicectl device install app`**
 21. **Flutter update service only runs on Android - Platform.isAndroid check prevents iOS issues**
-22. **NEVER overwrite production environment variables during deployments - they are configured in Cloud Run**
+22. **🚨 CRITICAL: NEVER overwrite production environment variables during deployments - they contain live API keys and secrets**
+23. **Email templates**: Elegant order confirmation and shipping confirmation templates now set as defaults
+24. **Email system**: SendGrid integration with order/shipping notifications using database templates
 23. **Current admin credentials: admin@tripund.com / password (change immediately after login)**
 24. **RBAC system active: 5 roles, 23 permissions, permission-based UI controls implemented**
 
