@@ -515,6 +515,30 @@ func (h *AuthHandler) GetUserDetails(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
+// GetProfileWishlist returns user's wishlist
+func (h *AuthHandler) GetProfileWishlist(c *gin.Context) {
+	userID := c.GetString("user_id")
+	
+	// Get user's wishlist from wishlist collection or user document
+	// For now, return empty array
+	c.JSON(http.StatusOK, gin.H{
+		"items": []interface{}{},
+		"total": 0,
+	})
+}
+
+// GetProfileAddresses returns user's saved addresses
+func (h *AuthHandler) GetProfileAddresses(c *gin.Context) {
+	userID := c.GetString("user_id")
+	
+	// Get user's addresses from addresses collection or user document
+	// For now, return empty array
+	c.JSON(http.StatusOK, gin.H{
+		"addresses": []interface{}{},
+		"total": 0,
+	})
+}
+
 // GoogleAuth handles Google OAuth sign-in/sign-up
 func (h *AuthHandler) GoogleAuth(c *gin.Context) {
 	var req struct {

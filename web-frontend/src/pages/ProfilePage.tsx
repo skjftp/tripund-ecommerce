@@ -606,15 +606,28 @@ export default function ProfilePage() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
                             <h4 className="font-medium mb-2">Items</h4>
-                            {order.items.map((item: any, index: number) => (
+                            {order.items && order.items.length > 0 ? order.items.map((item: any, index: number) => (
                               <p key={index} className="text-sm text-gray-600">
                                 {item.product_name} × {item.quantity}
                               </p>
-                            ))}
+                            )) : (
+                              <p className="text-sm text-gray-500">No items found</p>
+                            )}
                           </div>
                           <div>
                             <h4 className="font-medium mb-2">Total</h4>
                             <p className="text-lg font-semibold">₹{order.totals.total.toLocaleString()}</p>
+                            {(order.status === 'processing' || order.status === 'shipped' || order.status === 'completed') && (
+                              <button
+                                onClick={() => {
+                                  // Navigate to invoice page
+                                  window.open(`/invoices/${order.id}`, '_blank');
+                                }}
+                                className="mt-2 text-sm bg-primary-600 text-white px-3 py-1 rounded hover:bg-primary-700"
+                              >
+                                View Invoice
+                              </button>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -1014,15 +1027,28 @@ export default function ProfilePage() {
                       <div className="space-y-2">
                         <div>
                           <h4 className="font-medium text-sm mb-1">Items</h4>
-                          {order.items.map((item: any, index: number) => (
+                          {order.items && order.items.length > 0 ? order.items.map((item: any, index: number) => (
                             <p key={index} className="text-xs text-gray-600">
                               {item.product_name} × {item.quantity}
                             </p>
-                          ))}
+                          )) : (
+                            <p className="text-xs text-gray-500">No items found</p>
+                          )}
                         </div>
                         <div>
                           <h4 className="font-medium text-sm mb-1">Total</h4>
                           <p className="text-lg font-semibold">₹{order.totals.total.toLocaleString()}</p>
+                          {(order.status === 'processing' || order.status === 'shipped' || order.status === 'completed') && (
+                            <button
+                              onClick={() => {
+                                // Navigate to invoice page
+                                window.open(`/invoices/${order.id}`, '_blank');
+                              }}
+                              className="mt-1 text-xs bg-primary-600 text-white px-2 py-1 rounded hover:bg-primary-700"
+                            >
+                              Invoice
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>

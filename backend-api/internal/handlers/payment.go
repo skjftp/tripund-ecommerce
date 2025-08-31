@@ -143,8 +143,15 @@ func (h *PaymentHandler) VerifyPayment(c *gin.Context) {
 	// Create notification for payment received
 	h.notificationHandler.NotifyPaymentReceived(order.OrderNumber, order.Totals.Total)
 
-	// Auto-generate invoice and send order confirmation email after payment verification
+	// Auto-generate invoice, send email, and update stock after payment verification
 	go func() {
+		// Update stock quantities
+		if err := h.updateStockForOrder(order); err != nil {
+			log.Printf("Failed to update stock for order %s: %v", req.OrderID, err)
+		} else {
+			log.Printf("Successfully updated stock for order %s", req.OrderID)
+		}
+		
 		// Generate invoice
 		if err := h.generateInvoiceForOrder(req.OrderID); err != nil {
 			log.Printf("Failed to auto-generate invoice for order %s: %v", req.OrderID, err)
@@ -703,6 +710,84 @@ func (h *PaymentHandler) createInvoiceFromOrderData(order *models.Order, setting
 		"created_at":     now,
 		"updated_at":     now,
 	}
+}
+
+// updateStockForOrder decrements stock when payment is successful
+func (h *PaymentHandler) updateStockForOrder(order models.Order) error {
+	// Iterate through order items and decrement stock
+	for _, item := range order.Items {
+		productRef := h.db.Client.Collection("products").Doc(item.ProductID)
+		
+		// Get current product to check stock
+		productDoc, err := productRef.Get(h.db.Context)
+		if err != nil {
+			log.Printf("Failed to get product %s: %v", item.ProductID, err)
+			continue // Skip this product but continue with others
+		}
+
+		var product models.Product
+		if err := productDoc.DataTo(&product); err != nil {
+			log.Printf("Failed to parse product %s: %v", item.ProductID, err)
+			continue
+		}
+
+		// Check if this is a variant order
+		if item.VariantID != "" && product.HasVariants {
+			// Update variant stock
+			variantUpdated := false
+			for i, variant := range product.Variants {
+				if variant.ID == item.VariantID {
+					// Decrement variant stock
+					newStock := variant.StockQuantity - item.Quantity
+					if newStock < 0 {
+						newStock = 0
+					}
+					product.Variants[i].StockQuantity = newStock
+					
+					// Update availability
+					if newStock == 0 {
+						product.Variants[i].Available = false
+					}
+					
+					variantUpdated = true
+					log.Printf("Updated variant stock for product %s, variant %s: new stock %d", 
+						item.ProductID, item.VariantID, newStock)
+					break
+				}
+			}
+			
+			if variantUpdated {
+				// Update the entire product document with modified variants
+				_, err = productRef.Update(h.db.Context, []firestore.Update{
+					{Path: "variants", Value: product.Variants},
+					{Path: "updated_at", Value: time.Now()},
+				})
+				
+				if err != nil {
+					log.Printf("Failed to update variant stock for product %s: %v", item.ProductID, err)
+				}
+			}
+		} else {
+			// Regular product without variants - update main stock
+			newStock := product.StockQuantity - item.Quantity
+			if newStock < 0 {
+				newStock = 0 // Prevent negative stock
+			}
+
+			// Update product stock
+			_, err = productRef.Update(h.db.Context, []firestore.Update{
+				{Path: "stock_quantity", Value: newStock},
+				{Path: "updated_at", Value: time.Now()},
+			})
+
+			if err != nil {
+				log.Printf("Failed to update stock for product %s: %v", item.ProductID, err)
+			} else {
+				log.Printf("Updated stock for product %s: old=%d new=%d", item.ProductID, product.StockQuantity, newStock)
+			}
+		}
+	}
+	return nil
 }
 
 // getStringValue helper function (renamed to avoid conflict)

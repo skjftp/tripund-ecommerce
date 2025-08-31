@@ -110,6 +110,8 @@ func main() {
 		{
 			protected.GET("/profile", authHandler.GetProfile)
 			protected.PUT("/profile", authHandler.UpdateProfile)
+			protected.GET("/profile/wishlist", authHandler.GetProfileWishlist)
+			protected.GET("/profile/addresses", authHandler.GetProfileAddresses)
 
 			// Order endpoints
 			orders := protected.Group("/orders")
