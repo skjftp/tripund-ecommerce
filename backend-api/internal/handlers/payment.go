@@ -732,13 +732,13 @@ func (h *PaymentHandler) createCompleteInvoice(order *models.Order, settings map
 		// Line items
 		LineItems: lineItems,
 		
-		// Payment info
+		// Payment info (empty - removed as requested)
 		BankDetails:     models.BankDetails{},
-		PaymentTerms:    "Payment Method: " + paymentMethodDisplay,
+		PaymentTerms:    "", // Removed
 		
-		// Additional fields
-		Notes:           "Transaction ID: " + transactionID,
-		TermsConditions: "Thank you for shopping with us.",
+		// Additional fields (empty - removed as requested)
+		Notes:           "", // Removed
+		TermsConditions: "", // Removed
 		
 		// System fields
 		CreatedAt: now,

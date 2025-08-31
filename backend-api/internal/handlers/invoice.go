@@ -494,13 +494,13 @@ func (h *InvoiceHandler) createInvoiceFromOrder(order *models.Order, settings ma
 		// Line items
 		LineItems: lineItems,
 		
-		// Payment info (empty bank details)
+		// Payment info (completely removed as requested)
 		BankDetails:     models.BankDetails{},
-		PaymentTerms:    "Payment Method: " + paymentMethodDisplay,
+		PaymentTerms:    "", // Removed
 		
-		// Additional fields
-		Notes:           "Transaction ID: " + transactionID,
-		TermsConditions: "Thank you for shopping with us.",
+		// Additional fields (completely removed as requested)
+		Notes:           "", // Removed
+		TermsConditions: "", // Removed
 		
 		// System fields
 		CreatedAt: now,
