@@ -120,7 +120,7 @@ export default function LoginPage() {
                 type="button"
                 onClick={() => {
                   // TODO: Implement Google Sign-In
-                  toast.info('Google Sign-In integration coming soon!');
+                  toast('Google Sign-In integration coming soon!', { icon: 'ℹ️' });
                 }}
                 className="w-full inline-flex justify-center items-center py-2 px-4 border border-gray-300 rounded-md bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
               >
