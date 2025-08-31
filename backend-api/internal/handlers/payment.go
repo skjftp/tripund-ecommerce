@@ -298,14 +298,10 @@ func (h *PaymentHandler) handlePaymentCaptured(payload map[string]interface{}) e
 			updatedOrder.ID = updatedOrderDoc.Ref.ID
 			
 			// Send confirmation email using SendGrid service
-			if emailService, ok := h.emailService.(*services.SendGridEmailService); ok {
-				if err := emailService.SendOrderConfirmation(updatedOrder); err != nil {
-					log.Printf("Failed to send order confirmation email for order %s: %v", orderID, err)
-				} else {
-					log.Printf("Order confirmation email sent successfully after payment for order %s", orderID)
-				}
+			if err := h.emailService.SendOrderConfirmation(updatedOrder); err != nil {
+				log.Printf("Failed to send order confirmation email for order %s: %v", orderID, err)
 			} else {
-				log.Printf("Email service type assertion failed")
+				log.Printf("Order confirmation email sent successfully after payment for order %s", orderID)
 			}
 		} else {
 			log.Printf("Email service not available, skipping order confirmation email for order %s", orderID)
