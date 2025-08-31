@@ -48,48 +48,94 @@ export default function ProfilePage() {
     register: registerProfile,
     handleSubmit: handleProfileSubmit,
     formState: { errors: profileErrors },
-    reset: resetProfile,
+    setValue: setProfileValue,
+    watch: watchProfile,
   } = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
+    defaultValues: {
+      first_name: user?.profile.first_name || '',
+      last_name: user?.profile.last_name || '',
+      phone: user?.profile.phone || '',
+      email: user?.email || '',
+    },
   });
 
   const {
     register: registerAddress,
     handleSubmit: handleAddressSubmit,
     formState: { errors: addressErrors },
+    setValue: setAddressValue,
     reset: resetAddress,
   } = useForm<AddressFormData>({
-    resolver: zodResolver(addressSchema) as any,
+    resolver: zodResolver(addressSchema),
+    defaultValues: {
+      type: 'home',
+      line1: '',
+      line2: '',
+      city: '',
+      state: '',
+      postal_code: '',
+      country: 'India',
+      phone: '',
+      is_default: false,
+    },
   });
+
+  const [addresses, setAddresses] = useState<any[]>([]);
+  const [orders, setOrders] = useState<any[]>([]);
+  const [wishlist, setWishlist] = useState<any[]>([]);
 
   useEffect(() => {
     if (!isAuthenticated) {
       navigate('/login');
-    } else {
-      dispatch(fetchProfile());
+      return;
     }
+    
+    dispatch(fetchProfile());
+    fetchAddresses();
+    fetchOrders();
+    fetchWishlist();
   }, [isAuthenticated, navigate, dispatch]);
 
   useEffect(() => {
     if (user) {
-      resetProfile({
-        first_name: user.profile.first_name,
-        last_name: user.profile.last_name,
-        phone: user.profile.phone,
-        email: user.email,
-      });
+      setProfileValue('first_name', user.profile.first_name || '');
+      setProfileValue('last_name', user.profile.last_name || '');
+      setProfileValue('phone', user.profile.phone || '');
+      setProfileValue('email', user.email || '');
     }
-  }, [user, resetProfile]);
+  }, [user, setProfileValue]);
 
-  const handleProfileUpdate = async (data: ProfileFormData) => {
+  const fetchAddresses = async () => {
     try {
-      await api.put('/profile', {
-        profile: {
-          first_name: data.first_name,
-          last_name: data.last_name,
-          phone: data.phone,
-        },
-      });
+      const response = await api.get('/profile/addresses');
+      setAddresses(response.data.addresses || []);
+    } catch (error) {
+      console.error('Error fetching addresses:', error);
+    }
+  };
+
+  const fetchOrders = async () => {
+    try {
+      const response = await api.get('/orders');
+      setOrders(response.data.orders || []);
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+    }
+  };
+
+  const fetchWishlist = async () => {
+    try {
+      const response = await api.get('/profile/wishlist');
+      setWishlist(response.data.items || []);
+    } catch (error) {
+      console.error('Error fetching wishlist:', error);
+    }
+  };
+
+  const onProfileSubmit = async (data: ProfileFormData) => {
+    try {
+      await api.put('/profile', data);
       toast.success('Profile updated successfully');
       setIsEditing(false);
       dispatch(fetchProfile());
@@ -98,33 +144,21 @@ export default function ProfilePage() {
     }
   };
 
-  const handleAddressSubmitForm = async (data: AddressFormData) => {
+  const onAddressSubmit = async (data: AddressFormData) => {
     try {
       if (editingAddress) {
-        await api.put(`/addresses/${editingAddress}`, data);
+        await api.put(`/profile/addresses/${editingAddress}`, data);
         toast.success('Address updated successfully');
       } else {
-        await api.post('/addresses', data);
+        await api.post('/profile/addresses', data);
         toast.success('Address added successfully');
       }
       setShowAddressForm(false);
       setEditingAddress(null);
       resetAddress();
-      dispatch(fetchProfile());
+      fetchAddresses();
     } catch (error) {
       toast.error('Failed to save address');
-    }
-  };
-
-  const handleDeleteAddress = async (addressId: string) => {
-    if (window.confirm('Are you sure you want to delete this address?')) {
-      try {
-        await api.delete(`/addresses/${addressId}`);
-        toast.success('Address deleted successfully');
-        dispatch(fetchProfile());
-      } catch (error) {
-        toast.error('Failed to delete address');
-      }
     }
   };
 
@@ -151,25 +185,25 @@ export default function ProfilePage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gray-50 py-4 sm:py-8">
       <div className="max-w-7xl mx-auto px-4">
         <div className="bg-white rounded-lg shadow-md">
-          <div className="p-6 border-b">
-            <div className="flex items-center justify-between">
+          <div className="p-4 sm:p-6 border-b">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-center space-x-4">
-                <div className="w-20 h-20 bg-primary-100 rounded-full flex items-center justify-center">
-                  <User size={40} className="text-primary-600" />
+                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-primary-100 rounded-full flex items-center justify-center">
+                  <User size={32} className="text-primary-600 sm:w-10 sm:h-10" />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold">
+                  <h1 className="text-xl sm:text-2xl font-bold">
                     {user.profile.first_name} {user.profile.last_name}
                   </h1>
-                  <p className="text-gray-600">{user.email}</p>
+                  <p className="text-gray-600 text-sm sm:text-base">{user.email}</p>
                 </div>
               </div>
               <button
                 onClick={handleLogout}
-                className="flex items-center space-x-2 text-red-600 hover:text-red-700"
+                className="flex items-center justify-center space-x-2 text-red-600 hover:text-red-700 px-4 py-2 rounded-md border border-red-200 hover:bg-red-50 w-full sm:w-auto"
               >
                 <LogOut size={20} />
                 <span>Logout</span>
@@ -177,7 +211,28 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          <div className="flex">
+          {/* Mobile Tab Navigation */}
+          <div className="lg:hidden border-b">
+            <nav className="flex overflow-x-auto p-2 space-x-1">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center space-x-2 px-3 py-2 rounded-md transition-colors whitespace-nowrap text-sm ${
+                    activeTab === tab.id
+                      ? 'bg-primary-50 text-primary-600'
+                      : 'text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  <tab.icon size={16} />
+                  <span>{tab.name}</span>
+                </button>
+              ))}
+            </nav>
+          </div>
+
+          {/* Desktop Layout */}
+          <div className="hidden lg:flex">
             <div className="w-64 border-r">
               <nav className="p-4">
                 {tabs.map((tab) => (
@@ -207,7 +262,7 @@ export default function ProfilePage() {
                         onClick={() => setIsEditing(true)}
                         className="flex items-center space-x-2 text-primary-600 hover:text-primary-700"
                       >
-                        <Edit2 size={18} />
+                        <Edit2 size={20} />
                         <span>Edit</span>
                       </button>
                     ) : (
@@ -215,7 +270,7 @@ export default function ProfilePage() {
                         onClick={() => setIsEditing(false)}
                         className="flex items-center space-x-2 text-gray-600 hover:text-gray-700"
                       >
-                        <X size={18} />
+                        <X size={20} />
                         <span>Cancel</span>
                       </button>
                     )}
@@ -223,28 +278,36 @@ export default function ProfilePage() {
 
                   {!isEditing ? (
                     <div className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                          <label className="block text-sm font-medium text-gray-500">First Name</label>
-                          <p className="mt-1 text-lg">{user.profile.first_name}</p>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            First Name
+                          </label>
+                          <p className="text-gray-900">{user.profile.first_name}</p>
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-500">Last Name</label>
-                          <p className="mt-1 text-lg">{user.profile.last_name}</p>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Last Name
+                          </label>
+                          <p className="text-gray-900">{user.profile.last_name}</p>
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-500">Email</label>
-                          <p className="mt-1 text-lg">{user.email}</p>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Email
+                          </label>
+                          <p className="text-gray-900">{user.email}</p>
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-500">Phone</label>
-                          <p className="mt-1 text-lg">{user.profile.phone || 'Not provided'}</p>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Phone
+                          </label>
+                          <p className="text-gray-900">{user.profile.phone || 'Not provided'}</p>
                         </div>
                       </div>
                     </div>
                   ) : (
-                    <form onSubmit={handleProfileSubmit(handleProfileUpdate)} className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
+                    <form onSubmit={handleProfileSubmit(onProfileSubmit)} className="space-y-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">
                             First Name
@@ -275,6 +338,7 @@ export default function ProfilePage() {
                           </label>
                           <input
                             {...registerProfile('email')}
+                            type="email"
                             disabled
                             className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50"
                           />
@@ -297,15 +361,16 @@ export default function ProfilePage() {
                           type="submit"
                           className="flex items-center space-x-2 bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700"
                         >
-                          <Save size={18} />
+                          <Save size={20} />
                           <span>Save Changes</span>
                         </button>
                         <button
                           type="button"
                           onClick={() => setIsEditing(false)}
-                          className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+                          className="flex items-center space-x-2 text-gray-600 hover:text-gray-700 px-4 py-2 border rounded-md"
                         >
-                          Cancel
+                          <X size={20} />
+                          <span>Cancel</span>
                         </button>
                       </div>
                     </form>
@@ -316,23 +381,23 @@ export default function ProfilePage() {
               {activeTab === 'addresses' && (
                 <div>
                   <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-xl font-semibold">Saved Addresses</h2>
+                    <h2 className="text-xl font-semibold">Delivery Addresses</h2>
                     <button
                       onClick={() => setShowAddressForm(true)}
                       className="flex items-center space-x-2 bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700"
                     >
-                      <Plus size={18} />
-                      <span>Add New Address</span>
+                      <Plus size={20} />
+                      <span>Add Address</span>
                     </button>
                   </div>
 
                   {showAddressForm && (
                     <div className="bg-gray-50 p-6 rounded-lg mb-6">
-                      <h3 className="text-lg font-semibold mb-4">
+                      <h3 className="text-lg font-medium mb-4">
                         {editingAddress ? 'Edit Address' : 'Add New Address'}
                       </h3>
-                      <form onSubmit={handleAddressSubmit(handleAddressSubmitForm as any)} className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
+                      <form onSubmit={handleAddressSubmit(onAddressSubmit)} className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
                               Address Type
@@ -346,25 +411,21 @@ export default function ProfilePage() {
                               <option value="other">Other</option>
                             </select>
                           </div>
-                          <div>
+                          <div className="md:col-span-2">
                             <label className="block text-sm font-medium text-gray-700 mb-1">
-                              Phone
+                              Address Line 1
                             </label>
                             <input
-                              {...registerAddress('phone')}
+                              {...registerAddress('line1')}
                               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                              placeholder="Street address, apartment, etc."
                             />
+                            {addressErrors.line1 && (
+                              <p className="text-red-500 text-sm mt-1">{addressErrors.line1.message}</p>
+                            )}
                           </div>
                         </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Address Line 1
-                          </label>
-                          <input
-                            {...registerAddress('line1')}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                          />
-                        </div>
+
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">
                             Address Line 2
@@ -372,9 +433,11 @@ export default function ProfilePage() {
                           <input
                             {...registerAddress('line2')}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                            placeholder="Apartment, suite, etc. (optional)"
                           />
                         </div>
-                        <div className="grid grid-cols-3 gap-4">
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
                               City
@@ -383,6 +446,9 @@ export default function ProfilePage() {
                               {...registerAddress('city')}
                               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                             />
+                            {addressErrors.city && (
+                              <p className="text-red-500 text-sm mt-1">{addressErrors.city.message}</p>
+                            )}
                           </div>
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -392,6 +458,9 @@ export default function ProfilePage() {
                               {...registerAddress('state')}
                               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                             />
+                            {addressErrors.state && (
+                              <p className="text-red-500 text-sm mt-1">{addressErrors.state.message}</p>
+                            )}
                           </div>
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -401,24 +470,43 @@ export default function ProfilePage() {
                               {...registerAddress('postal_code')}
                               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                             />
+                            {addressErrors.postal_code && (
+                              <p className="text-red-500 text-sm mt-1">{addressErrors.postal_code.message}</p>
+                            )}
                           </div>
                         </div>
-                        <div>
-                          <label className="flex items-center">
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Phone
+                            </label>
                             <input
-                              {...registerAddress('is_default')}
-                              type="checkbox"
-                              className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                              {...registerAddress('phone')}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                             />
-                            <span className="ml-2 text-sm text-gray-600">Set as default address</span>
-                          </label>
+                            {addressErrors.phone && (
+                              <p className="text-red-500 text-sm mt-1">{addressErrors.phone.message}</p>
+                            )}
+                          </div>
+                          <div className="flex items-center pt-6">
+                            <label className="flex items-center">
+                              <input
+                                {...registerAddress('is_default')}
+                                type="checkbox"
+                                className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                              />
+                              <span className="ml-2 text-sm text-gray-700">Set as default address</span>
+                            </label>
+                          </div>
                         </div>
+
                         <div className="flex space-x-3">
                           <button
                             type="submit"
                             className="bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700"
                           >
-                            Save Address
+                            {editingAddress ? 'Update' : 'Add'} Address
                           </button>
                           <button
                             type="button"
@@ -427,7 +515,7 @@ export default function ProfilePage() {
                               setEditingAddress(null);
                               resetAddress();
                             }}
-                            className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+                            className="text-gray-600 hover:text-gray-700 px-4 py-2 border rounded-md"
                           >
                             Cancel
                           </button>
@@ -436,16 +524,16 @@ export default function ProfilePage() {
                     </div>
                   )}
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {user.addresses?.map((address) => (
+                  <div className="space-y-4">
+                    {addresses.map((address) => (
                       <div key={address.id} className="border rounded-lg p-4">
                         <div className="flex justify-between items-start mb-2">
                           <div>
-                            <span className="inline-block px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-md capitalize">
-                              {address.type}
+                            <span className="inline-block bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded-full mb-2">
+                              {address.type.charAt(0).toUpperCase() + address.type.slice(1)}
                             </span>
                             {address.is_default && (
-                              <span className="ml-2 inline-block px-2 py-1 bg-primary-100 text-primary-700 text-xs rounded-md">
+                              <span className="inline-block bg-primary-100 text-primary-800 text-xs px-2 py-1 rounded-full ml-2">
                                 Default
                               </span>
                             )}
@@ -455,31 +543,38 @@ export default function ProfilePage() {
                               onClick={() => {
                                 setEditingAddress(address.id);
                                 setShowAddressForm(true);
-                                resetAddress(address as any);
+                                Object.keys(address).forEach(key => {
+                                  if (key !== 'id') {
+                                    setAddressValue(key as any, address[key]);
+                                  }
+                                });
                               }}
-                              className="text-gray-600 hover:text-primary-600"
+                              className="text-primary-600 hover:text-primary-700"
                             >
                               <Edit2 size={16} />
                             </button>
                             <button
-                              onClick={() => handleDeleteAddress(address.id)}
-                              className="text-gray-600 hover:text-red-600"
+                              onClick={async () => {
+                                try {
+                                  await api.delete(`/profile/addresses/${address.id}`);
+                                  toast.success('Address deleted successfully');
+                                  fetchAddresses();
+                                } catch (error) {
+                                  toast.error('Failed to delete address');
+                                }
+                              }}
+                              className="text-red-600 hover:text-red-700"
                             >
                               <Trash2 size={16} />
                             </button>
                           </div>
                         </div>
-                        <p className="text-sm text-gray-800">
-                          {address.line1}
-                          {address.line2 && `, ${address.line2}`}
-                        </p>
-                        <p className="text-sm text-gray-800">
-                          {address.city}, {address.state} - {address.postal_code}
-                        </p>
-                        <p className="text-sm text-gray-600 mt-2">
-                          <Phone size={14} className="inline mr-1" />
-                          {address.phone}
-                        </p>
+                        <div className="text-gray-700">
+                          <p>{address.line1}</p>
+                          {address.line2 && <p>{address.line2}</p>}
+                          <p>{address.city}, {address.state} {address.postal_code}</p>
+                          <p className="text-sm text-gray-500 mt-1">Phone: {address.phone}</p>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -489,26 +584,61 @@ export default function ProfilePage() {
               {activeTab === 'orders' && (
                 <div>
                   <h2 className="text-xl font-semibold mb-6">Order History</h2>
-                  <p className="text-gray-600">You can view your order history on the Orders page.</p>
-                  <button
-                    onClick={() => navigate('/orders')}
-                    className="mt-4 bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700"
-                  >
-                    View Orders
-                  </button>
+                  <div className="space-y-4">
+                    {orders.map((order) => (
+                      <div key={order.id} className="border rounded-lg p-6">
+                        <div className="flex justify-between items-start mb-4">
+                          <div>
+                            <h3 className="font-semibold">Order #{order.order_number}</h3>
+                            <p className="text-sm text-gray-500">
+                              {new Date(order.created_at).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <span className={`px-3 py-1 rounded-full text-sm ${
+                            order.status === 'completed' ? 'bg-green-100 text-green-800' :
+                            order.status === 'processing' ? 'bg-blue-100 text-blue-800' :
+                            order.status === 'shipped' ? 'bg-purple-100 text-purple-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <h4 className="font-medium mb-2">Items</h4>
+                            {order.items.map((item: any, index: number) => (
+                              <p key={index} className="text-sm text-gray-600">
+                                {item.product_name} × {item.quantity}
+                              </p>
+                            ))}
+                          </div>
+                          <div>
+                            <h4 className="font-medium mb-2">Total</h4>
+                            <p className="text-lg font-semibold">₹{order.totals.total.toLocaleString()}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
 
               {activeTab === 'wishlist' && (
                 <div>
-                  <h2 className="text-xl font-semibold mb-6">Your Wishlist</h2>
-                  <p className="text-gray-600">Manage your saved items on the Wishlist page.</p>
-                  <button
-                    onClick={() => navigate('/wishlist')}
-                    className="mt-4 bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700"
-                  >
-                    View Wishlist
-                  </button>
+                  <h2 className="text-xl font-semibold mb-6">Wishlist</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {wishlist.map((item) => (
+                      <div key={item.id} className="border rounded-lg p-4">
+                        <img
+                          src={item.image}
+                          alt={item.name}
+                          className="w-full h-48 object-cover rounded mb-4"
+                        />
+                        <h3 className="font-semibold mb-2">{item.name}</h3>
+                        <p className="text-primary-600 font-semibold">₹{item.price.toLocaleString()}</p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
 
@@ -516,41 +646,432 @@ export default function ProfilePage() {
                 <div>
                   <h2 className="text-xl font-semibold mb-6">Account Settings</h2>
                   <div className="space-y-6">
-                    <div>
-                      <h3 className="text-lg font-medium mb-3">Email Preferences</h3>
-                      <div className="space-y-2">
+                    <div className="border rounded-lg p-4">
+                      <h3 className="font-medium mb-4">Notification Preferences</h3>
+                      <div className="space-y-3">
                         <label className="flex items-center">
-                          <input type="checkbox" className="rounded border-gray-300 text-primary-600 focus:ring-primary-500" />
-                          <span className="ml-2 text-sm text-gray-600">Newsletter subscription</span>
+                          <input type="checkbox" className="rounded" defaultChecked />
+                          <span className="ml-2 text-sm">Email notifications for orders</span>
                         </label>
                         <label className="flex items-center">
-                          <input type="checkbox" className="rounded border-gray-300 text-primary-600 focus:ring-primary-500" />
-                          <span className="ml-2 text-sm text-gray-600">Order updates</span>
+                          <input type="checkbox" className="rounded" defaultChecked />
+                          <span className="ml-2 text-sm">SMS notifications</span>
                         </label>
                         <label className="flex items-center">
-                          <input type="checkbox" className="rounded border-gray-300 text-primary-600 focus:ring-primary-500" />
-                          <span className="ml-2 text-sm text-gray-600">Promotional offers</span>
+                          <input type="checkbox" className="rounded" />
+                          <span className="ml-2 text-sm">Promotional emails</span>
                         </label>
                       </div>
-                    </div>
-
-                    <div>
-                      <h3 className="text-lg font-medium mb-3">Security</h3>
-                      <button className="text-primary-600 hover:text-primary-700">
-                        Change Password
-                      </button>
-                    </div>
-
-                    <div>
-                      <h3 className="text-lg font-medium mb-3 text-red-600">Danger Zone</h3>
-                      <button className="text-red-600 hover:text-red-700">
-                        Delete Account
-                      </button>
                     </div>
                   </div>
                 </div>
               )}
             </div>
+          </div>
+
+          {/* Mobile Content */}
+          <div className="lg:hidden p-4">
+            {activeTab === 'profile' && (
+              <div>
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-lg font-semibold">Personal Information</h2>
+                  {!isEditing ? (
+                    <button
+                      onClick={() => setIsEditing(true)}
+                      className="flex items-center space-x-2 text-primary-600 hover:text-primary-700"
+                    >
+                      <Edit2 size={18} />
+                      <span className="text-sm">Edit</span>
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => setIsEditing(false)}
+                      className="flex items-center space-x-2 text-gray-600 hover:text-gray-700"
+                    >
+                      <X size={18} />
+                      <span className="text-sm">Cancel</span>
+                    </button>
+                  )}
+                </div>
+
+                {!isEditing ? (
+                  <div className="space-y-4">
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          First Name
+                        </label>
+                        <p className="text-gray-900">{user.profile.first_name}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Last Name
+                        </label>
+                        <p className="text-gray-900">{user.profile.last_name}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Email
+                        </label>
+                        <p className="text-gray-900">{user.email}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Phone
+                        </label>
+                        <p className="text-gray-900">{user.profile.phone || 'Not provided'}</p>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <form onSubmit={handleProfileSubmit(onProfileSubmit)} className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        First Name
+                      </label>
+                      <input
+                        {...registerProfile('first_name')}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      />
+                      {profileErrors.first_name && (
+                        <p className="text-red-500 text-sm mt-1">{profileErrors.first_name.message}</p>
+                      )}
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Last Name
+                      </label>
+                      <input
+                        {...registerProfile('last_name')}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      />
+                      {profileErrors.last_name && (
+                        <p className="text-red-500 text-sm mt-1">{profileErrors.last_name.message}</p>
+                      )}
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Email
+                      </label>
+                      <input
+                        {...registerProfile('email')}
+                        type="email"
+                        disabled
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Phone
+                      </label>
+                      <input
+                        {...registerProfile('phone')}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      />
+                      {profileErrors.phone && (
+                        <p className="text-red-500 text-sm mt-1">{profileErrors.phone.message}</p>
+                      )}
+                    </div>
+                    <div className="flex flex-col space-y-2">
+                      <button
+                        type="submit"
+                        className="flex items-center justify-center space-x-2 bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700"
+                      >
+                        <Save size={18} />
+                        <span>Save Changes</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setIsEditing(false)}
+                        className="flex items-center justify-center space-x-2 text-gray-600 hover:text-gray-700 px-4 py-2 border rounded-md"
+                      >
+                        <X size={18} />
+                        <span>Cancel</span>
+                      </button>
+                    </div>
+                  </form>
+                )}
+              </div>
+            )}
+
+            {activeTab === 'addresses' && (
+              <div>
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-lg font-semibold">Addresses</h2>
+                  <button
+                    onClick={() => setShowAddressForm(true)}
+                    className="flex items-center space-x-2 bg-primary-600 text-white px-3 py-2 rounded-md hover:bg-primary-700 text-sm"
+                  >
+                    <Plus size={16} />
+                    <span>Add</span>
+                  </button>
+                </div>
+
+                {showAddressForm && (
+                  <div className="bg-gray-50 p-4 rounded-lg mb-6">
+                    <h3 className="text-lg font-medium mb-4">
+                      {editingAddress ? 'Edit Address' : 'Add New Address'}
+                    </h3>
+                    <form onSubmit={handleAddressSubmit(onAddressSubmit)} className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Address Type
+                        </label>
+                        <select
+                          {...registerAddress('type')}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                        >
+                          <option value="home">Home</option>
+                          <option value="work">Work</option>
+                          <option value="other">Other</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Address Line 1
+                        </label>
+                        <input
+                          {...registerAddress('line1')}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                          placeholder="Street address, apartment, etc."
+                        />
+                        {addressErrors.line1 && (
+                          <p className="text-red-500 text-sm mt-1">{addressErrors.line1.message}</p>
+                        )}
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Address Line 2
+                        </label>
+                        <input
+                          {...registerAddress('line2')}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                          placeholder="Apartment, suite, etc. (optional)"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            City
+                          </label>
+                          <input
+                            {...registerAddress('city')}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                          />
+                          {addressErrors.city && (
+                            <p className="text-red-500 text-sm mt-1">{addressErrors.city.message}</p>
+                          )}
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            State
+                          </label>
+                          <input
+                            {...registerAddress('state')}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                          />
+                          {addressErrors.state && (
+                            <p className="text-red-500 text-sm mt-1">{addressErrors.state.message}</p>
+                          )}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Postal Code
+                        </label>
+                        <input
+                          {...registerAddress('postal_code')}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                        />
+                        {addressErrors.postal_code && (
+                          <p className="text-red-500 text-sm mt-1">{addressErrors.postal_code.message}</p>
+                        )}
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Phone
+                        </label>
+                        <input
+                          {...registerAddress('phone')}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                        />
+                        {addressErrors.phone && (
+                          <p className="text-red-500 text-sm mt-1">{addressErrors.phone.message}</p>
+                        )}
+                      </div>
+                      <div>
+                        <label className="flex items-center">
+                          <input
+                            {...registerAddress('is_default')}
+                            type="checkbox"
+                            className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                          />
+                          <span className="ml-2 text-sm text-gray-700">Set as default address</span>
+                        </label>
+                      </div>
+                      <div className="flex flex-col space-y-2">
+                        <button
+                          type="submit"
+                          className="bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700"
+                        >
+                          {editingAddress ? 'Update' : 'Add'} Address
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowAddressForm(false);
+                            setEditingAddress(null);
+                            resetAddress();
+                          }}
+                          className="text-gray-600 hover:text-gray-700 px-4 py-2 border rounded-md"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                )}
+
+                <div className="space-y-4">
+                  {addresses.map((address) => (
+                    <div key={address.id} className="border rounded-lg p-4">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <span className="inline-block bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded-full mb-2">
+                            {address.type.charAt(0).toUpperCase() + address.type.slice(1)}
+                          </span>
+                          {address.is_default && (
+                            <span className="inline-block bg-primary-100 text-primary-800 text-xs px-2 py-1 rounded-full ml-2">
+                              Default
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => {
+                              setEditingAddress(address.id);
+                              setShowAddressForm(true);
+                              Object.keys(address).forEach(key => {
+                                if (key !== 'id') {
+                                  setAddressValue(key as any, address[key]);
+                                }
+                              });
+                            }}
+                            className="text-primary-600 hover:text-primary-700"
+                          >
+                            <Edit2 size={16} />
+                          </button>
+                          <button
+                            onClick={async () => {
+                              try {
+                                await api.delete(`/profile/addresses/${address.id}`);
+                                toast.success('Address deleted successfully');
+                                fetchAddresses();
+                              } catch (error) {
+                                toast.error('Failed to delete address');
+                              }
+                            }}
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="text-gray-700 text-sm">
+                        <p>{address.line1}</p>
+                        {address.line2 && <p>{address.line2}</p>}
+                        <p>{address.city}, {address.state} {address.postal_code}</p>
+                        <p className="text-gray-500 mt-1">Phone: {address.phone}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'orders' && (
+              <div>
+                <h2 className="text-lg font-semibold mb-4">Order History</h2>
+                <div className="space-y-4">
+                  {orders.map((order) => (
+                    <div key={order.id} className="border rounded-lg p-4">
+                      <div className="flex justify-between items-start mb-3">
+                        <div>
+                          <h3 className="font-semibold text-sm">Order #{order.order_number}</h3>
+                          <p className="text-xs text-gray-500">
+                            {new Date(order.created_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <span className={`px-2 py-1 rounded-full text-xs ${
+                          order.status === 'completed' ? 'bg-green-100 text-green-800' :
+                          order.status === 'processing' ? 'bg-blue-100 text-blue-800' :
+                          order.status === 'shipped' ? 'bg-purple-100 text-purple-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                        </span>
+                      </div>
+                      <div className="space-y-2">
+                        <div>
+                          <h4 className="font-medium text-sm mb-1">Items</h4>
+                          {order.items.map((item: any, index: number) => (
+                            <p key={index} className="text-xs text-gray-600">
+                              {item.product_name} × {item.quantity}
+                            </p>
+                          ))}
+                        </div>
+                        <div>
+                          <h4 className="font-medium text-sm mb-1">Total</h4>
+                          <p className="text-lg font-semibold">₹{order.totals.total.toLocaleString()}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'wishlist' && (
+              <div>
+                <h2 className="text-lg font-semibold mb-4">Wishlist</h2>
+                <div className="grid grid-cols-2 gap-4">
+                  {wishlist.map((item) => (
+                    <div key={item.id} className="border rounded-lg p-3">
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        className="w-full h-32 object-cover rounded mb-2"
+                      />
+                      <h3 className="font-semibold text-sm mb-1 line-clamp-2">{item.name}</h3>
+                      <p className="text-primary-600 font-semibold text-sm">₹{item.price.toLocaleString()}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'settings' && (
+              <div>
+                <h2 className="text-lg font-semibold mb-4">Account Settings</h2>
+                <div className="border rounded-lg p-4">
+                  <h3 className="font-medium mb-4">Notification Preferences</h3>
+                  <div className="space-y-3">
+                    <label className="flex items-center">
+                      <input type="checkbox" className="rounded" defaultChecked />
+                      <span className="ml-2 text-sm">Email notifications for orders</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input type="checkbox" className="rounded" defaultChecked />
+                      <span className="ml-2 text-sm">SMS notifications</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input type="checkbox" className="rounded" />
+                      <span className="ml-2 text-sm">Promotional emails</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
