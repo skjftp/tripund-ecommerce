@@ -173,8 +173,8 @@ func (h *InvoiceHandler) ListInvoices(c *gin.Context) {
 		req.Limit = 20
 	}
 
-	// Build query
-	query := h.db.Client.Collection("invoices").OrderBy("created_at", firestore.Desc)
+	// Build query - removed OrderBy to avoid index requirement
+	query := h.db.Client.Collection("invoices")
 	
 	// Apply filters
 	userID, _ := c.Get("user_id")
