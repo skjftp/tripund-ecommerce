@@ -199,7 +199,10 @@ func (h *InvoiceHandler) ListInvoices(c *gin.Context) {
 	iter := query.Documents(h.db.Context)
 	docs, err := iter.GetAll()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch invoices"})
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to fetch invoices",
+			"details": err.Error(),
+		})
 		return
 	}
 	
@@ -208,6 +211,17 @@ func (h *InvoiceHandler) ListInvoices(c *gin.Context) {
 	// Apply pagination
 	startIndex := (req.Page - 1) * req.Limit
 	endIndex := startIndex + req.Limit
+	
+	// Handle empty results (not an error)
+	if total == 0 {
+		c.JSON(http.StatusOK, InvoiceListResponse{
+			Invoices: []models.Invoice{},
+			Total:    0,
+			Page:     req.Page,
+			Limit:    req.Limit,
+		})
+		return
+	}
 	
 	if startIndex >= total {
 		c.JSON(http.StatusOK, InvoiceListResponse{
