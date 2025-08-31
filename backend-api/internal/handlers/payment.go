@@ -143,6 +143,27 @@ func (h *PaymentHandler) VerifyPayment(c *gin.Context) {
 	// Create notification for payment received
 	h.notificationHandler.NotifyPaymentReceived(order.OrderNumber, order.Totals.Total)
 
+	// Auto-generate invoice and send order confirmation email after payment verification
+	go func() {
+		// Generate invoice
+		if err := h.generateInvoiceForOrder(req.OrderID); err != nil {
+			log.Printf("Failed to auto-generate invoice for order %s: %v", req.OrderID, err)
+		} else {
+			log.Printf("Successfully auto-generated invoice for order %s", req.OrderID)
+		}
+		
+		// Send order confirmation email
+		if h.emailService != nil {
+			if err := h.emailService.SendOrderConfirmation(order); err != nil {
+				log.Printf("Failed to send order confirmation email for order %s: %v", req.OrderID, err)
+			} else {
+				log.Printf("Order confirmation email sent successfully after payment verification for order %s", req.OrderID)
+			}
+		} else {
+			log.Printf("Email service not available for order %s", req.OrderID)
+		}
+	}()
+
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Payment verified successfully",
 		"order_id": req.OrderID,
