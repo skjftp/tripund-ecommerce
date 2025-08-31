@@ -8,6 +8,7 @@ import { CreditCard, Truck, MapPin, User, ChevronRight } from 'lucide-react';
 import { RootState } from '../store';
 import { clearCartWithSync } from '../store/slices/cartSlice';
 import { AppDispatch } from '../store';
+import { PaymentSuccessModal, PaymentFailedModal, PaymentCancelledModal } from '../components/PaymentModals';
 import toast from 'react-hot-toast';
 import api from '../services/api';
 import { getPublicSettings, calculateShipping, type PublicSettings } from '../services/settings';
@@ -47,6 +48,10 @@ export default function CheckoutPage() {
   const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
   const [loading, setLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showFailedModal, setShowFailedModal] = useState(false);
+  const [showCancelledModal, setShowCancelledModal] = useState(false);
+  const [completedOrderId, setCompletedOrderId] = useState<string>('');
   const [settings, setSettings] = useState<PublicSettings | null>(null);
   const [promoCode, setPromoCode] = useState('');
   const [appliedPromo, setAppliedPromo] = useState<{
@@ -219,18 +224,16 @@ export default function CheckoutPage() {
             });
 
             dispatch(clearCartWithSync());
-            toast.success('Payment successful!');
-            navigate(`/order-confirmation/${createdOrder.id}`);
+            setCompletedOrderId(createdOrder.order_number || createdOrder.id);
+            setShowSuccessModal(true);
           } catch (error) {
-            toast.error('Payment verification failed');
-            navigate(`/order-status/${createdOrder.id}?payment=failed`);
+            setShowFailedModal(true);
           }
         },
         modal: {
           ondismiss: function() {
             // User closed the payment modal without completing payment
-            toast('Payment cancelled. Your order is saved and you can complete payment later.');
-            navigate(`/order-status/${createdOrder.id}?payment=pending`);
+            setShowCancelledModal(true);
           }
         },
         prefill: {
@@ -716,6 +719,35 @@ export default function CheckoutPage() {
           </div>
         </form>
       </div>
+      
+      {/* Payment Modals */}
+      <PaymentSuccessModal
+        isOpen={showSuccessModal}
+        orderId={completedOrderId}
+        onClose={() => setShowSuccessModal(false)}
+        onShopMore={() => {
+          setShowSuccessModal(false);
+          navigate('/products');
+        }}
+      />
+      
+      <PaymentFailedModal
+        isOpen={showFailedModal}
+        onClose={() => setShowFailedModal(false)}
+        onRetry={() => {
+          setShowFailedModal(false);
+          // Stay on checkout page to retry
+        }}
+      />
+      
+      <PaymentCancelledModal
+        isOpen={showCancelledModal}
+        onClose={() => setShowCancelledModal(false)}
+        onRetry={() => {
+          setShowCancelledModal(false);
+          // Stay on checkout page to retry
+        }}
+      />
     </div>
   );
 }
