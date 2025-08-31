@@ -634,8 +634,8 @@ func (h *PaymentHandler) generateInvoiceForOrder(orderID string) error {
 	// Generate simple invoice number
 	invoiceNumber := fmt.Sprintf("TRIPUND-%s-%s", time.Now().Format("200601"), orderID[:8])
 
-	// Create invoice from order (reuse logic from invoice handler)
-	invoice := h.createInvoiceFromOrderData(&order, settings, invoiceNumber, 30)
+	// Create complete invoice with all required fields
+	invoice := h.createCompleteInvoice(&order, settings, invoiceNumber)
 
 	// Save invoice to Firestore
 	docRef, _, err := h.db.Client.Collection("invoices").Add(h.db.Context, invoice)
@@ -652,10 +652,10 @@ func (h *PaymentHandler) generateInvoiceForOrder(orderID string) error {
 	return err
 }
 
-// createInvoiceFromOrderData creates invoice (simplified version of invoice handler logic)
-func (h *PaymentHandler) createInvoiceFromOrderData(order *models.Order, settings map[string]interface{}, invoiceNumber string, dueDays int) map[string]interface{} {
+// createCompleteInvoice creates a complete invoice with all required fields (copied from InvoiceHandler)
+func (h *PaymentHandler) createCompleteInvoice(order *models.Order, settings map[string]interface{}, invoiceNumber string) models.Invoice {
 	now := time.Now()
-	dueDate := now.AddDate(0, 0, dueDays)
+	dueDate := now.AddDate(0, 0, 30) // 30 days due date
 	
 	// Extract invoice settings
 	invoiceSettings := make(map[string]interface{})
@@ -663,54 +663,127 @@ func (h *PaymentHandler) createInvoiceFromOrderData(order *models.Order, setting
 		invoiceSettings = inv
 	}
 	
-	// Payment information from order
+	// Create seller address
+	sellerAddress := models.InvoiceAddress{
+		Line1:      getStringValue(invoiceSettings, "address_line1", "Office No.-509, Logix Technova, Tower-A"),
+		Line2:      getStringValue(invoiceSettings, "address_line2", "Sector-132, Greater Noida"),
+		City:       getStringValue(invoiceSettings, "city", "Greater Noida"),
+		State:      getStringValue(invoiceSettings, "home_state", "Uttar Pradesh"),
+		StateCode:  getStringValue(invoiceSettings, "home_state_code", "09"),
+		PostalCode: getStringValue(invoiceSettings, "postal_code", "201310"),
+		Country:    "India",
+	}
+	
+	// Create buyer address
+	buyerAddress := models.InvoiceAddress{
+		Line1:      order.BillingAddress.Line1,
+		Line2:      order.BillingAddress.Line2,
+		City:       order.BillingAddress.City,
+		State:      order.BillingAddress.State,
+		StateCode:  "27", // Default for now
+		PostalCode: order.BillingAddress.PostalCode,
+		Country:    order.BillingAddress.Country,
+	}
+	
+	// Create buyer details
+	buyerDetails := models.BillingEntity{
+		Name:    order.GuestName,
+		Email:   order.GuestEmail,
+		Phone:   order.GuestPhone,
+		Address: buyerAddress,
+		IsB2B:   false,
+	}
+	
+	// Create line items with proper tax calculations
+	var lineItems []models.InvoiceLineItem
+	gstRate := 18.0
+	isInterState := sellerAddress.StateCode != buyerAddress.StateCode
+	
+	for i, item := range order.Items {
+		taxableValue := item.Price * float64(item.Quantity)
+		
+		lineItem := models.InvoiceLineItem{
+			ID:          fmt.Sprintf("item_%d", i+1),
+			ProductID:   item.ProductID,
+			ProductName: item.ProductName,
+			HSNCode:     "9403",
+			Quantity:    float64(item.Quantity),
+			UnitPrice:   item.Price,
+			TaxableValue: taxableValue,
+		}
+		
+		// Apply GST based on inter-state or intra-state
+		lineItem.ApplyGST(gstRate, isInterState)
+		lineItems = append(lineItems, lineItem)
+	}
+	
+	// Payment information
 	var paymentMethodDisplay string
 	var transactionID string
 	
 	if order.Payment.Method == "razorpay" {
 		transactionID = order.Payment.RazorpayPaymentID
-		switch order.Payment.PaymentMethod {
-		case "card":
-			paymentMethodDisplay = "Credit/Debit Card"
-		case "upi":
-			paymentMethodDisplay = "UPI"
-		case "netbanking":
-			paymentMethodDisplay = "Net Banking"
-		case "wallet":
-			paymentMethodDisplay = "Wallet"
-		default:
-			paymentMethodDisplay = "Online Payment"
-		}
-		if order.Payment.Bank != "" {
-			paymentMethodDisplay += " (" + order.Payment.Bank + ")"
-		}
-	} else if order.Payment.Method == "cod" {
+		paymentMethodDisplay = "Online Payment"
+	} else {
 		paymentMethodDisplay = "Cash on Delivery"
 		transactionID = "COD-" + order.OrderNumber
-	} else {
-		paymentMethodDisplay = "Online Payment"
-		transactionID = order.Payment.TransactionID
 	}
 	
-	// Create simplified invoice data
-	return map[string]interface{}{
-		"invoice_number": invoiceNumber,
-		"order_id":       order.ID,
-		"user_id":        order.UserID,
-		"type":           "regular",
-		"status":         "sent",
-		"seller_name":    getStringValue(invoiceSettings, "registered_name", "TRIPUND Lifestyle"),
-		"seller_gstin":   getStringValue(invoiceSettings, "gstin", ""),
-		"seller_pan":     getStringValue(invoiceSettings, "pan", ""),
-		"issue_date":     now,
-		"due_date":       dueDate,
-		"payment_terms":  "Payment Method: " + paymentMethodDisplay,
-		"notes":          "Transaction ID: " + transactionID,
-		"terms_conditions": "Thank you for shopping with us.",
-		"created_at":     now,
-		"updated_at":     now,
+	// Create complete invoice
+	invoice := models.Invoice{
+		InvoiceNumber: invoiceNumber,
+		OrderID:       order.ID,
+		UserID:        order.UserID,
+		Type:          models.InvoiceTypeRegular,
+		Status:        models.InvoiceStatusSent,
+		
+		// Seller details
+		SellerName:    getStringValue(invoiceSettings, "registered_name", "TRIPUND Lifestyle"),
+		SellerGSTIN:   getStringValue(invoiceSettings, "gstin", ""),
+		SellerPAN:     getStringValue(invoiceSettings, "pan", ""),
+		SellerAddress: sellerAddress,
+		SellerEmail:   "orders@tripundlifestyle.com",
+		SellerPhone:   "+91 9711441830",
+		
+		// Buyer details
+		BuyerDetails:    buyerDetails,
+		ShippingAddress: models.InvoiceAddress{
+			Line1:      order.ShippingAddress.Line1,
+			Line2:      order.ShippingAddress.Line2,
+			City:       order.ShippingAddress.City,
+			State:      order.ShippingAddress.State,
+			StateCode:  "27",
+			PostalCode: order.ShippingAddress.PostalCode,
+			Country:    order.ShippingAddress.Country,
+		},
+		
+		// Invoice details
+		IssueDate:       now,
+		DueDate:         dueDate,
+		PlaceOfSupply:   order.ShippingAddress.State,
+		PlaceOfDelivery: order.ShippingAddress.State,
+		
+		// Line items
+		LineItems: lineItems,
+		
+		// Payment info
+		BankDetails:     models.BankDetails{},
+		PaymentTerms:    "Payment Method: " + paymentMethodDisplay,
+		
+		// Additional fields
+		Notes:           "Transaction ID: " + transactionID,
+		TermsConditions: "Thank you for shopping with us.",
+		
+		// System fields
+		CreatedAt: now,
+		UpdatedAt: now,
 	}
-}
+	
+	// Calculate tax summary
+	invoice.CalculateTaxSummary()
+
+	// Save invoice to Firestore
+	docRef, _, err := h.db.Client.Collection("invoices").Add(h.db.Context, invoice)
 
 // updateStockForOrder decrements stock when payment is successful
 func (h *PaymentHandler) updateStockForOrder(order models.Order) error {
