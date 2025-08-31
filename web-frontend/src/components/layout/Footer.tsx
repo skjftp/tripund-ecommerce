@@ -26,6 +26,8 @@ interface FooterContent {
     youtube?: string;
   };
   copyrightText?: string;
+  quickLinks?: Array<{ title: string; url: string }>;
+  customerService?: Array<{ title: string; url: string }>;
 }
 
 export default function Footer() {
@@ -103,7 +105,7 @@ export default function Footer() {
           <div>
             <h4 className="text-lg font-semibold mb-4">Quick Links</h4>
             <ul className="space-y-2">
-              {quickLinks.map((link, index) => (
+              {quickLinks.map((link: { title: string; url: string }, index: number) => (
                 <li key={index}>
                   <Link to={link.url} className="text-gray-400 hover:text-white">
                     {link.title}
@@ -116,7 +118,7 @@ export default function Footer() {
           <div>
             <h4 className="text-lg font-semibold mb-4">Customer Service</h4>
             <ul className="space-y-2">
-              {customerService.map((link, index) => (
+              {customerService.map((link: { title: string; url: string }, index: number) => (
                 <li key={index}>
                   <Link to={link.url} className="text-gray-400 hover:text-white">
                     {link.title}
