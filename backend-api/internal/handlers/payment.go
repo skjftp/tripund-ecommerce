@@ -264,13 +264,6 @@ func (h *PaymentHandler) handlePaymentCaptured(payload map[string]interface{}) e
 	
 	// Auto-generate invoice for successful payment
 	go func() {
-		// Get the updated order
-		orderDoc, err := h.db.Client.Collection("orders").Doc(orderID).Get(h.db.Context)
-		if err != nil {
-			log.Printf("Failed to get order for invoice generation: %v", err)
-			return
-		}
-		
 		// Generate invoice using the invoice handler logic
 		if err := h.generateInvoiceForOrder(orderID); err != nil {
 			log.Printf("Failed to auto-generate invoice for order %s: %v", orderID, err)
@@ -607,9 +600,9 @@ func (h *PaymentHandler) createInvoiceFromOrderData(order *models.Order, setting
 		"user_id":        order.UserID,
 		"type":           "regular",
 		"status":         "sent",
-		"seller_name":    getString(invoiceSettings, "registered_name", "TRIPUND Lifestyle"),
-		"seller_gstin":   getString(invoiceSettings, "gstin", ""),
-		"seller_pan":     getString(invoiceSettings, "pan", ""),
+		"seller_name":    getStringValue(invoiceSettings, "registered_name", "TRIPUND Lifestyle"),
+		"seller_gstin":   getStringValue(invoiceSettings, "gstin", ""),
+		"seller_pan":     getStringValue(invoiceSettings, "pan", ""),
 		"issue_date":     now,
 		"due_date":       dueDate,
 		"payment_terms":  "Payment Method: " + paymentMethodDisplay,
@@ -620,8 +613,8 @@ func (h *PaymentHandler) createInvoiceFromOrderData(order *models.Order, setting
 	}
 }
 
-// getString helper function
-func getString(m map[string]interface{}, key, defaultValue string) string {
+// getStringValue helper function (renamed to avoid conflict)
+func getStringValue(m map[string]interface{}, key, defaultValue string) string {
 	if val, ok := m[key].(string); ok {
 		return val
 	}
