@@ -223,7 +223,7 @@ export default function CheckoutPage() {
               order_id: createdOrder.id,
             });
 
-            dispatch(clearCartWithSync());
+            // Don't clear cart yet - clear it when user clicks 'Shop More'
             setCompletedOrderId(createdOrder.order_number || createdOrder.id);
             setShowSuccessModal(true);
           } catch (error) {
@@ -725,7 +725,13 @@ export default function CheckoutPage() {
         isOpen={showSuccessModal}
         orderId={completedOrderId}
         onClose={() => setShowSuccessModal(false)}
+        onViewOrders={() => {
+          dispatch(clearCartWithSync()); // Clear cart when viewing orders
+          setShowSuccessModal(false);
+          navigate('/orders');
+        }}
         onShopMore={() => {
+          dispatch(clearCartWithSync()); // Clear cart when user chooses to shop more
           setShowSuccessModal(false);
           navigate('/products');
         }}

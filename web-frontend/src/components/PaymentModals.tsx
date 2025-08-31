@@ -7,6 +7,7 @@ interface PaymentSuccessModalProps {
   orderId: string;
   onClose: () => void;
   onShopMore: () => void;
+  onViewOrders: () => void;
 }
 
 interface PaymentFailedModalProps {
@@ -21,7 +22,7 @@ interface PaymentCancelledModalProps {
   onRetry: () => void;
 }
 
-export function PaymentSuccessModal({ isOpen, orderId, onClose, onShopMore }: PaymentSuccessModalProps) {
+export function PaymentSuccessModal({ isOpen, orderId, onClose, onShopMore, onViewOrders }: PaymentSuccessModalProps) {
   if (!isOpen) return null;
 
   return (
@@ -56,14 +57,16 @@ export function PaymentSuccessModal({ isOpen, orderId, onClose, onShopMore }: Pa
         
         {/* Action Buttons */}
         <div className="grid grid-cols-2 gap-3">
-          <Link
-            to="/orders"
+          <button
+            onClick={() => {
+              onClose();
+              onViewOrders();
+            }}
             className="flex items-center justify-center space-x-2 px-4 py-3 border-2 border-primary-600 text-primary-600 rounded-lg hover:bg-primary-50 transition-colors"
-            onClick={onClose}
           >
             <Package size={18} />
             <span className="font-semibold">View Orders</span>
-          </Link>
+          </button>
           
           <button
             onClick={() => {
