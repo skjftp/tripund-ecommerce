@@ -40,6 +40,7 @@ type ShippingConfirmationData struct {
 	TrackingInfo  *models.Tracking
 	OrderDate     string
 	ShippedDate   string
+	InvoiceURL    string
 }
 
 type OrderEmailItem struct {
@@ -211,8 +212,9 @@ func (s *SendGridEmailService) SendShippingConfirmation(order models.Order) erro
 	}
 
 	subject := fmt.Sprintf("Your Order is Shipped - %s | TRIPUND Lifestyle", order.OrderNumber)
-	// Try to use database template first, fallback to hardcoded
-	htmlBody, err := s.renderDatabaseTemplate("shipping_confirmation", data)
+	// For shipping confirmation, always use fallback template due to data structure mismatch
+	// TODO: Fix database template data structure for shipping
+	htmlBody, err := s.renderShippingConfirmationTemplate(data)
 	if err != nil {
 		log.Printf("Failed to render database shipping template, using fallback: %v", err)
 		// Fallback to hardcoded template
@@ -222,27 +224,12 @@ func (s *SendGridEmailService) SendShippingConfirmation(order models.Order) erro
 		}
 	}
 
-	// Get invoice for this order to attach as PDF
-	var invoiceAttachment []byte
-	if s.db != nil {
-		// Find invoice for this order
-		invoiceDocs, err := s.db.Collection("invoices").Where("order_id", "==", order.ID).Documents(context.Background()).GetAll()
-		if err == nil && len(invoiceDocs) > 0 {
-			// Get invoice data
-			var invoice map[string]interface{}
-			if err := invoiceDocs[0].DataTo(&invoice); err == nil {
-				// For now, create a simple text representation of invoice
-				invoiceText := fmt.Sprintf("Invoice: %s\nOrder: %s\nTotal: %.2f", 
-					invoice["invoice_number"], order.OrderNumber, order.Totals.Total)
-				invoiceAttachment = []byte(invoiceText)
-				log.Printf("Invoice attachment prepared for shipping email %s", order.OrderNumber)
-			}
-		}
-	}
-	
-	// Send email with invoice attachment if available
-	if len(invoiceAttachment) > 0 {
-		return s.sendEmailWithAttachment(data.CustomerEmail, data.CustomerName, subject, htmlBody, invoiceAttachment, fmt.Sprintf("invoice-%s.txt", order.OrderNumber))
+	// Add invoice link to shipping template data
+	if shipData, ok := data.(ShippingConfirmationData); ok {
+		// Add invoice URL to template data for hyperlink
+		shipData.InvoiceURL = fmt.Sprintf("https://tripundlifestyle.netlify.app/invoices/%s", order.ID)
+		data = shipData
+		log.Printf("Added invoice URL to shipping template for order %s", order.OrderNumber)
 	}
 	
 	return s.sendEmail(data.CustomerEmail, data.CustomerName, subject, htmlBody)
