@@ -21,6 +21,7 @@ type Settings struct {
 	General  GeneralSettings  `json:"general" firestore:"general"`
 	Shipping ShippingSettings `json:"shipping" firestore:"shipping"`
 	Payment  PaymentSettings  `json:"payment" firestore:"payment"`
+	Invoice  InvoiceSettings  `json:"invoice" firestore:"invoice"`
 	UpdatedAt time.Time       `json:"updated_at" firestore:"updated_at"`
 }
 
@@ -48,6 +49,30 @@ type PaymentSettings struct {
 	CODLimit           float64 `json:"cod_limit" firestore:"cod_limit"`
 	TaxRate            float64 `json:"tax_rate" firestore:"tax_rate"`
 	PrepaidDiscount    float64 `json:"prepaid_discount" firestore:"prepaid_discount"`
+}
+
+type InvoiceSettings struct {
+	GSTIN               string `json:"gstin" firestore:"gstin"`
+	RegisteredName      string `json:"registered_name" firestore:"registered_name"`
+	HomeState           string `json:"home_state" firestore:"home_state"`
+	HomeStateCode       string `json:"home_state_code" firestore:"home_state_code"`
+	RegisteredAddress   string `json:"registered_address" firestore:"registered_address"`
+	PAN                 string `json:"pan" firestore:"pan"`
+	ContactPerson       string `json:"contact_person" firestore:"contact_person"`
+	AddressLine1        string `json:"address_line1" firestore:"address_line1"`
+	AddressLine2        string `json:"address_line2" firestore:"address_line2"`
+	City                string `json:"city" firestore:"city"`
+	PostalCode          string `json:"postal_code" firestore:"postal_code"`
+	InvoicePrefix       string `json:"invoice_prefix" firestore:"invoice_prefix"`
+	InvoiceStartNumber  int    `json:"invoice_start_number" firestore:"invoice_start_number"`
+	HSNCode             string `json:"hsn_code" firestore:"hsn_code"`
+	PlaceOfSupply       string `json:"place_of_supply" firestore:"place_of_supply"`
+	BankName            string `json:"bank_name" firestore:"bank_name"`
+	BankAccount         string `json:"bank_account" firestore:"bank_account"`
+	BankIFSC            string `json:"bank_ifsc" firestore:"bank_ifsc"`
+	BankBranch          string `json:"bank_branch" firestore:"bank_branch"`
+	TermsConditions     string `json:"terms_conditions" firestore:"terms_conditions"`
+	FooterNote          string `json:"footer_note" firestore:"footer_note"`
 }
 
 // GetPublicSettings retrieves public settings (shipping rates, tax, etc) for frontend use

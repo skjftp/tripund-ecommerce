@@ -64,8 +64,8 @@ func (h *InvoiceHandler) GenerateInvoice(c *gin.Context) {
 	}
 	order.ID = orderDoc.Ref.ID
 
-	// Get company settings
-	settingsDoc, err := h.db.Client.Collection("settings").Doc("company").Get(h.db.Context)
+	// Get company settings from main settings document
+	settingsDoc, err := h.db.Client.Collection("settings").Doc("main").Get(h.db.Context)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch company settings"})
 		return
@@ -74,6 +74,12 @@ func (h *InvoiceHandler) GenerateInvoice(c *gin.Context) {
 	var settings map[string]interface{}
 	if err := settingsDoc.DataTo(&settings); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to parse settings"})
+		return
+	}
+
+	// Verify invoice settings exist
+	if _, ok := settings["invoice"].(map[string]interface{}); !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invoice settings not configured"})
 		return
 	}
 
