@@ -447,6 +447,51 @@ Check Cloud Run logs for email status:
 - [ ] HTTPS enforced on all services
 - [ ] Environment variables for secrets
 
+## Google OAuth Integration (Prepared)
+
+### Current Status: PARKED
+Google Sign-In infrastructure is prepared but not active:
+
+#### Frontend Ready:
+- GoogleSignInButton component created
+- GoogleAuthService implemented
+- Google Sign-In API script included in HTML
+- Login/Register pages prepared (currently disabled)
+
+#### Backend Ready:
+- `/api/v1/auth/google` endpoint created
+- JWT integration prepared
+- User creation flow ready
+
+#### To Activate:
+1. Get Google OAuth Client ID from [Google Console](https://console.cloud.google.com)
+2. Add to environment variables: `VITE_GOOGLE_CLIENT_ID`
+3. Enable GoogleSignInButton in LoginPage and RegisterPage
+4. Complete backend token verification logic
+
+## Automatic Invoice System
+
+### Current Status: ACTIVE
+Invoices are automatically generated when payments are successful:
+
+#### Features:
+- **Auto-generation**: Invoice created on payment success (Razorpay webhook)
+- **GST Compliance**: Your GSTIN (09AALCT9072D1ZY) for tax calculations
+- **Payment Methods**: Captures and displays Razorpay payment method (UPI/Card/etc.)
+- **Transaction ID**: Includes Razorpay transaction ID in invoice
+- **Clean Format**: No bank details, simple "Thank you for shopping with us" footer
+
+#### Workflow:
+1. Customer completes payment → Razorpay webhook triggered
+2. Payment method details extracted and stored in order
+3. Invoice auto-generated with GST calculations (CGST/SGST/IGST)
+4. Invoice appears in user profile and admin panel
+5. Shipping confirmation email includes invoice attachment (when implemented)
+
+#### Admin Access:
+- **Settings → Invoice & GST**: Configure company GSTIN, PAN, addresses
+- **Invoices**: View all generated invoices, no manual generation needed
+
 ## Contact & Support
 - **Repository**: https://github.com/skjftp/tripund-ecommerce
 - **Issues**: Report at GitHub Issues
@@ -627,6 +672,10 @@ Add this A record to your DNS provider:
 22. **🚨 CRITICAL: NEVER overwrite production environment variables during deployments - they contain live API keys and secrets**
 23. **Email templates**: Elegant order confirmation and shipping confirmation templates now set as defaults
 24. **Email system**: SendGrid integration with order/shipping notifications using database templates
+25. **Automatic invoices**: Generate GST-compliant invoices automatically on payment success
+26. **Mobile responsive**: Profile page fully optimized for mobile with tab navigation
+27. **Category icons**: Fast-loading Lucide icons for category carousel (reverted from images)
+28. **Google OAuth**: Infrastructure prepared but not activated (Client ID needed)
 23. **Current admin credentials: admin@tripund.com / password (change immediately after login)**
 24. **RBAC system active: 5 roles, 23 permissions, permission-based UI controls implemented**
 
