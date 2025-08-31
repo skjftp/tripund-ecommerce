@@ -156,6 +156,21 @@ func (h *SettingsHandler) GetSettings(c *gin.Context) {
 				TaxRate:         18,
 				PrepaidDiscount: 5,
 			},
+			Invoice: InvoiceSettings{
+				GSTIN:               "",
+				RegisteredName:      "TRIPUND Lifestyle",
+				HomeState:           "Uttar Pradesh",
+				HomeStateCode:       "09",
+				RegisteredAddress:   "",
+				PAN:                 "",
+				ContactPerson:       "",
+				InvoicePrefix:       "TLS",
+				InvoiceStartNumber:  1000,
+				HSNCode:             "67029900",
+				PlaceOfSupply:       "Greater Noida",
+				TermsConditions:     "Thank you for your business!",
+				FooterNote:          "This is a computer generated invoice.",
+			},
 			UpdatedAt: time.Now(),
 		}
 		c.JSON(http.StatusOK, gin.H{"settings": defaultSettings})
