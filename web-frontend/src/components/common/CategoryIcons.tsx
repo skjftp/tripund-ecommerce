@@ -124,6 +124,12 @@ export default function CategoryIcons() {
           name: 'Gifting',
           icon: <Package size={24} />,
           slug: 'gifting'
+        },
+        {
+          id: 'sale',
+          name: 'Sale',
+          icon: <Tag size={24} />,
+          slug: 'sale'
         }
       ];
   const radius = 120; // Radius of the circular carousel
