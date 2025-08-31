@@ -91,24 +91,16 @@ export default function Header() {
             <div className="flex items-center justify-center py-2.5">
               <div className="text-center">
                 <span className="text-xs sm:text-sm font-medium tracking-wide sm:tracking-wider uppercase">
-                  <span className="hidden sm:inline">USE CODE </span>
+                  USE CODE 
                   <span className="bg-white/20 px-2 py-0.5 mx-1 rounded font-bold">
                     {activePromotions[currentPromoIndex]?.code}
                   </span>
-                  <span className="hidden sm:inline">
-                    {' FOR '}
-                    {activePromotions[currentPromoIndex]?.type === 'percentage' 
-                      ? `${activePromotions[currentPromoIndex]?.discount}% OFF` 
-                      : `₹${activePromotions[currentPromoIndex]?.discount} OFF`}
-                    {activePromotions[currentPromoIndex]?.description && 
-                      ` - ${activePromotions[currentPromoIndex]?.description.toUpperCase()}`}
-                  </span>
-                  <span className="sm:hidden">
-                    {' - '}
-                    {activePromotions[currentPromoIndex]?.type === 'percentage' 
-                      ? `${activePromotions[currentPromoIndex]?.discount}% OFF` 
-                      : `₹${activePromotions[currentPromoIndex]?.discount} OFF`}
-                  </span>
+                  {activePromotions[currentPromoIndex]?.description && (
+                    <span>
+                      {' - '}
+                      {activePromotions[currentPromoIndex]?.description.toUpperCase()}
+                    </span>
+                  )}
                 </span>
               </div>
             </div>
