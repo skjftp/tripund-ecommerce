@@ -77,7 +77,7 @@ type InvoiceSettings struct {
 
 // GetPublicSettings retrieves public settings (shipping rates, tax, etc) for frontend use
 func (h *SettingsHandler) GetPublicSettings(c *gin.Context) {
-	doc, err := h.db.Client.Collection("settings").Doc("store").Get(h.db.Context)
+	doc, err := h.db.Client.Collection("settings").Doc("main").Get(h.db.Context)
 	
 	// Default settings if not found
 	defaultSettings := map[string]interface{}{
@@ -131,7 +131,7 @@ func (h *SettingsHandler) GetPublicSettings(c *gin.Context) {
 
 // GetSettings retrieves the current settings
 func (h *SettingsHandler) GetSettings(c *gin.Context) {
-	doc, err := h.db.Client.Collection("settings").Doc("store").Get(h.db.Context)
+	doc, err := h.db.Client.Collection("settings").Doc("main").Get(h.db.Context)
 	if err != nil {
 		// If settings don't exist, return default settings
 		defaultSettings := Settings{
@@ -186,10 +186,11 @@ func (h *SettingsHandler) UpdateSettings(c *gin.Context) {
 		"general":    settings.General,
 		"shipping":   settings.Shipping,
 		"payment":    settings.Payment,
+		"invoice":    settings.Invoice,
 		"updated_at": settings.UpdatedAt,
 	}
 
-	_, err := h.db.Client.Collection("settings").Doc("store").Set(h.db.Context, data, firestore.MergeAll)
+	_, err := h.db.Client.Collection("settings").Doc("main").Set(h.db.Context, data, firestore.MergeAll)
 	if err != nil {
 		// Log the actual error for debugging
 		c.JSON(http.StatusInternalServerError, gin.H{
