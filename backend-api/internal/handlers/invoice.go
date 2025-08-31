@@ -173,31 +173,24 @@ func (h *InvoiceHandler) ListInvoices(c *gin.Context) {
 		req.Limit = 20
 	}
 
-	// Build query - removed OrderBy to avoid index requirement
-	query := h.db.Client.Collection("invoices")
-	
-	// Apply filters
+	// Apply filters and get documents
 	userID, _ := c.Get("user_id")
 	userRole, _ := c.Get("role")
 	
+	var docs []*firestore.DocumentSnapshot
+	var err error
+	
+	// Build query based on user role and filters
 	if userRole != "admin" {
 		// Non-admin users can only see their own invoices
-		query = query.Where("user_id", "==", userID)
+		docs, err = h.db.Client.Collection("invoices").Where("user_id", "==", userID).Documents(h.db.Context).GetAll()
 	} else if req.UserID != "" {
-		query = query.Where("user_id", "==", req.UserID)
+		// Admin with user filter
+		docs, err = h.db.Client.Collection("invoices").Where("user_id", "==", req.UserID).Documents(h.db.Context).GetAll()
+	} else {
+		// Admin sees all invoices
+		docs, err = h.db.Client.Collection("invoices").Documents(h.db.Context).GetAll()
 	}
-	
-	if req.Status != "" {
-		query = query.Where("status", "==", string(req.Status))
-	}
-	
-	if req.Type != "" {
-		query = query.Where("type", "==", string(req.Type))
-	}
-
-	// Get total count
-	iter := query.Documents(h.db.Context)
-	docs, err := iter.GetAll()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Failed to fetch invoices",
