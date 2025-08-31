@@ -413,13 +413,34 @@ func (h *InvoiceHandler) createInvoiceFromOrder(order *models.Order, settings ma
 		IsB2B:   false, // Default to B2C unless GSTIN provided
 	}
 
-	// Create bank details
-	bankDetails := models.BankDetails{
-		AccountName:   getString(invoiceSettings, "bank_account_name", "TRIPUND LIFESTYLE PRIVATE LIMITED"),
-		AccountNumber: getString(invoiceSettings, "bank_account_number", ""),
-		IFSCCode:      getString(invoiceSettings, "bank_ifsc", ""),
-		BankName:      getString(invoiceSettings, "bank_name", ""),
-		BranchName:    getString(invoiceSettings, "bank_branch", ""),
+	// Payment information from order
+	var paymentMethodDisplay string
+	var transactionID string
+	
+	if order.Payment.Method == "razorpay" {
+		transactionID = order.Payment.RazorpayPaymentID
+		// Map Razorpay method to display format
+		switch order.Payment.PaymentMethod {
+		case "card":
+			paymentMethodDisplay = "Credit/Debit Card"
+		case "upi":
+			paymentMethodDisplay = "UPI"
+		case "netbanking":
+			paymentMethodDisplay = "Net Banking"
+		case "wallet":
+			paymentMethodDisplay = "Wallet"
+		default:
+			paymentMethodDisplay = "Online Payment"
+		}
+		if order.Payment.Bank != "" {
+			paymentMethodDisplay += " (" + order.Payment.Bank + ")"
+		}
+	} else if order.Payment.Method == "cod" {
+		paymentMethodDisplay = "Cash on Delivery"
+		transactionID = "COD-" + order.OrderNumber
+	} else {
+		paymentMethodDisplay = "Online Payment"
+		transactionID = order.Payment.TransactionID
 	}
 
 	// Create line items
@@ -473,13 +494,13 @@ func (h *InvoiceHandler) createInvoiceFromOrder(order *models.Order, settings ma
 		// Line items
 		LineItems: lineItems,
 		
-		// Payment info
-		BankDetails:     bankDetails,
-		PaymentTerms:    fmt.Sprintf("Payment due within %d days", dueDays),
+		// Payment info (empty bank details)
+		BankDetails:     models.BankDetails{},
+		PaymentTerms:    "Payment Method: " + paymentMethodDisplay,
 		
 		// Additional fields
-		Notes:           "Thank you for your business!",
-		TermsConditions: getString(invoiceSettings, "terms_conditions", "Standard terms and conditions apply."),
+		Notes:           "Transaction ID: " + transactionID,
+		TermsConditions: "Thank you for shopping with us.",
 		
 		// System fields
 		CreatedAt: now,

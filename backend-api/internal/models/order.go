@@ -43,6 +43,9 @@ type Payment struct {
 	RazorpayOrderID string    `json:"razorpay_order_id" firestore:"razorpay_order_id"`
 	RazorpayPaymentID string  `json:"razorpay_payment_id" firestore:"razorpay_payment_id"`
 	RazorpaySignature string  `json:"razorpay_signature" firestore:"razorpay_signature"`
+	PaymentMethod   string    `json:"payment_method,omitempty" firestore:"payment_method,omitempty"` // card, upi, netbanking, wallet
+	Bank            string    `json:"bank,omitempty" firestore:"bank,omitempty"`                     // Bank name for netbanking/cards
+	Wallet          string    `json:"wallet,omitempty" firestore:"wallet,omitempty"`                 // Wallet name if applicable
 	Amount          float64   `json:"amount" firestore:"amount"`
 	Currency        string    `json:"currency" firestore:"currency"`
 	PaidAt          time.Time `json:"paid_at" firestore:"paid_at"`
