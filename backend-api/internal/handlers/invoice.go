@@ -419,35 +419,7 @@ func (h *InvoiceHandler) createInvoiceFromOrder(order *models.Order, settings ma
 		IsB2B:   false, // Default to B2C unless GSTIN provided
 	}
 
-	// Payment information from order
-	var paymentMethodDisplay string
-	var transactionID string
-	
-	if order.Payment.Method == "razorpay" {
-		transactionID = order.Payment.RazorpayPaymentID
-		// Map Razorpay method to display format
-		switch order.Payment.PaymentMethod {
-		case "card":
-			paymentMethodDisplay = "Credit/Debit Card"
-		case "upi":
-			paymentMethodDisplay = "UPI"
-		case "netbanking":
-			paymentMethodDisplay = "Net Banking"
-		case "wallet":
-			paymentMethodDisplay = "Wallet"
-		default:
-			paymentMethodDisplay = "Online Payment"
-		}
-		if order.Payment.Bank != "" {
-			paymentMethodDisplay += " (" + order.Payment.Bank + ")"
-		}
-	} else if order.Payment.Method == "cod" {
-		paymentMethodDisplay = "Cash on Delivery"
-		transactionID = "COD-" + order.OrderNumber
-	} else {
-		paymentMethodDisplay = "Online Payment"
-		transactionID = order.Payment.TransactionID
-	}
+	// Payment information removed as requested
 
 	// Create line items
 	var lineItems []models.InvoiceLineItem

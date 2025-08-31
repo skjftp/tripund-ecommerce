@@ -683,17 +683,7 @@ func (h *PaymentHandler) createCompleteInvoice(order *models.Order, settings map
 		lineItems = append(lineItems, lineItem)
 	}
 	
-	// Payment information
-	var paymentMethodDisplay string
-	var transactionID string
-	
-	if order.Payment.Method == "razorpay" {
-		transactionID = order.Payment.RazorpayPaymentID
-		paymentMethodDisplay = "Online Payment"
-	} else {
-		paymentMethodDisplay = "Cash on Delivery"
-		transactionID = "COD-" + order.OrderNumber
-	}
+	// Payment information removed as requested
 	
 	// Create complete invoice
 	invoice := models.Invoice{
