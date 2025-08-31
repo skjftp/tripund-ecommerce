@@ -58,16 +58,7 @@ export default function CategoryIcons() {
     ? categories.map(category => ({
         id: category.id,
         name: category.name.length > 10 ? category.name.split(' ')[0] : category.name,
-        icon: category.image ? (
-          <img 
-            src={category.image} 
-            alt={category.name}
-            className="w-full h-full object-cover rounded-full"
-            onError={(e) => {
-              e.currentTarget.src = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop';
-            }}
-          />
-        ) : getIconForCategory(category.slug),
+        icon: getIconForCategory(category.slug),
         slug: category.slug
       }))
     : [
@@ -194,17 +185,9 @@ export default function CategoryIcons() {
               to={`/category/${category.slug}`}
               className="flex flex-col items-center justify-center min-w-[80px] md:min-w-[100px] p-3 rounded-lg hover:bg-gray-50 transition-all duration-200 group flex-shrink-0"
             >
-              <div className="w-14 h-14 md:w-16 md:h-16 bg-gradient-to-br from-[#f8f5f0] to-[#e8e0d0] rounded-full flex items-center justify-center text-[#96865d] mb-2 shadow-md group-hover:shadow-lg group-hover:scale-105 transition-all duration-200 border-2 border-white overflow-hidden">
-                <div className="transform group-hover:rotate-6 transition-transform duration-200 w-full h-full flex items-center justify-center">
-                  {typeof category.icon === 'string' ? (
-                    <img 
-                      src={category.icon} 
-                      alt={category.name}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    category.icon
-                  )}
+              <div className="w-14 h-14 md:w-16 md:h-16 bg-gradient-to-br from-[#f8f5f0] to-[#e8e0d0] rounded-full flex items-center justify-center text-[#96865d] mb-2 shadow-md group-hover:shadow-lg group-hover:scale-105 transition-all duration-200 border-2 border-white">
+                <div className="transform group-hover:rotate-6 transition-transform duration-200">
+                  {category.icon}
                 </div>
               </div>
               <span className="text-xs md:text-sm text-gray-700 text-center font-medium whitespace-nowrap">
