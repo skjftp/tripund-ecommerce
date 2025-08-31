@@ -384,49 +384,12 @@ const InvoiceDetailPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Payment Information */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-              <div>
-                <h3 className="text-sm font-semibold text-gray-900 mb-3">PAYMENT INFORMATION</h3>
-                <div className="bg-gray-50 p-4 rounded-lg text-sm space-y-1">
-                  <p><strong>Account Name:</strong> {invoice.bank_details.account_name}</p>
-                  <p><strong>Account Number:</strong> {invoice.bank_details.account_number}</p>
-                  <p><strong>IFSC Code:</strong> {invoice.bank_details.ifsc_code}</p>
-                  <p><strong>Bank:</strong> {invoice.bank_details.bank_name}</p>
-                  {invoice.bank_details.branch_name && (
-                    <p><strong>Branch:</strong> {invoice.bank_details.branch_name}</p>
-                  )}
-                </div>
-              </div>
-              
-              {invoice.payment_terms && (
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-900 mb-3">PAYMENT TERMS</h3>
-                  <div className="bg-gray-50 p-4 rounded-lg text-sm">
-                    <p>{invoice.payment_terms}</p>
-                  </div>
-                </div>
-              )}
+            {/* Payment Information Section Removed */}
+            
+            {/* Simple footer */}
+            <div className="border-t pt-8 text-center">
+              <p className="text-sm text-gray-600">Thank you for shopping with us.</p>
             </div>
-
-            {/* Notes & Terms */}
-            {(invoice.notes || invoice.terms_conditions) && (
-              <div className="border-t pt-8">
-                {invoice.notes && (
-                  <div className="mb-4">
-                    <h3 className="text-sm font-semibold text-gray-900 mb-2">NOTES</h3>
-                    <p className="text-sm text-gray-600">{invoice.notes}</p>
-                  </div>
-                )}
-                
-                {invoice.terms_conditions && (
-                  <div>
-                    <h3 className="text-sm font-semibold text-gray-900 mb-2">TERMS & CONDITIONS</h3>
-                    <p className="text-sm text-gray-600">{invoice.terms_conditions}</p>
-                  </div>
-                )}
-              </div>
-            )}
           </div>
         </div>
       </div>
