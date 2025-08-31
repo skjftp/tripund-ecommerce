@@ -242,16 +242,44 @@ func (h *PaymentHandler) handlePaymentCaptured(payload map[string]interface{}) e
 		return fmt.Errorf("order ID not found in payment notes")
 	}
 
-	// Update order payment status
+	// Extract payment method details from Razorpay
+	paymentMethod, _ := paymentData["method"].(string)
+	bank, _ := paymentData["bank"].(string)
+	wallet, _ := paymentData["wallet"].(string)
+	
+	// Update order payment status with payment method details
 	_, err := h.db.Client.Collection("orders").Doc(orderID).Update(h.db.Context, []firestore.Update{
 		{Path: "payment.status", Value: "completed"},
 		{Path: "payment.razorpay_payment_id", Value: paymentData["id"]},
+		{Path: "payment.payment_method", Value: paymentMethod},
+		{Path: "payment.bank", Value: bank},
+		{Path: "payment.wallet", Value: wallet},
 		{Path: "payment.paid_at", Value: time.Now()},
 		{Path: "status", Value: "processing"},
 		{Path: "updated_at", Value: time.Now()},
 	})
+	if err != nil {
+		return err
+	}
+	
+	// Auto-generate invoice for successful payment
+	go func() {
+		// Get the updated order
+		orderDoc, err := h.db.Client.Collection("orders").Doc(orderID).Get(h.db.Context)
+		if err != nil {
+			log.Printf("Failed to get order for invoice generation: %v", err)
+			return
+		}
+		
+		// Generate invoice using the invoice handler logic
+		if err := h.generateInvoiceForOrder(orderID); err != nil {
+			log.Printf("Failed to auto-generate invoice for order %s: %v", orderID, err)
+		} else {
+			log.Printf("Successfully auto-generated invoice for order %s", orderID)
+		}
+	}()
 
-	return err
+	return nil
 }
 
 func (h *PaymentHandler) handlePaymentFailed(payload map[string]interface{}) error {
@@ -479,4 +507,123 @@ func (h *PaymentHandler) GetAllPayments(c *gin.Context) {
 		"payments": payments,
 		"total":    len(payments),
 	})
+}
+
+// generateInvoiceForOrder creates invoice for a completed payment
+func (h *PaymentHandler) generateInvoiceForOrder(orderID string) error {
+	// Get order details
+	orderDoc, err := h.db.Client.Collection("orders").Doc(orderID).Get(h.db.Context)
+	if err != nil {
+		return fmt.Errorf("order not found: %v", err)
+	}
+
+	var order models.Order
+	if err := orderDoc.DataTo(&order); err != nil {
+		return fmt.Errorf("failed to parse order: %v", err)
+	}
+	order.ID = orderDoc.Ref.ID
+
+	// Get company settings for invoice generation
+	settingsDoc, err := h.db.Client.Collection("settings").Doc("main").Get(h.db.Context)
+	if err != nil {
+		return fmt.Errorf("failed to fetch company settings: %v", err)
+	}
+
+	var settings map[string]interface{}
+	if err := settingsDoc.DataTo(&settings); err != nil {
+		return fmt.Errorf("failed to parse settings: %v", err)
+	}
+
+	// Verify invoice settings exist
+	if _, ok := settings["invoice"].(map[string]interface{}); !ok {
+		return fmt.Errorf("invoice settings not configured")
+	}
+
+	// Generate simple invoice number
+	invoiceNumber := fmt.Sprintf("TRIPUND-%s-%s", time.Now().Format("200601"), orderID[:8])
+
+	// Create invoice from order (reuse logic from invoice handler)
+	invoice := h.createInvoiceFromOrderData(&order, settings, invoiceNumber, 30)
+
+	// Save invoice to Firestore
+	docRef, _, err := h.db.Client.Collection("invoices").Add(h.db.Context, invoice)
+	if err != nil {
+		return fmt.Errorf("failed to create invoice: %v", err)
+	}
+
+	// Update order with invoice reference
+	_, err = h.db.Client.Collection("orders").Doc(orderID).Update(h.db.Context, []firestore.Update{
+		{Path: "invoice_id", Value: docRef.ID},
+		{Path: "updated_at", Value: time.Now()},
+	})
+
+	return err
+}
+
+// createInvoiceFromOrderData creates invoice (simplified version of invoice handler logic)
+func (h *PaymentHandler) createInvoiceFromOrderData(order *models.Order, settings map[string]interface{}, invoiceNumber string, dueDays int) map[string]interface{} {
+	now := time.Now()
+	dueDate := now.AddDate(0, 0, dueDays)
+	
+	// Extract invoice settings
+	invoiceSettings := make(map[string]interface{})
+	if inv, ok := settings["invoice"].(map[string]interface{}); ok {
+		invoiceSettings = inv
+	}
+	
+	// Payment information from order
+	var paymentMethodDisplay string
+	var transactionID string
+	
+	if order.Payment.Method == "razorpay" {
+		transactionID = order.Payment.RazorpayPaymentID
+		switch order.Payment.PaymentMethod {
+		case "card":
+			paymentMethodDisplay = "Credit/Debit Card"
+		case "upi":
+			paymentMethodDisplay = "UPI"
+		case "netbanking":
+			paymentMethodDisplay = "Net Banking"
+		case "wallet":
+			paymentMethodDisplay = "Wallet"
+		default:
+			paymentMethodDisplay = "Online Payment"
+		}
+		if order.Payment.Bank != "" {
+			paymentMethodDisplay += " (" + order.Payment.Bank + ")"
+		}
+	} else if order.Payment.Method == "cod" {
+		paymentMethodDisplay = "Cash on Delivery"
+		transactionID = "COD-" + order.OrderNumber
+	} else {
+		paymentMethodDisplay = "Online Payment"
+		transactionID = order.Payment.TransactionID
+	}
+	
+	// Create simplified invoice data
+	return map[string]interface{}{
+		"invoice_number": invoiceNumber,
+		"order_id":       order.ID,
+		"user_id":        order.UserID,
+		"type":           "regular",
+		"status":         "sent",
+		"seller_name":    getString(invoiceSettings, "registered_name", "TRIPUND Lifestyle"),
+		"seller_gstin":   getString(invoiceSettings, "gstin", ""),
+		"seller_pan":     getString(invoiceSettings, "pan", ""),
+		"issue_date":     now,
+		"due_date":       dueDate,
+		"payment_terms":  "Payment Method: " + paymentMethodDisplay,
+		"notes":          "Transaction ID: " + transactionID,
+		"terms_conditions": "Thank you for shopping with us.",
+		"created_at":     now,
+		"updated_at":     now,
+	}
+}
+
+// getString helper function
+func getString(m map[string]interface{}, key, defaultValue string) string {
+	if val, ok := m[key].(string); ok {
+		return val
+	}
+	return defaultValue
 }
