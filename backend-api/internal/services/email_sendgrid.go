@@ -222,6 +222,29 @@ func (s *SendGridEmailService) SendShippingConfirmation(order models.Order) erro
 		}
 	}
 
+	// Get invoice for this order to attach as PDF
+	var invoiceAttachment []byte
+	if s.db != nil {
+		// Find invoice for this order
+		invoiceDocs, err := s.db.Collection("invoices").Where("order_id", "==", order.ID).Documents(context.Background()).GetAll()
+		if err == nil && len(invoiceDocs) > 0 {
+			// Get invoice data
+			var invoice map[string]interface{}
+			if err := invoiceDocs[0].DataTo(&invoice); err == nil {
+				// For now, create a simple text representation of invoice
+				invoiceText := fmt.Sprintf("Invoice: %s\nOrder: %s\nTotal: %.2f", 
+					invoice["invoice_number"], order.OrderNumber, order.Totals.Total)
+				invoiceAttachment = []byte(invoiceText)
+				log.Printf("Invoice attachment prepared for shipping email %s", order.OrderNumber)
+			}
+		}
+	}
+	
+	// Send email with invoice attachment if available
+	if len(invoiceAttachment) > 0 {
+		return s.sendEmailWithAttachment(data.CustomerEmail, data.CustomerName, subject, htmlBody, invoiceAttachment, fmt.Sprintf("invoice-%s.txt", order.OrderNumber))
+	}
+	
 	return s.sendEmail(data.CustomerEmail, data.CustomerName, subject, htmlBody)
 }
 
@@ -638,4 +661,34 @@ func (s *SendGridEmailService) renderDatabaseTemplate(templateType string, data 
 	}
 	
 	return buf.String(), nil
+}
+
+// sendEmailWithAttachment sends email with file attachment
+func (s *SendGridEmailService) sendEmailWithAttachment(toEmail, toName, subject, htmlBody string, attachment []byte, filename string) error {
+	log.Printf("SendGrid: Preparing to send email with attachment to %s <%s>", toName, toEmail)
+	
+	from := mail.NewEmail(s.FromName, s.FromEmail)
+	to := mail.NewEmail(toName, toEmail)
+	
+	message := mail.NewSingleEmail(from, subject, to, "", htmlBody)
+	
+	// Add attachment
+	if len(attachment) > 0 {
+		attach := mail.NewAttachment()
+		attach.SetContent(string(attachment))
+		attach.SetType("text/plain")
+		attach.SetFilename(filename)
+		attach.SetDisposition("attachment")
+		message.AddAttachment(attach)
+		log.Printf("SendGrid: Added attachment %s (%d bytes)", filename, len(attachment))
+	}
+	
+	response, err := s.client.Send(message)
+	if err != nil {
+		log.Printf("SendGrid: Failed to send email with attachment: %v", err)
+		return err
+	}
+	
+	log.Printf("SendGrid: Email with attachment sent successfully. Status: %d", response.StatusCode)
+	return nil
 }
