@@ -300,41 +300,7 @@ func (h *PaymentHandler) handlePaymentCaptured(payload map[string]interface{}) e
 		return err
 	}
 	
-	// Auto-generate invoice and send order confirmation email for successful payment
-	go func() {
-		// Generate invoice
-		if err := h.generateInvoiceForOrder(orderID); err != nil {
-			log.Printf("Failed to auto-generate invoice for order %s: %v", orderID, err)
-		} else {
-			log.Printf("Successfully auto-generated invoice for order %s", orderID)
-		}
-		
-		// Send order confirmation email after payment
-		if h.emailService != nil {
-			// Get updated order with payment details
-			updatedOrderDoc, err := h.db.Client.Collection("orders").Doc(orderID).Get(h.db.Context)
-			if err != nil {
-				log.Printf("Failed to get order for confirmation email: %v", err)
-				return
-			}
-			
-			var updatedOrder models.Order
-			if err := updatedOrderDoc.DataTo(&updatedOrder); err != nil {
-				log.Printf("Failed to parse order for confirmation email: %v", err)
-				return
-			}
-			updatedOrder.ID = updatedOrderDoc.Ref.ID
-			
-			// Send confirmation email using SendGrid service
-			if err := h.emailService.SendOrderConfirmation(updatedOrder); err != nil {
-				log.Printf("Failed to send order confirmation email for order %s: %v", orderID, err)
-			} else {
-				log.Printf("Order confirmation email sent successfully after payment for order %s", orderID)
-			}
-		} else {
-			log.Printf("Email service not available, skipping order confirmation email for order %s", orderID)
-		}
-	}()
+	// Note: Invoice generation and email sending handled by frontend payment verification API
 
 	return nil
 }
