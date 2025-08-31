@@ -82,8 +82,6 @@ export default function ProfilePage() {
   });
 
   const [addresses, setAddresses] = useState<any[]>([]);
-  const [orders, setOrders] = useState<any[]>([]);
-  const [wishlist, setWishlist] = useState<any[]>([]);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -93,8 +91,6 @@ export default function ProfilePage() {
     
     dispatch(fetchProfile());
     fetchAddresses();
-    fetchOrders();
-    fetchWishlist();
   }, [isAuthenticated, navigate, dispatch]);
 
   useEffect(() => {
@@ -115,23 +111,6 @@ export default function ProfilePage() {
     }
   };
 
-  const fetchOrders = async () => {
-    try {
-      const response = await api.get('/orders');
-      setOrders(response.data.orders || []);
-    } catch (error) {
-      console.error('Error fetching orders:', error);
-    }
-  };
-
-  const fetchWishlist = async () => {
-    try {
-      const response = await api.get('/profile/wishlist');
-      setWishlist(response.data.items || []);
-    } catch (error) {
-      console.error('Error fetching wishlist:', error);
-    }
-  };
 
   const onProfileSubmit = async (data: ProfileFormData) => {
     try {
@@ -179,8 +158,6 @@ export default function ProfilePage() {
   const tabs = [
     { id: 'profile', name: 'Profile', icon: User },
     { id: 'addresses', name: 'Addresses', icon: MapPin },
-    { id: 'orders', name: 'Orders', icon: Package },
-    { id: 'wishlist', name: 'Wishlist', icon: Heart },
     { id: 'settings', name: 'Settings', icon: Settings },
   ];
 
@@ -581,80 +558,7 @@ export default function ProfilePage() {
                 </div>
               )}
 
-              {activeTab === 'orders' && (
-                <div>
-                  <h2 className="text-xl font-semibold mb-6">Order History</h2>
-                  <div className="space-y-4">
-                    {orders.map((order) => (
-                      <div key={order.id} className="border rounded-lg p-6">
-                        <div className="flex justify-between items-start mb-4">
-                          <div>
-                            <h3 className="font-semibold">Order #{order.order_number}</h3>
-                            <p className="text-sm text-gray-500">
-                              {new Date(order.created_at).toLocaleDateString()}
-                            </p>
-                          </div>
-                          <span className={`px-3 py-1 rounded-full text-sm ${
-                            order.status === 'completed' ? 'bg-green-100 text-green-800' :
-                            order.status === 'processing' ? 'bg-blue-100 text-blue-800' :
-                            order.status === 'shipped' ? 'bg-purple-100 text-purple-800' :
-                            'bg-gray-100 text-gray-800'
-                          }`}>
-                            {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-                          </span>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <h4 className="font-medium mb-2">Items</h4>
-                            {order.items && order.items.length > 0 ? order.items.map((item: any, index: number) => (
-                              <p key={index} className="text-sm text-gray-600">
-                                {item.product_name} × {item.quantity}
-                              </p>
-                            )) : (
-                              <p className="text-sm text-gray-500">No items found</p>
-                            )}
-                          </div>
-                          <div>
-                            <h4 className="font-medium mb-2">Total</h4>
-                            <p className="text-lg font-semibold">₹{order.totals.total.toLocaleString()}</p>
-                            {(order.status === 'processing' || order.status === 'shipped' || order.status === 'completed') && (
-                              <button
-                                onClick={() => {
-                                  // Navigate to invoice page - use order's invoice_id if available
-                                  const invoiceId = order.invoice_id || order.id;
-                                  window.open(`/invoices/${invoiceId}`, '_blank');
-                                }}
-                                className="mt-2 text-sm bg-primary-600 text-white px-3 py-1 rounded hover:bg-primary-700"
-                              >
-                                View Invoice
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
 
-              {activeTab === 'wishlist' && (
-                <div>
-                  <h2 className="text-xl font-semibold mb-6">Wishlist</h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {wishlist.map((item) => (
-                      <div key={item.id} className="border rounded-lg p-4">
-                        <img
-                          src={item.image}
-                          alt={item.name}
-                          className="w-full h-48 object-cover rounded mb-4"
-                        />
-                        <h3 className="font-semibold mb-2">{item.name}</h3>
-                        <p className="text-primary-600 font-semibold">₹{item.price.toLocaleString()}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
 
               {activeTab === 'settings' && (
                 <div>
@@ -1003,80 +907,7 @@ export default function ProfilePage() {
               </div>
             )}
 
-            {activeTab === 'orders' && (
-              <div>
-                <h2 className="text-lg font-semibold mb-4">Order History</h2>
-                <div className="space-y-4">
-                  {orders.map((order) => (
-                    <div key={order.id} className="border rounded-lg p-4">
-                      <div className="flex justify-between items-start mb-3">
-                        <div>
-                          <h3 className="font-semibold text-sm">Order #{order.order_number}</h3>
-                          <p className="text-xs text-gray-500">
-                            {new Date(order.created_at).toLocaleDateString()}
-                          </p>
-                        </div>
-                        <span className={`px-2 py-1 rounded-full text-xs ${
-                          order.status === 'completed' ? 'bg-green-100 text-green-800' :
-                          order.status === 'processing' ? 'bg-blue-100 text-blue-800' :
-                          order.status === 'shipped' ? 'bg-purple-100 text-purple-800' :
-                          'bg-gray-100 text-gray-800'
-                        }`}>
-                          {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-                        </span>
-                      </div>
-                      <div className="space-y-2">
-                        <div>
-                          <h4 className="font-medium text-sm mb-1">Items</h4>
-                          {order.items && order.items.length > 0 ? order.items.map((item: any, index: number) => (
-                            <p key={index} className="text-xs text-gray-600">
-                              {item.product_name} × {item.quantity}
-                            </p>
-                          )) : (
-                            <p className="text-xs text-gray-500">No items found</p>
-                          )}
-                        </div>
-                        <div>
-                          <h4 className="font-medium text-sm mb-1">Total</h4>
-                          <p className="text-lg font-semibold">₹{order.totals.total.toLocaleString()}</p>
-                          {(order.status === 'processing' || order.status === 'shipped' || order.status === 'completed') && (
-                            <button
-                              onClick={() => {
-                                // Navigate to invoice page - use order's invoice_id if available
-                                const invoiceId = order.invoice_id || order.id;
-                                window.open(`/invoices/${invoiceId}`, '_blank');
-                              }}
-                              className="mt-1 text-xs bg-primary-600 text-white px-2 py-1 rounded hover:bg-primary-700"
-                            >
-                              Invoice
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
 
-            {activeTab === 'wishlist' && (
-              <div>
-                <h2 className="text-lg font-semibold mb-4">Wishlist</h2>
-                <div className="grid grid-cols-2 gap-4">
-                  {wishlist.map((item) => (
-                    <div key={item.id} className="border rounded-lg p-3">
-                      <img
-                        src={item.image}
-                        alt={item.name}
-                        className="w-full h-32 object-cover rounded mb-2"
-                      />
-                      <h3 className="font-semibold text-sm mb-1 line-clamp-2">{item.name}</h3>
-                      <p className="text-primary-600 font-semibold text-sm">₹{item.price.toLocaleString()}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
 
             {activeTab === 'settings' && (
               <div>

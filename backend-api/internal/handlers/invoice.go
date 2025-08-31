@@ -113,12 +113,18 @@ func (h *InvoiceHandler) GenerateInvoice(c *gin.Context) {
 
 // Get invoice by ID
 func (h *InvoiceHandler) GetInvoice(c *gin.Context) {
-	invoiceID := c.Param("id")
+	id := c.Param("id")
 	
-	doc, err := h.db.Client.Collection("invoices").Doc(invoiceID).Get(h.db.Context)
+	// First try to get invoice by invoice ID
+	doc, err := h.db.Client.Collection("invoices").Doc(id).Get(h.db.Context)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Invoice not found"})
-		return
+		// If not found, try to find invoice by order ID
+		docs, err2 := h.db.Client.Collection("invoices").Where("order_id", "==", id).Documents(h.db.Context).GetAll()
+		if err2 != nil || len(docs) == 0 {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Invoice not found"})
+			return
+		}
+		doc = docs[0] // Use first invoice found for this order
 	}
 
 	var invoice models.Invoice
