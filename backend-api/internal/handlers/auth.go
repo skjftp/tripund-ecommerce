@@ -517,8 +517,6 @@ func (h *AuthHandler) GetUserDetails(c *gin.Context) {
 
 // GetProfileWishlist returns user's wishlist
 func (h *AuthHandler) GetProfileWishlist(c *gin.Context) {
-	userID := c.GetString("user_id")
-	
 	// Get user's wishlist from wishlist collection or user document
 	// For now, return empty array
 	c.JSON(http.StatusOK, gin.H{
@@ -529,8 +527,6 @@ func (h *AuthHandler) GetProfileWishlist(c *gin.Context) {
 
 // GetProfileAddresses returns user's saved addresses
 func (h *AuthHandler) GetProfileAddresses(c *gin.Context) {
-	userID := c.GetString("user_id")
-	
 	// Get user's addresses from addresses collection or user document
 	// For now, return empty array
 	c.JSON(http.StatusOK, gin.H{
