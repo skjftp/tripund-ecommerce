@@ -45,7 +45,8 @@ export default function ImageCarousel({ images, productName, className = '', sho
         <img
           src={images[0]}
           alt={productName}
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover object-center"
+          style={{ minWidth: '100%', minHeight: '100%' }}
           onError={(e) => {
             const target = e.target as HTMLImageElement;
             target.src = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop';
@@ -62,7 +63,8 @@ export default function ImageCarousel({ images, productName, className = '', sho
         <img
           src={images[currentIndex]}
           alt={`${productName} - Image ${currentIndex + 1}`}
-          className="w-full h-full object-cover transition-opacity duration-300"
+          className="w-full h-full object-cover object-center transition-opacity duration-300"
+          style={{ minWidth: '100%', minHeight: '100%' }}
           onError={(e) => {
             const target = e.target as HTMLImageElement;
             target.src = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop';

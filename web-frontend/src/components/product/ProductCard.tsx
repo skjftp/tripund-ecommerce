@@ -138,7 +138,7 @@ export default function ProductCard({ product, viewMode = 'grid' }: ProductCardP
     <Link to={`/products/${product.id}`} className="group h-full">
       <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow h-full flex flex-col">
         {/* Fixed aspect ratio container for image */}
-        <div className="relative aspect-square bg-gray-100">
+        <div className="relative aspect-square bg-gray-50 overflow-hidden">
           <ImageCarousel 
             images={product.images || []} 
             productName={product.name}
