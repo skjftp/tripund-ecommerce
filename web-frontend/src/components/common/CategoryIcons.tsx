@@ -14,7 +14,7 @@ import {
   ShoppingBag
 } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { RootState, AppDispatch } from '../../store';
 import { fetchCategories } from '../../store/slices/categoriesSlice';
 
@@ -45,7 +45,7 @@ const getIconForCategory = (slug: string) => {
 export default function CategoryIcons() {
   const dispatch = useDispatch<AppDispatch>();
   const { categories } = useSelector((state: RootState) => state.categories);
-  const [rotation, setRotation] = useState(0);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (categories.length === 0) {
@@ -53,20 +53,11 @@ export default function CategoryIcons() {
     }
   }, [dispatch, categories.length]);
 
-  // Infinite rotation animation
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setRotation(prev => prev + 0.5); // Slow, smooth rotation
-    }, 50); // Update every 50ms for smooth animation
-    
-    return () => clearInterval(interval);
-  }, []);
-
   // Map categories from API with fallback to hardcoded data
   const categoryIcons: CategoryIcon[] = categories.length > 0 
     ? categories.map(category => ({
         id: category.id,
-        name: category.name.length > 8 ? category.name.split(' ')[0] : category.name,
+        name: category.name.length > 10 ? category.name.split(' ')[0] : category.name,
         icon: getIconForCategory(category.slug),
         slug: category.slug
       }))
@@ -132,74 +123,83 @@ export default function CategoryIcons() {
           slug: 'sale'
         }
       ];
+
+  // Auto scroll animation
+  useEffect(() => {
+    const scrollContainer = scrollRef.current;
+    if (!scrollContainer) return;
+
+    let scrollPosition = 0;
+    const scrollSpeed = 0.3; // Very slow scroll speed
+    let animationId: number;
+    
+    const animate = () => {
+      scrollPosition += scrollSpeed;
+      
+      // Reset scroll when reaching halfway (since we duplicated categories)
+      const maxScroll = scrollContainer.scrollWidth / 2;
+      if (scrollPosition >= maxScroll) {
+        scrollPosition = 0;
+      }
+      
+      scrollContainer.scrollLeft = scrollPosition;
+      animationId = requestAnimationFrame(animate);
+    };
+    
+    animationId = requestAnimationFrame(animate);
+    
+    // Pause on hover
+    const handleMouseEnter = () => {
+      if (animationId) cancelAnimationFrame(animationId);
+    };
+    const handleMouseLeave = () => {
+      animationId = requestAnimationFrame(animate);
+    };
+    
+    scrollContainer.addEventListener('mouseenter', handleMouseEnter);
+    scrollContainer.addEventListener('mouseleave', handleMouseLeave);
+    
+    return () => {
+      if (animationId) cancelAnimationFrame(animationId);
+      scrollContainer.removeEventListener('mouseenter', handleMouseEnter);
+      scrollContainer.removeEventListener('mouseleave', handleMouseLeave);
+    };
+  }, []);
+
   return (
     <div className="bg-white border-b border-gray-100">
-      {/* 3D Horizontal Revolving Carousel - Both Mobile and Desktop */}
-      <div className="relative h-32 md:h-40 flex items-center justify-center overflow-hidden">
+      {/* Auto-scrolling horizontal carousel */}
+      <div className="relative py-6 overflow-hidden">
         <div 
-          className="relative w-full h-full flex items-center justify-center"
+          ref={scrollRef}
+          className="flex gap-6 md:gap-8 px-4 overflow-x-auto scrollbar-hide"
           style={{
-            perspective: '1200px',
-            perspectiveOrigin: 'center center'
+            scrollBehavior: 'auto',
+            WebkitOverflowScrolling: 'touch'
           }}
         >
-          <div
-            className="relative"
-            style={{
-              transformStyle: 'preserve-3d',
-              transform: `rotateY(${rotation}deg)`,
-              transition: 'transform 0.05s linear'
-            }}
-          >
-            {categoryIcons.map((category, index) => {
-              const angle = (index * 360) / categoryIcons.length;
-              const radius = 200; // Distance from center
-              const rotateY = angle;
-              const translateZ = radius;
-              
-              return (
-                <Link
-                  key={category.id}
-                  to={`/category/${category.slug}`}
-                  className="absolute group cursor-pointer"
-                  style={{
-                    transform: `rotateY(${rotateY}deg) translateZ(${translateZ}px)`,
-                    transformOrigin: 'center',
-                    left: '50%',
-                    top: '50%',
-                    marginLeft: '-40px',
-                    marginTop: '-40px'
-                  }}
-                >
-                  <div 
-                    className="flex flex-col items-center justify-center w-20 h-20 md:w-24 md:h-24"
-                    style={{
-                      transform: `rotateY(${-rotateY}deg)`, // Counter-rotate to keep icons facing forward
-                      backfaceVisibility: 'hidden'
-                    }}
-                  >
-                    <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-[#f8f5f0] to-[#e8e0d0] rounded-full flex items-center justify-center text-[#96865d] mb-1 shadow-lg group-hover:shadow-xl group-hover:scale-110 transition-all duration-300 border-2 border-white/80">
-                      <div className="transform group-hover:rotate-12 transition-transform duration-300">
-                        {category.icon}
-                      </div>
-                    </div>
-                    <span className="text-xs md:text-sm text-gray-700 text-center font-medium bg-white/90 px-2 py-0.5 rounded-full shadow-sm whitespace-nowrap">
-                      {category.name}
-                    </span>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-          
-          {/* Optional: Center gradient for depth effect */}
-          <div className="absolute inset-0 bg-gradient-radial from-transparent via-transparent to-gray-50/20 pointer-events-none"></div>
+          {/* Duplicate categories for seamless infinite scroll */}
+          {[...categoryIcons, ...categoryIcons].map((category, index) => (
+            <Link
+              key={`${category.id}-${index}`}
+              to={`/category/${category.slug}`}
+              className="flex flex-col items-center justify-center min-w-[80px] md:min-w-[100px] p-3 rounded-lg hover:bg-gray-50 transition-all duration-200 group flex-shrink-0"
+            >
+              <div className="w-14 h-14 md:w-16 md:h-16 bg-gradient-to-br from-[#f8f5f0] to-[#e8e0d0] rounded-full flex items-center justify-center text-[#96865d] mb-2 shadow-md group-hover:shadow-lg group-hover:scale-105 transition-all duration-200 border-2 border-white">
+                <div className="transform group-hover:rotate-6 transition-transform duration-200">
+                  {category.icon}
+                </div>
+              </div>
+              <span className="text-xs md:text-sm text-gray-700 text-center font-medium whitespace-nowrap">
+                {category.name}
+              </span>
+            </Link>
+          ))}
         </div>
-      </div>
-      
-      {/* Instruction text */}
-      <div className="text-center py-2 text-xs text-gray-500">
-        Explore our handcrafted categories
+        
+        {/* Gradient fade edges for seamless effect */}
+        <div className="absolute left-0 top-0 w-8 h-full bg-gradient-to-r from-white to-transparent pointer-events-none"></div>
+        <div className="absolute right-0 top-0 w-8 h-full bg-gradient-to-l from-white to-transparent pointer-events-none"></div>
       </div>
     </div>
   );
