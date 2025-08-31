@@ -2,12 +2,14 @@ package services
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"html/template"
 	"log"
 	"os"
 	"time"
 
+	"cloud.google.com/go/firestore"
 	"github.com/sendgrid/sendgrid-go"
 	"github.com/sendgrid/sendgrid-go/helpers/mail"
 	"tripund-api/internal/models"
@@ -18,6 +20,7 @@ type SendGridEmailService struct {
 	FromEmail string
 	FromName  string
 	client    *sendgrid.Client
+	db        *firestore.Client
 }
 
 type OrderConfirmationData struct {
@@ -67,6 +70,13 @@ func NewSendGridEmailService() (*SendGridEmailService, error) {
 
 	client := sendgrid.NewSendClient(apiKey)
 	
+	// Initialize Firestore client for user lookups
+	db, err := firestore.NewClient(context.Background(), os.Getenv("FIREBASE_PROJECT_ID"))
+	if err != nil {
+		log.Printf("Warning: Failed to initialize Firestore client for email service: %v", err)
+		db = nil
+	}
+	
 	log.Printf("SendGrid: Email service initialized with from: %s <%s>", fromName, fromEmail)
 	
 	return &SendGridEmailService{
@@ -74,6 +84,7 @@ func NewSendGridEmailService() (*SendGridEmailService, error) {
 		FromEmail: fromEmail,
 		FromName:  fromName,
 		client:    client,
+		db:        db,
 	}, nil
 }
 
@@ -87,9 +98,33 @@ func (s *SendGridEmailService) SendOrderConfirmation(order models.Order) error {
 		Totals:        order.Totals,
 	}
 
-	// If it's a registered user order, ensure we have email
+	// For registered users, get email from user profile if not in GuestEmail
 	if order.UserID != "guest" && order.GuestEmail == "" {
-		return fmt.Errorf("user email not found for order %s", order.ID)
+		if s.db != nil {
+			// Get user email from Firestore
+			userDoc, err := s.db.Collection("users").Doc(order.UserID).Get(context.Background())
+			if err != nil {
+				return fmt.Errorf("failed to get user email for order %s: %v", order.ID, err)
+			}
+			
+			var user struct {
+				Email   string `firestore:"email"`
+				Profile struct {
+					FirstName string `firestore:"first_name"`
+					LastName  string `firestore:"last_name"`
+				} `firestore:"profile"`
+			}
+			
+			if err := userDoc.DataTo(&user); err != nil {
+				return fmt.Errorf("failed to parse user data for order %s: %v", order.ID, err)
+			}
+			
+			data.CustomerEmail = user.Email
+			data.CustomerName = user.Profile.FirstName + " " + user.Profile.LastName
+			log.Printf("SendGrid: Using registered user email %s for order %s", user.Email, order.ID)
+		} else {
+			return fmt.Errorf("no database connection to fetch user email for order %s", order.ID)
+		}
 	}
 
 	// Convert order items to email items
@@ -128,9 +163,33 @@ func (s *SendGridEmailService) SendShippingConfirmation(order models.Order) erro
 		TrackingInfo:  order.Tracking,
 	}
 
-	// If it's a registered user order, ensure we have email
+	// For registered users, get email from user profile if not in GuestEmail
 	if order.UserID != "guest" && order.GuestEmail == "" {
-		return fmt.Errorf("user email not found for order %s", order.ID)
+		if s.db != nil {
+			// Get user email from Firestore
+			userDoc, err := s.db.Collection("users").Doc(order.UserID).Get(context.Background())
+			if err != nil {
+				return fmt.Errorf("failed to get user email for order %s: %v", order.ID, err)
+			}
+			
+			var user struct {
+				Email   string `firestore:"email"`
+				Profile struct {
+					FirstName string `firestore:"first_name"`
+					LastName  string `firestore:"last_name"`
+				} `firestore:"profile"`
+			}
+			
+			if err := userDoc.DataTo(&user); err != nil {
+				return fmt.Errorf("failed to parse user data for order %s: %v", order.ID, err)
+			}
+			
+			data.CustomerEmail = user.Email
+			data.CustomerName = user.Profile.FirstName + " " + user.Profile.LastName
+			log.Printf("SendGrid: Using registered user email %s for order %s", user.Email, order.ID)
+		} else {
+			return fmt.Errorf("no database connection to fetch user email for order %s", order.ID)
+		}
 	}
 
 	// Convert order items to email items
