@@ -146,6 +146,44 @@ func (h *InvoiceHandler) GetInvoice(c *gin.Context) {
 	c.JSON(http.StatusOK, invoice)
 }
 
+// DownloadInvoice generates and downloads invoice PDF
+func (h *InvoiceHandler) DownloadInvoice(c *gin.Context) {
+	id := c.Param("id")
+	
+	// Get invoice (handles both invoice ID and order ID)
+	doc, err := h.db.Client.Collection("invoices").Doc(id).Get(h.db.Context)
+	if err != nil {
+		// Try to find by order ID
+		docs, err2 := h.db.Client.Collection("invoices").Where("order_id", "==", id).Documents(h.db.Context).GetAll()
+		if err2 != nil || len(docs) == 0 {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Invoice not found"})
+			return
+		}
+		doc = docs[0]
+	}
+
+	var invoice models.Invoice
+	if err := doc.DataTo(&invoice); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to parse invoice"})
+		return
+	}
+	invoice.ID = doc.Ref.ID
+
+	// Check access permissions
+	userID, _ := c.Get("user_id")
+	userRole, _ := c.Get("role")
+	
+	if userRole != "admin" && userID != invoice.UserID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Access denied"})
+		return
+	}
+
+	// For now, return JSON (PDF generation can be added later)
+	c.Header("Content-Type", "application/json")
+	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=invoice-%s.json", invoice.InvoiceNumber))
+	c.JSON(http.StatusOK, invoice)
+}
+
 // List invoices with filtering
 func (h *InvoiceHandler) ListInvoices(c *gin.Context) {
 	var req InvoiceListRequest
@@ -421,13 +459,22 @@ func (h *InvoiceHandler) createInvoiceFromOrder(order *models.Order, settings ma
 
 	// Payment information removed as requested
 
-	// Create line items
+	// Get GST rate from settings
+	var gstRate float64 = 18.0 // Default fallback
+	if paymentSettings, ok := settings["payment"].(map[string]interface{}); ok {
+		if rate, ok := paymentSettings["tax_rate"].(float64); ok {
+			gstRate = rate
+		}
+	}
+	
+	// Create line items with reverse GST calculation
 	var lineItems []models.InvoiceLineItem
-	gstRate := 18.0 // Default GST rate
 	isInterState := sellerAddress.StateCode != buyerAddress.StateCode
 
 	for i, item := range order.Items {
-		taxableValue := item.Price * float64(item.Quantity)
+		// Reverse calculate: amount is inclusive of GST
+		inclusiveAmount := item.Price * float64(item.Quantity)
+		taxableValue := inclusiveAmount / (1 + (gstRate / 100)) // Extract base amount
 		
 		lineItem := models.InvoiceLineItem{
 			ID:          fmt.Sprintf("item_%d", i+1),

@@ -126,6 +126,7 @@ func main() {
 			{
 				invoices.GET("", invoiceHandler.ListInvoices)
 				invoices.GET("/:id", invoiceHandler.GetInvoice)
+				invoices.GET("/:id/download", invoiceHandler.DownloadInvoice)
 			}
 
 			payment := protected.Group("/payment")

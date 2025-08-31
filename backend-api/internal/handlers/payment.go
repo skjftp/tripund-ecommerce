@@ -660,13 +660,22 @@ func (h *PaymentHandler) createCompleteInvoice(order *models.Order, settings map
 		IsB2B:   false,
 	}
 	
-	// Create line items with proper tax calculations
+	// Get GST rate from settings
+	var gstRate float64 = 18.0 // Default fallback
+	if paymentSettings, ok := settings["payment"].(map[string]interface{}); ok {
+		if rate, ok := paymentSettings["tax_rate"].(float64); ok {
+			gstRate = rate
+		}
+	}
+	
+	// Create line items with proper tax calculations (reverse calculation for inclusive amounts)
 	var lineItems []models.InvoiceLineItem
-	gstRate := 18.0
 	isInterState := sellerAddress.StateCode != buyerAddress.StateCode
 	
 	for i, item := range order.Items {
-		taxableValue := item.Price * float64(item.Quantity)
+		// Reverse calculate: if amount is inclusive of GST, extract the base amount
+		inclusiveAmount := item.Price * float64(item.Quantity)
+		taxableValue := inclusiveAmount / (1 + (gstRate / 100)) // Extract base amount from inclusive
 		
 		lineItem := models.InvoiceLineItem{
 			ID:          fmt.Sprintf("item_%d", i+1),

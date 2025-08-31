@@ -211,9 +211,15 @@ func (s *SendGridEmailService) SendShippingConfirmation(order models.Order) erro
 	}
 
 	subject := fmt.Sprintf("Your Order is Shipped - %s | TRIPUND Lifestyle", order.OrderNumber)
-	htmlBody, err := s.renderShippingConfirmationTemplate(data)
+	// Try to use database template first, fallback to hardcoded
+	htmlBody, err := s.renderDatabaseTemplate("shipping_confirmation", data)
 	if err != nil {
-		return fmt.Errorf("failed to render email template: %v", err)
+		log.Printf("Failed to render database shipping template, using fallback: %v", err)
+		// Fallback to hardcoded template
+		htmlBody, err = s.renderShippingConfirmationTemplate(data)
+		if err != nil {
+			return fmt.Errorf("failed to render shipping email template: %v", err)
+		}
 	}
 
 	return s.sendEmail(data.CustomerEmail, data.CustomerName, subject, htmlBody)
@@ -597,7 +603,7 @@ func (s *SendGridEmailService) SendRawEmail(toEmail, subject, htmlBody string) e
 }
 
 // renderDatabaseTemplate renders email using template from database
-func (s *SendGridEmailService) renderDatabaseTemplate(templateType string, data OrderConfirmationData) (string, error) {
+func (s *SendGridEmailService) renderDatabaseTemplate(templateType string, data interface{}) (string, error) {
 	if s.db == nil {
 		return "", fmt.Errorf("no database connection for template rendering")
 	}
