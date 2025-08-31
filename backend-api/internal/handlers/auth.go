@@ -514,3 +514,32 @@ func (h *AuthHandler) GetUserDetails(c *gin.Context) {
 
 	c.JSON(http.StatusOK, response)
 }
+
+// GoogleAuth handles Google OAuth sign-in/sign-up
+func (h *AuthHandler) GoogleAuth(c *gin.Context) {
+	var req struct {
+		Credential string `json:"credential" binding:"required"`
+	}
+	
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	
+	// TODO: Verify Google ID token with Google's API
+	// For now, return a placeholder response
+	c.JSON(http.StatusNotImplemented, gin.H{
+		"error": "Google OAuth integration in progress",
+		"message": "Please use email/password authentication for now",
+	})
+	
+	/*
+	// Future implementation:
+	// 1. Verify Google ID token with Google's API
+	// 2. Extract user info (email, name, picture)
+	// 3. Check if user exists in database
+	// 4. If not, create new user account
+	// 5. Generate JWT token
+	// 6. Return user data and token
+	*/
+}

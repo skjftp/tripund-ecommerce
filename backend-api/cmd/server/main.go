@@ -64,6 +64,7 @@ func main() {
 		{
 			auth.POST("/register", authHandler.Register)
 			auth.POST("/login", authHandler.Login)
+			auth.POST("/google", authHandler.GoogleAuth)
 			auth.POST("/refresh", authHandler.RefreshToken)
 		}
 
