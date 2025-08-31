@@ -146,6 +146,96 @@ func (h *InvoiceHandler) GetInvoice(c *gin.Context) {
 	c.JSON(http.StatusOK, invoice)
 }
 
+// generateInvoiceHTML creates HTML representation of invoice for download
+func (h *InvoiceHandler) generateInvoiceHTML(invoice models.Invoice) string {
+	return fmt.Sprintf(`
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Invoice %s</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .company { font-size: 24px; font-weight: bold; color: #8B4513; }
+        .invoice-details { margin: 20px 0; }
+        .section { margin: 20px 0; }
+        table { width: 100%%; border-collapse: collapse; margin: 15px 0; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f5f5f5; }
+        .total-row { font-weight: bold; background-color: #f9f9f9; }
+        .text-right { text-align: right; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="company">TRIPUND LIFESTYLE</div>
+        <div>Premium Indian Handicrafts</div>
+    </div>
+    
+    <div class="invoice-details">
+        <h2>INVOICE %s</h2>
+        <p><strong>Date:</strong> %s</p>
+        <p><strong>GSTIN:</strong> %s</p>
+    </div>
+    
+    <div class="section">
+        <h3>BILL TO</h3>
+        <p>%s<br>%s<br>%s, %s %s</p>
+    </div>
+    
+    <div class="section">
+        <h3>ITEMS</h3>
+        <table>
+            <tr><th>Description</th><th>Qty</th><th>Rate</th><th>Amount</th></tr>
+            %s
+        </table>
+    </div>
+    
+    <div class="section">
+        <table>
+            <tr><td><strong>Taxable Value:</strong></td><td class="text-right">₹%.2f</td></tr>
+            <tr><td><strong>GST:</strong></td><td class="text-right">₹%.2f</td></tr>
+            <tr class="total-row"><td><strong>Total:</strong></td><td class="text-right">₹%.2f</td></tr>
+        </table>
+    </div>
+    
+    <div style="text-align: center; margin-top: 40px; color: #666;">
+        <p>Thank you for shopping with us.</p>
+    </div>
+</body>
+</html>
+`,
+		invoice.InvoiceNumber,
+		invoice.InvoiceNumber,
+		invoice.IssueDate.Format("January 2, 2006"),
+		invoice.SellerGSTIN,
+		invoice.BuyerDetails.Name,
+		invoice.BuyerDetails.Address.Line1,
+		invoice.BuyerDetails.Address.City,
+		invoice.BuyerDetails.Address.State,
+		invoice.BuyerDetails.Address.PostalCode,
+		h.generateItemsHTML(invoice.LineItems),
+		invoice.TaxSummary.TotalTaxableValue,
+		invoice.TaxSummary.TotalTax,
+		invoice.TaxSummary.FinalAmount,
+	)
+}
+
+// generateItemsHTML creates HTML for invoice line items
+func (h *InvoiceHandler) generateItemsHTML(items []models.InvoiceLineItem) string {
+	var itemsHTML string
+	for _, item := range items {
+		itemsHTML += fmt.Sprintf(
+			"<tr><td>%s</td><td>%.0f</td><td>₹%.2f</td><td>₹%.2f</td></tr>",
+			item.ProductName,
+			item.Quantity,
+			item.UnitPrice,
+			item.TotalAmount,
+		)
+	}
+	return itemsHTML
+}
+
 // DownloadInvoice generates and downloads invoice PDF
 func (h *InvoiceHandler) DownloadInvoice(c *gin.Context) {
 	id := c.Param("id")
@@ -178,10 +268,13 @@ func (h *InvoiceHandler) DownloadInvoice(c *gin.Context) {
 		return
 	}
 
-	// For now, return JSON (PDF generation can be added later)
-	c.Header("Content-Type", "application/json")
-	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=invoice-%s.json", invoice.InvoiceNumber))
-	c.JSON(http.StatusOK, invoice)
+	// Generate HTML content for the invoice
+	htmlContent := h.generateInvoiceHTML(invoice)
+	
+	// For now, return HTML as "PDF" (proper PDF generation can be added later)
+	c.Header("Content-Type", "text/html")
+	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=invoice-%s.html", invoice.InvoiceNumber))
+	c.String(http.StatusOK, htmlContent)
 }
 
 // List invoices with filtering
