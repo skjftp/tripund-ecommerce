@@ -782,19 +782,7 @@ func (h *PaymentHandler) createCompleteInvoice(order *models.Order, settings map
 	// Calculate tax summary
 	invoice.CalculateTaxSummary()
 
-	// Save invoice to Firestore
-	docRef, _, err := h.db.Client.Collection("invoices").Add(h.db.Context, invoice)
-	if err != nil {
-		return fmt.Errorf("failed to create invoice: %v", err)
-	}
-
-	// Update order with invoice reference
-	_, err = h.db.Client.Collection("orders").Doc(orderID).Update(h.db.Context, []firestore.Update{
-		{Path: "invoice_id", Value: docRef.ID},
-		{Path: "updated_at", Value: time.Now()},
-	})
-
-	return err
+	return invoice
 }
 
 // updateStockForOrder decrements stock when payment is successful
