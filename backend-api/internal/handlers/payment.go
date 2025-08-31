@@ -468,6 +468,41 @@ func (h *PaymentHandler) VerifyGuestPayment(c *gin.Context) {
 		return
 	}
 
+	// Auto-generate invoice and send order confirmation email after guest payment verification
+	go func() {
+		// Get updated order
+		updatedOrderDoc, err := h.db.Client.Collection("orders").Doc(req.OrderID).Get(h.db.Context)
+		if err != nil {
+			log.Printf("Failed to get order for post-payment processing: %v", err)
+			return
+		}
+		
+		var updatedOrder models.Order
+		if err := updatedOrderDoc.DataTo(&updatedOrder); err != nil {
+			log.Printf("Failed to parse order for post-payment processing: %v", err)
+			return
+		}
+		updatedOrder.ID = updatedOrderDoc.Ref.ID
+		
+		// Generate invoice
+		if err := h.generateInvoiceForOrder(req.OrderID); err != nil {
+			log.Printf("Failed to auto-generate invoice for guest order %s: %v", req.OrderID, err)
+		} else {
+			log.Printf("Successfully auto-generated invoice for guest order %s", req.OrderID)
+		}
+		
+		// Send order confirmation email
+		if h.emailService != nil {
+			if err := h.emailService.SendOrderConfirmation(updatedOrder); err != nil {
+				log.Printf("Failed to send order confirmation email for guest order %s: %v", req.OrderID, err)
+			} else {
+				log.Printf("Order confirmation email sent successfully after guest payment verification for order %s", req.OrderID)
+			}
+		} else {
+			log.Printf("Email service not available for guest order %s", req.OrderID)
+		}
+	}()
+
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Payment verified successfully",
 		"order_id": req.OrderID,
