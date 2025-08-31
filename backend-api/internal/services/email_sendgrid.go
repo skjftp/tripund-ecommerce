@@ -51,6 +51,7 @@ type OrderEmailItem struct {
 	Total        float64
 	VariantColor string
 	VariantSize  string
+	ImageURL     string
 }
 
 func NewSendGridEmailService() (*SendGridEmailService, error) {
@@ -138,6 +139,7 @@ func (s *SendGridEmailService) SendOrderConfirmation(order models.Order) error {
 			Total:        item.Total,
 			VariantColor: item.VariantColor,
 			VariantSize:  item.VariantSize,
+			ImageURL:     item.ProductImage, // Add image URL for template
 		}
 		data.Items = append(data.Items, emailItem)
 	}
@@ -207,14 +209,14 @@ func (s *SendGridEmailService) SendShippingConfirmation(order models.Order) erro
 			Total:        item.Total,
 			VariantColor: item.VariantColor,
 			VariantSize:  item.VariantSize,
+			ImageURL:     item.ProductImage, // Add image URL for template
 		}
 		data.Items = append(data.Items, emailItem)
 	}
 
 	subject := fmt.Sprintf("Your Order is Shipped - %s | TRIPUND Lifestyle", order.OrderNumber)
-	// For shipping confirmation, always use fallback template due to data structure mismatch
-	// TODO: Fix database template data structure for shipping
-	htmlBody, err := s.renderShippingConfirmationTemplate(data)
+	// Use database template for shipping (fixed data structure)
+	htmlBody, err := s.renderDatabaseTemplate("shipping_confirmation", data)
 	if err != nil {
 		log.Printf("Failed to render database shipping template, using fallback: %v", err)
 		// Fallback to hardcoded template
