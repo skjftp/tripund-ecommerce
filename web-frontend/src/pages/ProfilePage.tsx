@@ -66,7 +66,7 @@ export default function ProfilePage() {
     formState: { errors: addressErrors },
     setValue: setAddressValue,
     reset: resetAddress,
-  } = useForm<AddressFormData>({
+  } = useForm({
     resolver: zodResolver(addressSchema),
     defaultValues: {
       type: 'home',
@@ -144,7 +144,7 @@ export default function ProfilePage() {
     }
   };
 
-  const onAddressSubmit = async (data: AddressFormData) => {
+  const onAddressSubmit = async (data: any) => {
     try {
       if (editingAddress) {
         await api.put(`/profile/addresses/${editingAddress}`, data);
@@ -396,7 +396,7 @@ export default function ProfilePage() {
                       <h3 className="text-lg font-medium mb-4">
                         {editingAddress ? 'Edit Address' : 'Add New Address'}
                       </h3>
-                      <form onSubmit={handleAddressSubmit(onAddressSubmit)} className="space-y-4">
+                      <form onSubmit={handleAddressSubmit(onAddressSubmit as any)} className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
