@@ -13,7 +13,7 @@ export default function ImageCarousel({ images, productName, className = '', sho
 
   if (!images || images.length === 0) {
     return (
-      <div className={`bg-gray-200 flex items-center justify-center ${className}`}>
+      <div className={`bg-gray-200 flex items-center justify-center w-full h-full ${className}`}>
         <span className="text-gray-400">No image available</span>
       </div>
     );
@@ -41,11 +41,11 @@ export default function ImageCarousel({ images, productName, className = '', sho
 
   if (images.length === 1) {
     return (
-      <div className={`relative ${className}`}>
+      <div className={`relative w-full h-full ${className}`}>
         <img
           src={images[0]}
           alt={productName}
-          className="w-full h-full object-cover rounded-lg"
+          className="w-full h-full object-cover"
           onError={(e) => {
             const target = e.target as HTMLImageElement;
             target.src = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop';
@@ -56,9 +56,9 @@ export default function ImageCarousel({ images, productName, className = '', sho
   }
 
   return (
-    <div className={`relative group ${className}`}>
+    <div className={`relative group w-full h-full ${className}`}>
       {/* Main Image */}
-      <div className="relative overflow-hidden rounded-lg">
+      <div className="relative overflow-hidden w-full h-full">
         <img
           src={images[currentIndex]}
           alt={`${productName} - Image ${currentIndex + 1}`}
