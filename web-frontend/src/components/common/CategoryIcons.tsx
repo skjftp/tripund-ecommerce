@@ -132,89 +132,74 @@ export default function CategoryIcons() {
           slug: 'sale'
         }
       ];
-  const radius = 120; // Radius of the circular carousel
-  const centerX = 150; // Center X position
-  const centerY = 150; // Center Y position
-  
   return (
     <div className="bg-white border-b border-gray-100">
-      {/* 3D Revolving Circular Carousel - Both Mobile and Desktop */}
-      <div className="relative h-80 md:h-96 flex items-center justify-center overflow-hidden">
+      {/* 3D Horizontal Revolving Carousel - Both Mobile and Desktop */}
+      <div className="relative h-32 md:h-40 flex items-center justify-center overflow-hidden">
         <div 
-          className="relative w-80 h-80 md:w-96 md:h-96"
+          className="relative w-full h-full flex items-center justify-center"
           style={{
-            perspective: '1000px',
-            transformStyle: 'preserve-3d'
+            perspective: '1200px',
+            perspectiveOrigin: 'center center'
           }}
         >
-          {categoryIcons.map((category, index) => {
-            const angle = (index * 360 / categoryIcons.length) + rotation;
-            const radian = (angle * Math.PI) / 180;
-            const x = centerX + radius * Math.cos(radian);
-            const y = centerY + radius * Math.sin(radian);
-            const scale = 0.8 + 0.2 * Math.cos(radian); // Scale effect for 3D depth
-            const opacity = 0.6 + 0.4 * Math.cos(radian); // Opacity effect for depth
-            const zIndex = Math.round(50 + 50 * Math.cos(radian)); // Z-index for layering
-            
-            return (
-              <Link
-                key={category.id}
-                to={`/category/${category.slug}`}
-                className="absolute transform -translate-x-1/2 -translate-y-1/2 transition-all duration-100 ease-out group cursor-pointer"
-                style={{
-                  left: x,
-                  top: y,
-                  transform: `translate(-50%, -50%) scale(${scale})`,
-                  opacity,
-                  zIndex,
-                  transition: 'all 0.1s ease-out'
-                }}
-              >
-                <div className="flex flex-col items-center justify-center">
-                  <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-[#f8f5f0] to-[#e8e0d0] rounded-full flex items-center justify-center text-[#96865d] mb-2 shadow-lg group-hover:shadow-xl group-hover:scale-110 transition-all duration-300 border-2 border-white">
-                    <div className="transform group-hover:rotate-12 transition-transform duration-300">
-                      {category.icon}
+          <div
+            className="relative"
+            style={{
+              transformStyle: 'preserve-3d',
+              transform: `rotateY(${rotation}deg)`,
+              transition: 'transform 0.05s linear'
+            }}
+          >
+            {categoryIcons.map((category, index) => {
+              const angle = (index * 360) / categoryIcons.length;
+              const radius = 200; // Distance from center
+              const rotateY = angle;
+              const translateZ = radius;
+              
+              return (
+                <Link
+                  key={category.id}
+                  to={`/category/${category.slug}`}
+                  className="absolute group cursor-pointer"
+                  style={{
+                    transform: `rotateY(${rotateY}deg) translateZ(${translateZ}px)`,
+                    transformOrigin: 'center',
+                    left: '50%',
+                    top: '50%',
+                    marginLeft: '-40px',
+                    marginTop: '-40px'
+                  }}
+                >
+                  <div 
+                    className="flex flex-col items-center justify-center w-20 h-20 md:w-24 md:h-24"
+                    style={{
+                      transform: `rotateY(${-rotateY}deg)`, // Counter-rotate to keep icons facing forward
+                      backfaceVisibility: 'hidden'
+                    }}
+                  >
+                    <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-[#f8f5f0] to-[#e8e0d0] rounded-full flex items-center justify-center text-[#96865d] mb-1 shadow-lg group-hover:shadow-xl group-hover:scale-110 transition-all duration-300 border-2 border-white/80">
+                      <div className="transform group-hover:rotate-12 transition-transform duration-300">
+                        {category.icon}
+                      </div>
                     </div>
+                    <span className="text-xs md:text-sm text-gray-700 text-center font-medium bg-white/90 px-2 py-0.5 rounded-full shadow-sm whitespace-nowrap">
+                      {category.name}
+                    </span>
                   </div>
-                  <span className="text-xs md:text-sm text-gray-700 text-center font-medium bg-white/80 px-2 py-1 rounded-full shadow-sm">
-                    {category.name}
-                  </span>
-                </div>
-              </Link>
-            );
-          })}
-          
-          {/* Central decorative element */}
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-20 h-20 md:w-24 md:h-24 bg-gradient-to-br from-[#96865d] to-[#8B4513] rounded-full flex items-center justify-center shadow-xl border-4 border-white">
-            <div className="text-white font-bold text-lg md:text-xl tracking-wider">
-              T
-            </div>
+                </Link>
+              );
+            })}
           </div>
           
-          {/* Rotating background rings for visual effect */}
-          <div 
-            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 md:w-80 md:h-80 border-2 border-dashed border-gray-200 rounded-full opacity-20"
-            style={{
-              transform: `translate(-50%, -50%) rotate(${rotation}deg)`,
-              transition: 'transform 0.1s ease-out'
-            }}
-          ></div>
-          <div 
-            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-48 md:w-60 md:h-60 border border-dashed border-gray-300 rounded-full opacity-30"
-            style={{
-              transform: `translate(-50%, -50%) rotate(${-rotation * 0.7}deg)`,
-              transition: 'transform 0.1s ease-out'
-            }}
-          ></div>
+          {/* Optional: Center gradient for depth effect */}
+          <div className="absolute inset-0 bg-gradient-radial from-transparent via-transparent to-gray-50/20 pointer-events-none"></div>
         </div>
-        
-        {/* Background gradient for depth */}
-        <div className="absolute inset-0 bg-gradient-radial from-transparent via-gray-50/30 to-gray-100/50 pointer-events-none"></div>
       </div>
       
-      {/* Mobile instruction */}
-      <div className="md:hidden text-center py-2 text-xs text-gray-500">
-        Tap any category to explore
+      {/* Instruction text */}
+      <div className="text-center py-2 text-xs text-gray-500">
+        Explore our handcrafted categories
       </div>
     </div>
   );
