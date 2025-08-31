@@ -620,8 +620,9 @@ export default function ProfilePage() {
                             {(order.status === 'processing' || order.status === 'shipped' || order.status === 'completed') && (
                               <button
                                 onClick={() => {
-                                  // Navigate to invoice page
-                                  window.open(`/invoices/${order.id}`, '_blank');
+                                  // Navigate to invoice page - use order's invoice_id if available
+                                  const invoiceId = order.invoice_id || order.id;
+                                  window.open(`/invoices/${invoiceId}`, '_blank');
                                 }}
                                 className="mt-2 text-sm bg-primary-600 text-white px-3 py-1 rounded hover:bg-primary-700"
                               >
@@ -1041,8 +1042,9 @@ export default function ProfilePage() {
                           {(order.status === 'processing' || order.status === 'shipped' || order.status === 'completed') && (
                             <button
                               onClick={() => {
-                                // Navigate to invoice page
-                                window.open(`/invoices/${order.id}`, '_blank');
+                                // Navigate to invoice page - use order's invoice_id if available
+                                const invoiceId = order.invoice_id || order.id;
+                                window.open(`/invoices/${invoiceId}`, '_blank');
                               }}
                               className="mt-1 text-xs bg-primary-600 text-white px-2 py-1 rounded hover:bg-primary-700"
                             >
