@@ -2,12 +2,14 @@ package services
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"html/template"
 	"log"
 	"os"
 	"time"
 
+	"cloud.google.com/go/firestore"
 	"github.com/sendgrid/sendgrid-go"
 	"github.com/sendgrid/sendgrid-go/helpers/mail"
 	"tripund-api/internal/models"
@@ -18,6 +20,7 @@ type SendGridEmailService struct {
 	FromEmail string
 	FromName  string
 	client    *sendgrid.Client
+	db        *firestore.Client
 }
 
 type OrderConfirmationData struct {
@@ -107,9 +110,15 @@ func (s *SendGridEmailService) SendOrderConfirmation(order models.Order) error {
 	}
 
 	subject := fmt.Sprintf("Order Confirmation - %s | TRIPUND Lifestyle", order.OrderNumber)
-	htmlBody, err := s.renderOrderConfirmationTemplate(data)
+	// Get active order confirmation template from database
+	htmlBody, err := s.renderTemplateFromDatabase("order_confirmation", data)
 	if err != nil {
-		return fmt.Errorf("failed to render email template: %v", err)
+		log.Printf("Failed to render database template, using fallback: %v", err)
+		// Fallback to hardcoded template
+		htmlBody, err = s.renderOrderConfirmationTemplate(data)
+		if err != nil {
+			return fmt.Errorf("failed to render email template: %v", err)
+		}
 	}
 
 	return s.sendEmail(data.CustomerEmail, data.CustomerName, subject, htmlBody)

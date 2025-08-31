@@ -153,18 +153,7 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 	// Create notification for new order
 	h.notificationHandler.NotifyNewOrder(orderID, orderNumber, req.Totals.Total)
 
-	// Send order confirmation email
-	go func() {
-		if h.emailService != nil {
-			if err := h.emailService.SendOrderConfirmation(order); err != nil {
-				log.Printf("Failed to send order confirmation email for order %s: %v", orderID, err)
-			} else {
-				log.Printf("Order confirmation email sent successfully for order %s", orderID)
-			}
-		} else {
-			log.Printf("Email service not available, skipping order confirmation email for order %s", orderID)
-		}
-	}()
+	// Note: Order confirmation email will be sent after payment confirmation
 
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "Order created successfully",
@@ -535,18 +524,7 @@ func (h *OrderHandler) CreateGuestOrder(c *gin.Context) {
 	// Create notification for new guest order
 	h.notificationHandler.NotifyNewOrder(orderID, orderNumber, req.Totals.Total)
 
-	// Send order confirmation email
-	go func() {
-		if h.emailService != nil {
-			if err := h.emailService.SendOrderConfirmation(order); err != nil {
-				log.Printf("Failed to send guest order confirmation email for order %s: %v", orderID, err)
-			} else {
-				log.Printf("Guest order confirmation email sent successfully for order %s", orderID)
-			}
-		} else {
-			log.Printf("Email service not available, skipping guest order confirmation email for order %s", orderID)
-		}
-	}()
+	// Note: Order confirmation email will be sent after payment confirmation
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Order created successfully",
