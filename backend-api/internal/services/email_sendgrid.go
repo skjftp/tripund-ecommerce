@@ -142,11 +142,15 @@ func (s *SendGridEmailService) SendOrderConfirmation(order models.Order) error {
 	}
 
 	subject := fmt.Sprintf("Order Confirmation - %s | TRIPUND Lifestyle", order.OrderNumber)
-	// TODO: Use database template when ready
-	// For now, use the hardcoded template (will be updated to use database template)
-	htmlBody, err := s.renderOrderConfirmationTemplate(data)
+	// Try to use database template first, fallback to hardcoded
+	htmlBody, err := s.renderDatabaseTemplate("order_confirmation", data)
 	if err != nil {
-		return fmt.Errorf("failed to render email template: %v", err)
+		log.Printf("Failed to render database template, using fallback: %v", err)
+		// Fallback to hardcoded template
+		htmlBody, err = s.renderOrderConfirmationTemplate(data)
+		if err != nil {
+			return fmt.Errorf("failed to render email template: %v", err)
+		}
 	}
 
 	return s.sendEmail(data.CustomerEmail, data.CustomerName, subject, htmlBody)
@@ -590,4 +594,42 @@ func (s *SendGridEmailService) renderShippingConfirmationTemplate(data ShippingC
 // SendRawEmail sends an email with custom content (for template testing)
 func (s *SendGridEmailService) SendRawEmail(toEmail, subject, htmlBody string) error {
 	return s.sendEmail(toEmail, "", subject, htmlBody)
+}
+
+// renderDatabaseTemplate renders email using template from database
+func (s *SendGridEmailService) renderDatabaseTemplate(templateType string, data OrderConfirmationData) (string, error) {
+	if s.db == nil {
+		return "", fmt.Errorf("no database connection for template rendering")
+	}
+	
+	// Get active template from database
+	docs, err := s.db.Collection("email_templates").
+		Where("type", "==", templateType).
+		Where("is_active", "==", true).
+		Where("is_default", "==", true).
+		Documents(context.Background()).GetAll()
+	
+	if err != nil || len(docs) == 0 {
+		return "", fmt.Errorf("no active template found for type: %s", templateType)
+	}
+	
+	// Get the first active template
+	templateData := docs[0].Data()
+	htmlContent, ok := templateData["html_content"].(string)
+	if !ok {
+		return "", fmt.Errorf("template html_content not found or invalid")
+	}
+	
+	// Parse and execute template
+	t, err := template.New("database_template").Parse(htmlContent)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse database template: %v", err)
+	}
+	
+	var buf bytes.Buffer
+	if err := t.Execute(&buf, data); err != nil {
+		return "", fmt.Errorf("failed to execute database template: %v", err)
+	}
+	
+	return buf.String(), nil
 }
