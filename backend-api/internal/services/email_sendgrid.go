@@ -224,13 +224,9 @@ func (s *SendGridEmailService) SendShippingConfirmation(order models.Order) erro
 		}
 	}
 
-	// Add invoice link to shipping template data
-	if shipData, ok := data.(ShippingConfirmationData); ok {
-		// Add invoice URL to template data for hyperlink
-		shipData.InvoiceURL = fmt.Sprintf("https://tripundlifestyle.netlify.app/invoices/%s", order.ID)
-		data = shipData
-		log.Printf("Added invoice URL to shipping template for order %s", order.OrderNumber)
-	}
+	// Add invoice URL to shipping data
+	data.InvoiceURL = fmt.Sprintf("https://tripundlifestyle.netlify.app/invoices/%s", order.ID)
+	log.Printf("Added invoice URL to shipping template for order %s", order.OrderNumber)
 	
 	return s.sendEmail(data.CustomerEmail, data.CustomerName, subject, htmlBody)
 }
