@@ -64,6 +64,8 @@ export default function Footer() {
   };
   const socialLinks = content.socialLinks || {};
   const copyrightText = content.copyrightText || '© 2024 TRIPUND Lifestyle. All rights reserved.';
+  const quickLinks = content.quickLinks || [];
+  const customerService = content.customerService || [];
   return (
     <footer className="bg-gray-900 text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -101,52 +103,26 @@ export default function Footer() {
           <div>
             <h4 className="text-lg font-semibold mb-4">Quick Links</h4>
             <ul className="space-y-2">
-              <li>
-                <Link to="/products" className="text-gray-400 hover:text-white">
-                  All Products
-                </Link>
-              </li>
-              <li>
-                <Link to="/categories" className="text-gray-400 hover:text-white">
-                  Categories
-                </Link>
-              </li>
-              <li>
-                <Link to="/artisans" className="text-gray-400 hover:text-white">
-                  Our Artisans
-                </Link>
-              </li>
-              <li>
-                <Link to="/about" className="text-gray-400 hover:text-white">
-                  About Us
-                </Link>
-              </li>
+              {quickLinks.map((link, index) => (
+                <li key={index}>
+                  <Link to={link.url} className="text-gray-400 hover:text-white">
+                    {link.title}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
           <div>
             <h4 className="text-lg font-semibold mb-4">Customer Service</h4>
             <ul className="space-y-2">
-              <li>
-                <Link to="/contact" className="text-gray-400 hover:text-white">
-                  Contact Us
-                </Link>
-              </li>
-              <li>
-                <Link to="/shipping" className="text-gray-400 hover:text-white">
-                  Shipping Info
-                </Link>
-              </li>
-              <li>
-                <Link to="/returns" className="text-gray-400 hover:text-white">
-                  Returns & Exchanges
-                </Link>
-              </li>
-              <li>
-                <Link to="/faq" className="text-gray-400 hover:text-white">
-                  FAQ
-                </Link>
-              </li>
+              {customerService.map((link, index) => (
+                <li key={index}>
+                  <Link to={link.url} className="text-gray-400 hover:text-white">
+                    {link.title}
+                  </Link>
+                </li>
+              ))}
               <li>
                 <Link to="/privacy-policy" className="text-gray-400 hover:text-white">
                   Privacy Policy
