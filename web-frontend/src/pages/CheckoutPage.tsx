@@ -726,14 +726,14 @@ export default function CheckoutPage() {
         orderId={completedOrderId}
         onClose={() => setShowSuccessModal(false)}
         onViewOrders={() => {
-          dispatch(clearCartWithSync()); // Clear cart when viewing orders
           setShowSuccessModal(false);
-          navigate('/orders');
+          dispatch(clearCartWithSync()); // Clear cart after modal closes
+          setTimeout(() => navigate('/orders'), 100); // Small delay to ensure modal closes first
         }}
         onShopMore={() => {
-          dispatch(clearCartWithSync()); // Clear cart when user chooses to shop more
           setShowSuccessModal(false);
-          navigate('/products');
+          dispatch(clearCartWithSync()); // Clear cart after modal closes
+          setTimeout(() => navigate('/products'), 100); // Small delay to ensure modal closes first
         }}
       />
       
