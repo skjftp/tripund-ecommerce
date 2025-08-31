@@ -65,63 +65,127 @@ export default function CartPage() {
               {Array.isArray(items) && items.map((item) => (
                 <div
                   key={item.product_id}
-                  className="flex items-center p-6 border-b last:border-b-0"
+                  className="p-6 border-b last:border-b-0"
                 >
-                  <img
-                    src={item.product.images?.[0] || ''}
-                    alt={item.product.name || item.product.title}
-                    className="w-24 h-24 object-cover rounded-md"
-                  />
-                  
-                  <div className="flex-1 ml-6">
-                    <Link
-                      to={`/products/${item.product_id}`}
-                      className="text-lg font-semibold hover:text-primary-600"
-                    >
-                      {item.product.name || item.product.title}
-                    </Link>
-                    {item.product.variant_info ? (
-                      <p className="text-gray-600 text-sm mt-1">
-                        {item.product.variant_info.color && `Color: ${item.product.variant_info.color}`}
-                        {item.product.variant_info.color && item.product.variant_info.size && ' | '}
-                        {item.product.variant_info.size && `Size: ${item.product.variant_info.size}`}
+                  {/* Desktop Layout */}
+                  <div className="hidden md:flex md:items-center">
+                    <img
+                      src={item.product.images?.[0] || ''}
+                      alt={item.product.name || item.product.title}
+                      className="w-24 h-24 object-cover rounded-md"
+                    />
+                    
+                    <div className="flex-1 ml-6">
+                      <Link
+                        to={`/products/${item.product_id}`}
+                        className="text-lg font-semibold hover:text-primary-600"
+                      >
+                        {item.product.name || item.product.title}
+                      </Link>
+                      {item.product.variant_info ? (
+                        <p className="text-gray-600 text-sm mt-1">
+                          {item.product.variant_info.color && `Color: ${item.product.variant_info.color}`}
+                          {item.product.variant_info.color && item.product.variant_info.size && ' | '}
+                          {item.product.variant_info.size && `Size: ${item.product.variant_info.size}`}
+                        </p>
+                      ) : (
+                        <p className="text-gray-600 text-sm mt-1">
+                          {/* No variant info */}
+                        </p>
+                      )}
+                      <p className="text-primary-600 font-semibold mt-2">
+                        ₹{item.price.toLocaleString()}
                       </p>
-                    ) : (
-                      <p className="text-gray-600 text-sm mt-1">
-                        {/* No variant info */}
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => handleQuantityChange(item.product_id, item.quantity - 1)}
+                        className="p-1 rounded-md border hover:bg-gray-100"
+                      >
+                        <Minus size={16} />
+                      </button>
+                      <span className="px-3 py-1 min-w-[40px] text-center">{item.quantity}</span>
+                      <button
+                        onClick={() => handleQuantityChange(item.product_id, item.quantity + 1)}
+                        className="p-1 rounded-md border hover:bg-gray-100"
+                      >
+                        <Plus size={16} />
+                      </button>
+                    </div>
+
+                    <div className="ml-6 text-right">
+                      <p className="font-semibold">
+                        ₹{(item.price * item.quantity).toLocaleString()}
                       </p>
-                    )}
-                    <p className="text-primary-600 font-semibold mt-2">
-                      ₹{item.price.toLocaleString()}
-                    </p>
+                      <button
+                        onClick={() => handleRemove(item.product_id, item.product.variant_info?.variant_id)}
+                        className="text-red-500 hover:text-red-700 mt-2"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
                   </div>
 
-                  <div className="flex items-center space-x-2">
-                    <button
-                      onClick={() => handleQuantityChange(item.product_id, item.quantity - 1)}
-                      className="p-1 rounded-md border hover:bg-gray-100"
-                    >
-                      <Minus size={16} />
-                    </button>
-                    <span className="px-3 py-1 min-w-[40px] text-center">{item.quantity}</span>
-                    <button
-                      onClick={() => handleQuantityChange(item.product_id, item.quantity + 1)}
-                      className="p-1 rounded-md border hover:bg-gray-100"
-                    >
-                      <Plus size={16} />
-                    </button>
-                  </div>
-
-                  <div className="ml-6 text-right">
-                    <p className="font-semibold">
-                      ₹{(item.price * item.quantity).toLocaleString()}
-                    </p>
-                    <button
-                      onClick={() => handleRemove(item.product_id, item.product.variant_info?.variant_id)}
-                      className="text-red-500 hover:text-red-700 mt-2"
-                    >
-                      <Trash2 size={18} />
-                    </button>
+                  {/* Mobile Layout */}
+                  <div className="md:hidden">
+                    <div className="flex gap-4 mb-4">
+                      <img
+                        src={item.product.images?.[0] || ''}
+                        alt={item.product.name || item.product.title}
+                        className="w-20 h-20 object-cover rounded-md flex-shrink-0"
+                      />
+                      
+                      <div className="flex-1 min-w-0">
+                        <Link
+                          to={`/products/${item.product_id}`}
+                          className="font-semibold hover:text-primary-600 block leading-tight"
+                        >
+                          {item.product.name || item.product.title}
+                        </Link>
+                        {item.product.variant_info && (
+                          <p className="text-gray-600 text-sm mt-1 leading-tight">
+                            {item.product.variant_info.color && `Color: ${item.product.variant_info.color}`}
+                            {item.product.variant_info.color && item.product.variant_info.size && ' | '}
+                            {item.product.variant_info.size && `Size: ${item.product.variant_info.size}`}
+                          </p>
+                        )}
+                        <p className="text-primary-600 font-semibold mt-2">
+                          ₹{item.price.toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    {/* Mobile Controls Row */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <button
+                          onClick={() => handleQuantityChange(item.product_id, item.quantity - 1)}
+                          className="p-2 rounded-md border hover:bg-gray-100"
+                        >
+                          <Minus size={16} />
+                        </button>
+                        <span className="px-3 py-1 min-w-[50px] text-center font-medium">{item.quantity}</span>
+                        <button
+                          onClick={() => handleQuantityChange(item.product_id, item.quantity + 1)}
+                          className="p-2 rounded-md border hover:bg-gray-100"
+                        >
+                          <Plus size={16} />
+                        </button>
+                      </div>
+                      
+                      <div className="flex items-center space-x-4">
+                        <p className="font-semibold text-lg">
+                          ₹{(item.price * item.quantity).toLocaleString()}
+                        </p>
+                        <button
+                          onClick={() => handleRemove(item.product_id, item.product.variant_info?.variant_id)}
+                          className="text-red-500 hover:text-red-700 p-2"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               ))}

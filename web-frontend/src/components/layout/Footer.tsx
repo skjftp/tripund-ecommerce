@@ -185,10 +185,10 @@ export default function Footer() {
         <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
           <p>{copyrightText}</p>
           <div className="mt-2 space-x-4">
-            <Link to="/privacy" className="hover:text-white">
+            <Link to="/privacy-policy" className="hover:text-white">
               Privacy Policy
             </Link>
-            <Link to="/terms" className="hover:text-white">
+            <Link to="/terms-conditions" className="hover:text-white">
               Terms of Service
             </Link>
           </div>
