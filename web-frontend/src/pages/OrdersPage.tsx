@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { 
   Package, Clock, CheckCircle, Truck, 
-  AlertCircle, ChevronRight, Calendar, MapPin, CreditCard, Phone 
+  AlertCircle, ChevronRight, Calendar, MapPin, CreditCard, Phone, FileText, Download 
 } from 'lucide-react';
 import { RootState } from '../store';
 import api from '../services/api';
@@ -393,6 +393,37 @@ export default function OrdersPage() {
                       >
                         View Details
                       </button>
+                      
+                      {/* Invoice buttons for paid orders */}
+                      {(order.status === 'processing' || order.status === 'shipped' || order.status === 'delivered' || order.status === 'completed') && (
+                        <>
+                          <button
+                            onClick={() => {
+                              // View invoice in same tab
+                              window.open(`/invoices/${order.id}`, '_blank');
+                            }}
+                            className="text-green-600 hover:text-green-700 font-medium text-xs sm:text-sm px-3 py-1 border border-green-600 rounded-md hover:bg-green-50 flex items-center space-x-1"
+                          >
+                            <FileText size={12} />
+                            <span>View Invoice</span>
+                          </button>
+                          
+                          <button
+                            onClick={() => {
+                              // Download invoice PDF
+                              const link = document.createElement('a');
+                              link.href = `/api/v1/invoices/${order.id}/download`;
+                              link.download = `invoice-${order.order_number}.pdf`;
+                              link.click();
+                            }}
+                            className="text-blue-600 hover:text-blue-700 font-medium text-xs sm:text-sm px-3 py-1 border border-blue-600 rounded-md hover:bg-blue-50 flex items-center space-x-1"
+                          >
+                            <Download size={12} />
+                            <span>Download</span>
+                          </button>
+                        </>
+                      )}
+                      
                       {order.status === 'delivered' && (
                         <button className="text-primary-600 hover:text-primary-700 font-medium text-xs sm:text-sm px-3 py-1 border border-primary-600 rounded-md hover:bg-primary-50">
                           Write Review

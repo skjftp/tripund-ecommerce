@@ -254,13 +254,6 @@ export default function Header() {
                         My Orders
                       </Link>
                       <Link
-                        to="/invoices"
-                        onClick={() => setShowProfileDropdown(false)}
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                      >
-                        My Invoices
-                      </Link>
-                      <Link
                         to="/wishlist"
                         onClick={() => setShowProfileDropdown(false)}
                         className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
@@ -406,13 +399,6 @@ export default function Header() {
                     onClick={() => setIsMenuOpen(false)}
                   >
                     My Orders
-                  </Link>
-                  <Link
-                    to="/invoices"
-                    className="block px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    My Invoices
                   </Link>
                   <button
                     onClick={() => {
