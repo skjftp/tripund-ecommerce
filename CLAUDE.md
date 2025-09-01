@@ -469,28 +469,54 @@ Google Sign-In infrastructure is prepared but not active:
 3. Enable GoogleSignInButton in LoginPage and RegisterPage
 4. Complete backend token verification logic
 
-## Automatic Invoice System
+## Enhanced E-Commerce System
 
-### Current Status: ACTIVE
-Invoices are automatically generated when payments are successful:
+### Current Status: FULLY OPERATIONAL
+Complete professional e-commerce platform with advanced features:
 
-#### Features:
-- **Auto-generation**: Invoice created on payment success (Razorpay webhook)
-- **GST Compliance**: Your GSTIN (09AALCT9072D1ZY) for tax calculations
-- **Payment Methods**: Captures and displays Razorpay payment method (UPI/Card/etc.)
-- **Transaction ID**: Includes Razorpay transaction ID in invoice
-- **Clean Format**: No bank details, simple "Thank you for shopping with us" footer
+#### Automatic Invoice System (ACTIVE):
+- **Auto-generation**: Invoice created on payment verification (not webhook)
+- **12% GST**: Dynamic rate from settings API with reverse calculation for inclusive pricing  
+- **GST Compliance**: Your GSTIN (09AALCT9072D1ZY) with proper CGST/SGST/IGST
+- **Clean Format**: No payment/bank information sections, professional layout
+- **Stock Integration**: Stock automatically decremented on successful payment
+- **User Access**: Invoices accessible from orders page with View/Download buttons
 
-#### Workflow:
-1. Customer completes payment → Razorpay webhook triggered
-2. Payment method details extracted and stored in order
-3. Invoice auto-generated with GST calculations (CGST/SGST/IGST)
-4. Invoice appears in user profile and admin panel
-5. Shipping confirmation email includes invoice attachment (when implemented)
+#### Email Template System (ACTIVE):
+- **Database Templates**: Both order confirmation and shipping use elegant designs
+- **Order Confirmation**: TRIPUND branded template with 12% GST calculations
+- **Shipping Confirmation**: Custom tracking URLs from admin, invoice access links
+- **Template Management**: Admin can modify templates in Email Templates section
+- **Smart Fallback**: Hardcoded template only if database template fails
 
-#### Admin Access:
-- **Settings → Invoice & GST**: Configure company GSTIN, PAN, addresses
-- **Invoices**: View all generated invoices, no manual generation needed
+#### Order Tracking System (ACTIVE):
+- **Custom URLs**: Admin provides courier tracking URLs when marking as shipped
+- **Smart Links**: Email links go to actual courier tracking pages
+- **Professional Modal**: Tracking URL input when changing order status to shipped
+- **Fallback**: Generic order page if no custom tracking URL provided
+
+#### Stock Management (ACTIVE):
+- **Featured Products**: 0 stock products completely hidden
+- **Product Listings**: Out of stock badges with alert icons
+- **Variant Logic**: Show product if ANY size/color is available
+- **Real-time Updates**: Stock decremented immediately on payment success
+
+#### Authentication & UX (ACTIVE):
+- **Login Flow**: Professional login modal with returnTo redirect for invoice access
+- **Mobile Responsive**: Complete mobile optimization for profile and checkout
+- **Payment Modals**: Success/failed/cancelled modals like mobile app
+- **Clean Navigation**: Removed duplicate pages, unified structure
+
+#### Admin Workflow:
+1. **Order Received** → Auto-invoice generated + stock decremented + email sent
+2. **Mark as Shipped** → Tracking URL modal → Custom courier tracking in email
+3. **Settings Management**: GST configuration, email templates, all centralized
+
+#### Customer Workflow:
+1. **Payment Success** → Elegant confirmation email + invoice generated
+2. **Order Shipped** → Shipping email with courier tracking + invoice link  
+3. **Invoice Access** → Direct from orders page or email links
+4. **Authentication**: Login modal if accessing invoice while logged out
 
 ## Contact & Support
 - **Repository**: https://github.com/skjftp/tripund-ecommerce
@@ -672,10 +698,15 @@ Add this A record to your DNS provider:
 22. **🚨 CRITICAL: NEVER overwrite production environment variables during deployments - they contain live API keys and secrets**
 23. **Email templates**: Elegant order confirmation and shipping confirmation templates now set as defaults
 24. **Email system**: SendGrid integration with order/shipping notifications using database templates
-25. **Automatic invoices**: Generate GST-compliant invoices automatically on payment success
-26. **Mobile responsive**: Profile page fully optimized for mobile with tab navigation
-27. **Category icons**: Fast-loading Lucide icons for category carousel (reverted from images)
+25. **Automatic invoices**: Generate GST-compliant invoices automatically on payment success with 12% GST
+26. **Mobile responsive**: Profile page fully optimized for mobile with tab navigation  
+27. **Category icons**: Fast-loading Lucide icons for category carousel with auto-scroll
 28. **Google OAuth**: Infrastructure prepared but not activated (Client ID needed)
+29. **Stock management**: Featured products filter 0 stock, out of stock badges on listings
+30. **Email templates**: Both order confirmation and shipping use elegant database templates
+31. **Custom tracking**: Admin-provided courier URLs in shipping confirmation emails
+32. **Authentication flow**: Login modal with returnTo redirect for invoice access
+33. **Clean navigation**: Removed duplicate pages, unified invoice access from orders page
 23. **Current admin credentials: admin@tripund.com / password (change immediately after login)**
 24. **RBAC system active: 5 roles, 23 permissions, permission-based UI controls implemented**
 
@@ -785,7 +816,11 @@ Add this A record to your DNS provider:
 - `ProductForm.tsx` - Comprehensive product management form
 
 ---
-Last Updated: August 29, 2025
-Platform: TRIPUND E-Commerce
-Version: 1.0.22
-iOS Build: Successfully deployed to iPhone 16 Pro Max
+Last Updated: September 1, 2025
+Platform: TRIPUND E-Commerce - Enhanced Professional System
+Version: 1.0.22+ (Enhanced)
+Backend: Cloud Run revision 00130-5br with complete functionality
+Frontend: Fully responsive with mobile optimization
+Email System: Database templates operational
+Invoice System: 12% GST compliance with auto-generation
+Tracking: Custom courier URL integration
