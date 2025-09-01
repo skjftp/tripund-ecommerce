@@ -244,6 +244,9 @@ func (s *SendGridEmailService) sendEmail(toEmail, toName, subject, htmlBody stri
 	
 	message := mail.NewSingleEmail(from, subject, to, plainTextBody, htmlBody)
 
+	// Disable click tracking to prevent URL mangling
+	message.SetClickTracking(false, false)
+
 	// Send email
 	response, err := s.client.Send(message)
 	if err != nil {
@@ -656,6 +659,9 @@ func (s *SendGridEmailService) sendEmailWithAttachment(toEmail, toName, subject,
 	to := mail.NewEmail(toName, toEmail)
 	
 	message := mail.NewSingleEmail(from, subject, to, "", htmlBody)
+
+	// Disable click tracking to prevent URL mangling
+	message.SetClickTracking(false, false)
 	
 	// Add attachment
 	if len(attachment) > 0 {
