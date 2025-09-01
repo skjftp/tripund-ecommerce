@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Heart, ShoppingCart } from 'lucide-react';
+import { Heart, ShoppingCart, AlertTriangle } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Product } from '../../types';
 import { addToCartWithSync } from '../../store/slices/cartSlice';
@@ -18,6 +18,19 @@ export default function ProductCard({ product, viewMode = 'grid' }: ProductCardP
   const dispatch = useDispatch<AppDispatch>();
   const wishlistItems = useSelector((state: RootState) => state.wishlist.items);
   const isInWishlist = Array.isArray(wishlistItems) ? wishlistItems.some((item) => item.id === product.id) : false;
+  
+  // Check if product is out of stock
+  const isOutOfStock = () => {
+    if (product.has_variants && product.variants && product.variants.length > 0) {
+      // For variant products, out of stock if ALL variants are out of stock
+      return !product.variants.some(variant => variant.stock_quantity > 0 && variant.available);
+    } else {
+      // For simple products, check main stock
+      return (product.stock_quantity || 0) <= 0;
+    }
+  };
+  
+  const outOfStock = isOutOfStock();
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -65,7 +78,16 @@ export default function ProductCard({ product, viewMode = 'grid' }: ProductCardP
   // Show "From" prefix if product has multiple price points
   const showFromPrefix = product.has_variants && product.variants && 
     product.variants.some(v => v.available && (v.price !== price || v.sale_price !== salePrice));
-  const isInStock = product.stock_status === 'in_stock' && product.stock_quantity > 0;
+  // Check if product is in stock (improved logic)
+  const isInStock = (() => {
+    if (product.has_variants && product.variants && product.variants.length > 0) {
+      // For variant products, in stock if ANY variant has stock
+      return product.variants.some(variant => variant.stock_quantity > 0 && variant.available);
+    } else {
+      // For simple products, check main stock
+      return (product.stock_quantity || 0) > 0;
+    }
+  })();
 
   // List view layout
   if (viewMode === 'list') {
@@ -149,7 +171,13 @@ export default function ProductCard({ product, viewMode = 'grid' }: ProductCardP
               -{discountPercentage}%
             </div>
           )}
-          {product.featured && (
+          {outOfStock && (
+            <div className="absolute top-2 left-2 bg-red-600 text-white px-2 py-1 text-sm rounded z-10 flex items-center gap-1">
+              <AlertTriangle size={14} />
+              Out of Stock
+            </div>
+          )}
+          {!outOfStock && product.featured && (
             <div className="absolute top-2 right-2 bg-primary-600 text-white px-2 py-1 text-sm rounded z-10">
               Featured
             </div>

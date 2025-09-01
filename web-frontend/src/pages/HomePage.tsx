@@ -15,6 +15,31 @@ import CategoryIcons from '../components/common/CategoryIcons';
 export default function HomePage() {
   const dispatch = useDispatch<AppDispatch>();
   const { featuredProducts, loading } = useSelector((state: RootState) => state.products);
+  
+  // Filter featured products to only show in-stock items
+  const inStockFeaturedProducts = useMemo(() => {
+    return featuredProducts.filter(product => {
+      // Check if product has stock
+      if (product.has_variants && product.variants && product.variants.length > 0) {
+        // For variant products, check if any variant has stock
+        return product.variants.some(variant => variant.stock_quantity > 0 && variant.available);
+      } else {
+        // For simple products, check main stock
+        return (product.stock_quantity || 0) > 0;
+      }
+    });
+  }, [featuredProducts]);
+  
+  // Helper function to check if product is out of stock
+  const isProductOutOfStock = (product: any) => {
+    if (product.has_variants && product.variants && product.variants.length > 0) {
+      // For variant products, out of stock if ALL variants are out of stock
+      return !product.variants.some(variant => variant.stock_quantity > 0 && variant.available);
+    } else {
+      // For simple products, check main stock
+      return (product.stock_quantity || 0) <= 0;
+    }
+  };
   const wishlistItems = useSelector((state: RootState) => state.wishlist.items);
   const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
   const [selectedVariantProduct, setSelectedVariantProduct] = useState<any>(null);
@@ -169,7 +194,7 @@ export default function HomePage() {
           </div>
           
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {featuredProducts.slice(0, 8).map((product) => (
+            {inStockFeaturedProducts.slice(0, 8).map((product) => (
               <Link
                 key={product.id}
                 to={`/products/${product.id}`}
