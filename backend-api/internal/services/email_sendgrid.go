@@ -36,6 +36,8 @@ type OrderConfirmationData struct {
 	Shipping      float64
 	Tax           float64
 	Total         float64
+	PaymentMethod string
+	ExpectedDelivery string
 }
 
 type ShippingConfirmationData struct {
@@ -105,11 +107,13 @@ func (s *SendGridEmailService) SendOrderConfirmation(order models.Order) error {
 		OrderDate:     order.CreatedAt.Format("January 2, 2006"),
 		Totals:        order.Totals,
 		// Additional fields for template compatibility
-		OrderNumber:   order.OrderNumber,
-		Subtotal:      order.Totals.Subtotal,
-		Shipping:      order.Totals.Shipping,
-		Tax:           order.Totals.Tax,
-		Total:         order.Totals.Total,
+		OrderNumber:      order.OrderNumber,
+		Subtotal:         order.Totals.Subtotal,
+		Shipping:         order.Totals.Shipping,
+		Tax:              order.Totals.Tax,
+		Total:            order.Totals.Total,
+		PaymentMethod:    getPaymentMethodDisplay(order.Payment),
+		ExpectedDelivery: "Within 5-7 business days",
 	}
 
 	// For registered users, get email from user profile if not in GuestEmail
@@ -692,4 +696,25 @@ func (s *SendGridEmailService) sendEmailWithAttachment(toEmail, toName, subject,
 	
 	log.Printf("SendGrid: Email with attachment sent successfully. Status: %d", response.StatusCode)
 	return nil
+}
+
+// getPaymentMethodDisplay formats payment method for display
+func getPaymentMethodDisplay(payment models.Payment) string {
+	if payment.Method == "razorpay" {
+		switch payment.PaymentMethod {
+		case "card":
+			return "Credit/Debit Card"
+		case "upi":
+			return "UPI"
+		case "netbanking":
+			return "Net Banking"
+		case "wallet":
+			return "Wallet"
+		default:
+			return "Online Payment"
+		}
+	} else if payment.Method == "cod" {
+		return "Cash on Delivery"
+	}
+	return "Online Payment"
 }
