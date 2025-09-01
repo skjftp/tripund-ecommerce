@@ -30,6 +30,12 @@ type OrderConfirmationData struct {
 	Items         []OrderEmailItem
 	Totals        models.OrderTotals
 	OrderDate     string
+	// Additional fields for template compatibility
+	OrderNumber   string
+	Subtotal      float64
+	Shipping      float64
+	Tax           float64
+	Total         float64
 }
 
 type ShippingConfirmationData struct {
@@ -91,13 +97,19 @@ func NewSendGridEmailService() (*SendGridEmailService, error) {
 }
 
 func (s *SendGridEmailService) SendOrderConfirmation(order models.Order) error {
-	// Prepare email data
+	// Prepare email data (with fields matching database template)
 	data := OrderConfirmationData{
 		Order:         order,
 		CustomerName:  order.GuestName,
 		CustomerEmail: order.GuestEmail,
 		OrderDate:     order.CreatedAt.Format("January 2, 2006"),
 		Totals:        order.Totals,
+		// Additional fields for template compatibility
+		OrderNumber:   order.OrderNumber,
+		Subtotal:      order.Totals.Subtotal,
+		Shipping:      order.Totals.Shipping,
+		Tax:           order.Totals.Tax,
+		Total:         order.Totals.Total,
 	}
 
 	// For registered users, get email from user profile if not in GuestEmail
