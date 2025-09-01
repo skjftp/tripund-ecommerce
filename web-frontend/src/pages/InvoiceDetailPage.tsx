@@ -28,7 +28,9 @@ const InvoiceDetailPage: React.FC = () => {
       setInvoice(invoiceData);
     } catch (err: any) {
       // Check if error is due to authentication
-      if (err.response?.status === 401 || err.response?.status === 403 || err.response?.data?.error === 'Authorization header required') {
+      if (err.response?.status === 401 || err.response?.status === 403 || 
+          err.response?.data?.error === 'Authorization header required' ||
+          err.response?.data?.error === 'Authentication required') {
         setShowLoginModal(true);
       } else {
         setError(err.response?.data?.error || 'Failed to fetch invoice');

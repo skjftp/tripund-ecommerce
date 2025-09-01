@@ -115,6 +115,14 @@ func (h *InvoiceHandler) GenerateInvoice(c *gin.Context) {
 func (h *InvoiceHandler) GetInvoice(c *gin.Context) {
 	id := c.Param("id")
 	
+	// Check authentication first
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Authentication required"})
+		return
+	}
+	userRole, _ := c.Get("role")
+	
 	// First try to get invoice by invoice ID
 	doc, err := h.db.Client.Collection("invoices").Doc(id).Get(h.db.Context)
 	if err != nil {
@@ -134,10 +142,7 @@ func (h *InvoiceHandler) GetInvoice(c *gin.Context) {
 	}
 	invoice.ID = doc.Ref.ID
 
-	// Check access permissions
-	userID, _ := c.Get("user_id")
-	userRole, _ := c.Get("role")
-	
+	// Check access permissions (userID and userRole already set above)
 	if userRole != "admin" && userID != invoice.UserID {
 		c.JSON(http.StatusForbidden, gin.H{"error": "Access denied"})
 		return
