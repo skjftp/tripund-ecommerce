@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Save, Eye, Smartphone, Monitor, Plus, Trash2, Edit2, ChevronDown, ChevronRight } from 'lucide-react';
+import ImageUpload from '../components/ImageUpload';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
@@ -771,17 +772,19 @@ export default function ContentManagement() {
                 className="px-3 py-2 border border-gray-300 rounded-md"
               />
             </div>
-            <input
-              type="text"
-              placeholder="Image URL"
-              value={member.image}
-              onChange={(e) => {
-                const newMembers = [...aboutContent.teamMembers];
-                newMembers[index].image = e.target.value;
-                setAboutContent({ ...aboutContent, teamMembers: newMembers });
-              }}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md mb-2"
-            />
+            <div className="mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Profile Image</label>
+              <ImageUpload
+                images={member.image ? [member.image] : []}
+                onImagesChange={(images) => {
+                  const newMembers = [...aboutContent.teamMembers];
+                  newMembers[index].image = images[0] || '';
+                  setAboutContent({ ...aboutContent, teamMembers: newMembers });
+                }}
+                maxImages={1}
+                label="Team Member Photo"
+              />
+            </div>
             <div className="flex items-center justify-between">
               <textarea
                 placeholder="Bio (optional)"
