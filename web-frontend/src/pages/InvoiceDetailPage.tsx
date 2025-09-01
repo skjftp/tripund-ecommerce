@@ -1,14 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Download, Printer, Calendar, MapPin, Phone, Mail, Building, FileText } from 'lucide-react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { ArrowLeft, Download, Printer, Calendar, MapPin, Phone, Mail, Building, FileText, User, Lock } from 'lucide-react';
+import { useSelector } from 'react-redux';
+import { RootState } from '../store';
 import invoiceService, { Invoice } from '../services/invoice';
 
 const InvoiceDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
   const [invoice, setInvoice] = useState<Invoice | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [downloading, setDownloading] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -22,7 +27,12 @@ const InvoiceDetailPage: React.FC = () => {
       const invoiceData = await invoiceService.getInvoice(invoiceId);
       setInvoice(invoiceData);
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to fetch invoice');
+      // Check if error is due to authentication
+      if (err.response?.status === 401 || err.response?.status === 403 || err.response?.data?.error === 'Authorization header required') {
+        setShowLoginModal(true);
+      } else {
+        setError(err.response?.data?.error || 'Failed to fetch invoice');
+      }
     } finally {
       setLoading(false);
     }
@@ -393,6 +403,47 @@ const InvoiceDetailPage: React.FC = () => {
           </div>
         </div>
       </div>
+      
+      {/* Login Modal */}
+      {showLoginModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
+            <div className="flex justify-center mb-6">
+              <div className="w-24 h-24 bg-primary-100 rounded-full flex items-center justify-center">
+                <Lock className="w-12 h-12 text-primary-600" />
+              </div>
+            </div>
+            
+            <div className="text-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-800 mb-3">
+                Login Required
+              </h2>
+              <p className="text-gray-600 mb-4">
+                Please log in to view your invoice details.
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={() => setShowLoginModal(false)}
+                className="px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-semibold"
+              >
+                Cancel
+              </button>
+              
+              <button
+                onClick={() => {
+                  setShowLoginModal(false);
+                  navigate('/login');
+                }}
+                className="px-4 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-semibold"
+              >
+                Login
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
