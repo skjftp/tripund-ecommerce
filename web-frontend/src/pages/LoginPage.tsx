@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { Eye, EyeOff } from 'lucide-react';
 import { RootState, AppDispatch } from '../store';
@@ -9,20 +9,30 @@ import toast from 'react-hot-toast';
 export default function LoginPage() {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  const { loading, error } = useSelector((state: RootState) => state.auth);
+  const { loading, error, isAuthenticated } = useSelector((state: RootState) => state.auth);
+  const [searchParams] = useSearchParams();
+  const returnTo = searchParams.get('returnTo');
   
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   });
   const [showPassword, setShowPassword] = useState(false);
+  
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate(returnTo || '/');
+    }
+  }, [isAuthenticated, navigate, returnTo]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       await dispatch(loginAndSync(formData.email, formData.password));
       toast.success('Login successful!');
-      navigate('/');
+      // Redirect to intended page or home
+      navigate(returnTo || '/');
     } catch (err) {
       toast.error('Login failed. Please check your credentials.');
     }

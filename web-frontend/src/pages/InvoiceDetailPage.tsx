@@ -143,7 +143,11 @@ const InvoiceDetailPage: React.FC = () => {
               </button>
               
               <button
-                onClick={() => navigate('/login')}
+                onClick={() => {
+                  // Redirect to login with return URL
+                  const currentPath = window.location.pathname;
+                  navigate(`/login?returnTo=${encodeURIComponent(currentPath)}`);
+                }}
                 className="px-4 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-semibold"
               >
                 Login
