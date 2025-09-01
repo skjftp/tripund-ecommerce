@@ -17,9 +17,15 @@ const InvoiceDetailPage: React.FC = () => {
 
   useEffect(() => {
     if (id) {
+      // Check if user is authenticated before fetching invoice
+      if (!isAuthenticated) {
+        setShowLoginModal(true);
+        setLoading(false);
+        return;
+      }
       fetchInvoice(id);
     }
-  }, [id]);
+  }, [id, isAuthenticated]);
 
   const fetchInvoice = async (invoiceId: string) => {
     try {
