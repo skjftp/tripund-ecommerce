@@ -69,6 +69,8 @@ export const orderAPI = {
   getById: (id: string) => api.get(`/admin/orders/${id}`),
   updateStatus: (id: string, status: string) =>
     api.patch(`/admin/orders/${id}/status`, { status }),
+  updateStatusWithTracking: (id: string, status: string, trackingURL: string) =>
+    api.patch(`/admin/orders/${id}/status`, { status, tracking_url: trackingURL }),
   updateTracking: (id: string, tracking: any) =>
     api.patch(`/admin/orders/${id}/tracking`, tracking),
   refund: (id: string, amount: number) =>

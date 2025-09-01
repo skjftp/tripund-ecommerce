@@ -26,6 +26,9 @@ export default function Orders() {
   const [selectedPayment, setSelectedPayment] = useState('all');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showTrackingModal, setShowTrackingModal] = useState(false);
+  const [pendingOrderId, setPendingOrderId] = useState<string>('');
+  const [trackingURL, setTrackingURL] = useState<string>('');
 
   // Fetch orders from API
   useEffect(() => {
@@ -158,27 +161,60 @@ export default function Orders() {
   };
 
   const handleStatusUpdate = async (orderId: string, newStatus: string) => {
+    // If changing to shipped, show tracking URL modal
+    if (newStatus === 'shipped') {
+      setPendingOrderId(orderId);
+      setTrackingURL('');
+      setShowTrackingModal(true);
+      return;
+    }
+    
     try {
-      // Call API to update status
+      // Call API to update status for non-shipped statuses
       await orderAPI.updateStatus(orderId, newStatus);
       
       // Update local state
       setOrders(orders.map(o => o.id === orderId ? { ...o, status: newStatus as any } : o));
       
-      // Show appropriate message based on status
-      if (newStatus === 'shipped') {
-        toast.success('Order marked as shipped. Product stock has been updated.');
-      } else {
-        toast.success('Order status updated successfully');
-      }
+      toast.success('Order status updated successfully');
       
       // Optionally refresh orders to get latest data
-      if (newStatus === 'shipped' || newStatus === 'delivered') {
+      if (newStatus === 'delivered') {
         fetchOrders();
       }
     } catch (error) {
       console.error('Error updating order status:', error);
       toast.error('Failed to update order status');
+    }
+  };
+  
+  const handleShippingConfirm = async () => {
+    if (!trackingURL.trim()) {
+      toast.error('Please enter a tracking URL');
+      return;
+    }
+    
+    try {
+      // Call API to update status with tracking URL
+      await orderAPI.updateStatusWithTracking(pendingOrderId, 'shipped', trackingURL);
+      
+      // Update local state
+      setOrders(orders.map(o => 
+        o.id === pendingOrderId 
+          ? { ...o, status: 'shipped' as any, tracking: { url: trackingURL } as any } 
+          : o
+      ));
+      
+      toast.success('Order marked as shipped with tracking URL!');
+      setShowTrackingModal(false);
+      setPendingOrderId('');
+      setTrackingURL('');
+      
+      // Refresh orders to get latest data
+      fetchOrders();
+    } catch (error) {
+      console.error('Error updating order with tracking:', error);
+      toast.error('Failed to update order with tracking URL');
     }
   };
 
@@ -382,6 +418,53 @@ export default function Orders() {
           </tbody>
         </table>
       </div>
+      
+      {/* Tracking URL Modal */}
+      {showTrackingModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
+            <h3 className="text-lg font-semibold mb-4">Add Tracking Information</h3>
+            <p className="text-gray-600 mb-4">
+              Please provide the tracking URL for this shipment. This will be sent to the customer in the shipping confirmation email.
+            </p>
+            
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Tracking URL
+              </label>
+              <input
+                type="url"
+                value={trackingURL}
+                onChange={(e) => setTrackingURL(e.target.value)}
+                placeholder="https://example-courier.com/track/ABC123456789"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Enter the tracking URL from your courier service
+              </p>
+            </div>
+            
+            <div className="flex space-x-3">
+              <button
+                onClick={() => {
+                  setShowTrackingModal(false);
+                  setPendingOrderId('');
+                  setTrackingURL('');
+                }}
+                className="flex-1 px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleShippingConfirm}
+                className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700"
+              >
+                Mark as Shipped
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

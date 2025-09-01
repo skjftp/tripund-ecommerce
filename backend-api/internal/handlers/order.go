@@ -403,11 +403,27 @@ func (h *OrderHandler) UpdateOrderStatus(c *gin.Context) {
 		}
 	}
 
-	// Update order status
-	_, err = h.db.Client.Collection("orders").Doc(orderID).Update(h.db.Context, []firestore.Update{
+	// Prepare updates
+	updates := []firestore.Update{
 		{Path: "status", Value: req.Status},
 		{Path: "updated_at", Value: time.Now()},
-	})
+	}
+	
+	// Add tracking URL if provided (for shipped status)
+	if req.Status == "shipped" && req.TrackingURL != "" {
+		updates = append(updates, firestore.Update{
+			Path: "tracking", 
+			Value: map[string]interface{}{
+				"url":        req.TrackingURL,
+				"shipped_at": time.Now(),
+				"status":     "shipped",
+			},
+		})
+		log.Printf("Adding tracking URL for order %s: %s", orderID, req.TrackingURL)
+	}
+	
+	// Update order status
+	_, err = h.db.Client.Collection("orders").Doc(orderID).Update(h.db.Context, updates)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update order status"})
