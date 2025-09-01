@@ -22,7 +22,7 @@ export default function HomePage() {
       // Check if product has stock
       if (product.has_variants && product.variants && product.variants.length > 0) {
         // For variant products, check if any variant has stock
-        return product.variants.some(variant => variant.stock_quantity > 0 && variant.available);
+        return product.variants.some((variant: any) => variant.stock_quantity > 0 && variant.available);
       } else {
         // For simple products, check main stock
         return (product.stock_quantity || 0) > 0;
@@ -34,7 +34,7 @@ export default function HomePage() {
   const isProductOutOfStock = (product: any) => {
     if (product.has_variants && product.variants && product.variants.length > 0) {
       // For variant products, out of stock if ALL variants are out of stock
-      return !product.variants.some(variant => variant.stock_quantity > 0 && variant.available);
+      return !product.variants.some((variant: any) => variant.stock_quantity > 0 && variant.available);
     } else {
       // For simple products, check main stock
       return (product.stock_quantity || 0) <= 0;
