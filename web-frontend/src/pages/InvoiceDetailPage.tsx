@@ -113,6 +113,48 @@ const InvoiceDetailPage: React.FC = () => {
     );
   };
 
+  // Show login modal if not authenticated
+  if (showLoginModal) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
+            <div className="flex justify-center mb-6">
+              <div className="w-24 h-24 bg-primary-100 rounded-full flex items-center justify-center">
+                <Lock className="w-12 h-12 text-primary-600" />
+              </div>
+            </div>
+            
+            <div className="text-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-800 mb-3">
+                Login Required
+              </h2>
+              <p className="text-gray-600 mb-4">
+                Please log in to view your invoice details.
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={() => navigate('/')}
+                className="px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-semibold"
+              >
+                Go Home
+              </button>
+              
+              <button
+                onClick={() => navigate('/login')}
+                className="px-4 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-semibold"
+              >
+                Login
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 py-8">
@@ -411,47 +453,6 @@ const InvoiceDetailPage: React.FC = () => {
           </div>
         </div>
       </div>
-      
-      {/* Login Modal */}
-      {showLoginModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
-            <div className="flex justify-center mb-6">
-              <div className="w-24 h-24 bg-primary-100 rounded-full flex items-center justify-center">
-                <Lock className="w-12 h-12 text-primary-600" />
-              </div>
-            </div>
-            
-            <div className="text-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-800 mb-3">
-                Login Required
-              </h2>
-              <p className="text-gray-600 mb-4">
-                Please log in to view your invoice details.
-              </p>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                onClick={() => setShowLoginModal(false)}
-                className="px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-semibold"
-              >
-                Cancel
-              </button>
-              
-              <button
-                onClick={() => {
-                  setShowLoginModal(false);
-                  navigate('/login');
-                }}
-                className="px-4 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-semibold"
-              >
-                Login
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
