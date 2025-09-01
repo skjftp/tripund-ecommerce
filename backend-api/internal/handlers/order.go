@@ -304,7 +304,8 @@ func (h *OrderHandler) UpdateOrderStatus(c *gin.Context) {
 	orderID := c.Param("id")
 	
 	var req struct {
-		Status string `json:"status" validate:"required"`
+		Status      string `json:"status" validate:"required"`
+		TrackingURL string `json:"tracking_url,omitempty"`
 	}
 	
 	if err := c.ShouldBindJSON(&req); err != nil {
