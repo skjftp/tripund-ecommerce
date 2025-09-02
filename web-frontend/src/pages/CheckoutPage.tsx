@@ -51,7 +51,8 @@ export default function CheckoutPage() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showFailedModal, setShowFailedModal] = useState(false);
   const [showCancelledModal, setShowCancelledModal] = useState(false);
-  const [completedOrderId, setCompletedOrderId] = useState<string>('');
+  const [completedOrderId, setCompletedOrderId] = useState<string>('');  
+  const [shippingMethod, setShippingMethod] = useState<'standard' | 'express'>('standard');
   const [settings, setSettings] = useState<PublicSettings | null>(null);
   const [promoCode, setPromoCode] = useState('');
   const [appliedPromo, setAppliedPromo] = useState<{
@@ -82,8 +83,12 @@ export default function CheckoutPage() {
   // Watch the state field to calculate GST dynamically
   const selectedState = watch('address.state');
   
-  // Calculate values using dynamic settings
-  const shipping = settings ? calculateShipping(total, settings) : 0;
+  // Calculate values using dynamic settings and selected shipping method
+  const shipping = settings ? (
+    shippingMethod === 'express' && settings.shipping.express_shipping_rate > 0
+      ? settings.shipping.express_shipping_rate
+      : calculateShipping(total, settings)
+  ) : 0;
   const promoDiscount = appliedPromo ? appliedPromo.discount : 0;
   const discountedTotal = total - promoDiscount;
   
@@ -292,6 +297,7 @@ export default function CheckoutPage() {
         total: grandTotal,
       },
       paymentMethod: data.paymentMethod,
+      shippingMethod: shippingMethod,
       notes: data.notes || ''
     };
 
@@ -516,6 +522,59 @@ export default function CheckoutPage() {
                 </div>
               </div>
 
+              {/* Shipping Method Selection */}
+              {settings && settings.shipping.express_shipping_rate > 0 && (
+                <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+                  <h2 className="text-xl font-semibold mb-4 flex items-center">
+                    <Truck className="mr-2" size={20} />
+                    Shipping Method
+                  </h2>
+                  <div className="space-y-3">
+                    <div 
+                      className={`border-2 rounded-lg p-4 cursor-pointer transition-colors ${
+                        shippingMethod === 'standard' 
+                          ? 'border-primary-500 bg-primary-50' 
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                      onClick={() => setShippingMethod('standard')}
+                    >
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <div className="font-semibold">Standard Shipping</div>
+                          <div className="text-sm text-gray-600">5-7 business days</div>
+                        </div>
+                        <div className="text-lg font-semibold">
+                          {total >= settings.shipping.free_shipping_threshold ? (
+                            <span className="text-green-600">FREE</span>
+                          ) : (
+                            `₹${settings.shipping.standard_shipping_rate}`
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div 
+                      className={`border-2 rounded-lg p-4 cursor-pointer transition-colors ${
+                        shippingMethod === 'express' 
+                          ? 'border-primary-500 bg-primary-50' 
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                      onClick={() => setShippingMethod('express')}
+                    >
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <div className="font-semibold">Express Shipping</div>
+                          <div className="text-sm text-gray-600">2-3 business days</div>
+                        </div>
+                        <div className="text-lg font-semibold text-primary-600">
+                          ₹{settings.shipping.express_shipping_rate}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className="bg-white rounded-lg shadow-md p-6">
                 <h2 className="text-xl font-semibold mb-4 flex items-center">
                   <CreditCard className="mr-2" size={20} />
@@ -624,7 +683,9 @@ export default function CheckoutPage() {
                     </div>
                   )}
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Shipping</span>
+                    <span className="text-gray-600">
+                      Shipping ({shippingMethod === 'express' ? 'Express' : 'Standard'})
+                    </span>
                     <span>
                       {shipping === 0 ? (
                         <span className="text-green-600 font-medium">
