@@ -53,15 +53,15 @@ export default function Orders() {
       // Handle the API response
       const ordersData = response.data.orders || [];
       
-      // Map the API response to match the expected Order type structure
+      // Map the API response to match the expected Order type structure  
       const mappedOrders: Order[] = ordersData.map((order: any) => ({
         id: order.id,
         order_number: order.order_number,
         customer: order.customer || {
           id: order.user_id || '',
-          name: order.customer?.name || order.guest_name || (order.user_id ? `Customer ${order.user_id.slice(0,8)}` : 'Guest User'),
-          email: order.customer?.email || '',
-          phone: order.customer?.phone || '',
+          name: order.guest_name || (order.user_id && order.user_id !== 'guest' ? 'Registered Customer' : 'Guest User'),
+          email: order.guest_email || '',
+          phone: order.guest_phone || '',
         },
         items: order.items || [],
         shipping_address: order.shipping_address || {},
