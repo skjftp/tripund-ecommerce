@@ -150,15 +150,20 @@ export default function ProductForm({ isOpen, onClose, product, onSubmit }: Prod
     }
   }, [isOpen, product]);
 
-  const categories = [
-    { value: 'divine-collections', label: 'Divine Collections' },
-    { value: 'wall-decor', label: 'Wall Décor' },
-    { value: 'festivals', label: 'Festivals' },
-    { value: 'lighting', label: 'Lighting' },
-    { value: 'home-accent', label: 'Home Accent' },
-    { value: 'storage-bags', label: 'Storage & Bags' },
-    { value: 'gifting', label: 'Gifting' }
-  ];
+  // Use dynamic categories from database instead of hardcoded list
+  const categories = dbCategories.map(category => ({
+    value: category.slug,
+    label: category.name
+  }));
+  
+  // Sort categories by order if available, otherwise alphabetically
+  const sortedCategories = categories.sort((a, b) => {
+    const categoryA = dbCategories.find(c => c.slug === a.value);
+    const categoryB = dbCategories.find(c => c.slug === b.value);
+    const orderA = categoryA?.order || 999;
+    const orderB = categoryB?.order || 999;
+    return orderA - orderB;
+  });
 
   const handleInputChange = (field: string, value: any) => {
     setFormData(prev => ({
@@ -487,7 +492,7 @@ export default function ProductForm({ isOpen, onClose, product, onSubmit }: Prod
               Categories *
             </label>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-              {categories.map(category => (
+              {sortedCategories.map(category => (
                 <label key={category.value} className="flex items-center">
                   <input
                     type="checkbox"
@@ -526,7 +531,7 @@ export default function ProductForm({ isOpen, onClose, product, onSubmit }: Prod
                 return (
                   <div key={category} className="mb-3">
                     <p className="text-xs font-medium text-gray-600 mb-2">
-                      {categories.find(c => c.value === category)?.label || category}:
+                      {sortedCategories.find(c => c.value === category)?.label || category}:
                     </p>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-2 pl-4">
                       {subcats.map(subcat => (
