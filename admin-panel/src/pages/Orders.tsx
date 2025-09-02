@@ -10,7 +10,6 @@ import {
   CheckCircle,
   XCircle,
   Clock,
-  DollarSign,
 } from 'lucide-react';
 import { Order } from '../types';
 import { format } from 'date-fns';
@@ -60,7 +59,7 @@ export default function Orders() {
         order_number: order.order_number,
         customer: order.customer || {
           id: order.user_id || '',
-          name: order.customer?.name || 'Guest User',
+          name: order.customer?.name || order.guest_name || (order.user_id ? `Customer ${order.user_id.slice(0,8)}` : 'Guest User'),
           email: order.customer?.email || '',
           phone: order.customer?.phone || '',
         },
@@ -354,11 +353,8 @@ export default function Orders() {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <DollarSign size={14} className="text-gray-400" />
-                      <span className="text-sm font-medium text-gray-900">
-                        ₹{order.totals.total.toLocaleString()}
-                      </span>
+                    <div className="text-sm font-medium text-gray-900">
+                      ₹{order.totals.total.toLocaleString()}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -418,6 +414,93 @@ export default function Orders() {
           </tbody>
         </table>
       </div>
+      
+      {/* Order Detail Modal */}
+      {showDetailModal && selectedOrder && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-semibold">Order Details</h3>
+                <button
+                  onClick={() => setShowDetailModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  ×
+                </button>
+              </div>
+              
+              <div className="space-y-6">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Order Number</label>
+                    <p className="text-sm text-gray-900">{selectedOrder.order_number}</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Status</label>
+                    <p className="text-sm text-gray-900">{selectedOrder.status}</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Customer</label>
+                    <p className="text-sm text-gray-900">{selectedOrder.customer.name}</p>
+                    <p className="text-xs text-gray-500">{selectedOrder.customer.email}</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Total</label>
+                    <p className="text-sm text-gray-900">₹{selectedOrder.totals.total}</p>
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Items</label>
+                  <div className="space-y-2">
+                    {selectedOrder.items.map((item: any, index: number) => (
+                      <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                        <div>
+                          <p className="text-sm font-medium">{item.product_name}</p>
+                          <p className="text-xs text-gray-500">Qty: {item.quantity}</p>
+                        </div>
+                        <p className="text-sm font-semibold">₹{item.total}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Shipping Address</label>
+                    <div className="text-sm text-gray-600">
+                      <p>{selectedOrder.shipping_address.line1}</p>
+                      {selectedOrder.shipping_address.line2 && <p>{selectedOrder.shipping_address.line2}</p>}
+                      <p>{selectedOrder.shipping_address.city}, {selectedOrder.shipping_address.state}</p>
+                      <p>{selectedOrder.shipping_address.postal_code}</p>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Payment Info</label>
+                    <div className="text-sm text-gray-600">
+                      <p>Method: {selectedOrder.payment.method}</p>
+                      <p>Status: {selectedOrder.payment.status}</p>
+                      {selectedOrder.payment.transaction_id && (
+                        <p>Transaction: {selectedOrder.payment.transaction_id}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="mt-6 flex justify-end">
+                <button
+                  onClick={() => setShowDetailModal(false)}
+                  className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* Tracking URL Modal */}
       {showTrackingModal && (
