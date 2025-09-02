@@ -291,6 +291,29 @@ func (h *OrderHandler) GetAllOrders(c *gin.Context) {
 		if err := doc.DataTo(&order); err != nil {
 			continue
 		}
+		order.ID = doc.Ref.ID
+		
+		// For logged-in users, populate customer information from user profile
+		if order.UserID != "" && order.UserID != "guest" {
+			userDoc, err := h.db.Client.Collection("users").Doc(order.UserID).Get(h.db.Context)
+			if err == nil {
+				var user struct {
+					Email   string `firestore:"email"`
+					Profile struct {
+						FirstName string `firestore:"first_name"`
+						LastName  string `firestore:"last_name"`
+						Phone     string `firestore:"phone"`
+					} `firestore:"profile"`
+				}
+				if userDoc.DataTo(&user) == nil {
+					// Override guest fields with actual user data
+					order.GuestName = user.Profile.FirstName + " " + user.Profile.LastName
+					order.GuestEmail = user.Email
+					order.GuestPhone = user.Profile.Phone
+				}
+			}
+		}
+		
 		orders = append(orders, order)
 	}
 
