@@ -867,7 +867,7 @@ export default function Settings() {
           <label className="flex items-center">
             <input
               type="checkbox"
-              checked={settings.security.two_factor_auth}
+              checked={settings.security?.two_factor_auth || false}
               onChange={(e) => setSettings({
                 ...settings,
                 security: { ...settings.security, two_factor_auth: e.target.checked }
@@ -884,7 +884,7 @@ export default function Settings() {
               <label className="admin-label">Session Timeout (minutes)</label>
               <input
                 type="number"
-                value={settings.security.session_timeout}
+                value={settings.security?.session_timeout || 30}
                 onChange={(e) => setSettings({
                   ...settings,
                   security: { ...settings.security, session_timeout: parseInt(e.target.value) }
@@ -896,7 +896,7 @@ export default function Settings() {
               <label className="admin-label">Password Expiry (days)</label>
               <input
                 type="number"
-                value={settings.security.password_expiry}
+                value={settings.security?.password_expiry || 90}
                 onChange={(e) => setSettings({
                   ...settings,
                   security: { ...settings.security, password_expiry: parseInt(e.target.value) }
@@ -908,7 +908,7 @@ export default function Settings() {
               <label className="admin-label">Max Login Attempts</label>
               <input
                 type="number"
-                value={settings.security.max_login_attempts}
+                value={settings.security?.max_login_attempts || 5}
                 onChange={(e) => setSettings({
                   ...settings,
                   security: { ...settings.security, max_login_attempts: parseInt(e.target.value) }
