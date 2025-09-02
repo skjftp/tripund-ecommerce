@@ -44,6 +44,18 @@ export default function Notifications() {
   const [selectedType, setSelectedType] = useState('all');
   const [selectedPriority, setSelectedPriority] = useState('all');
   const [showOnlyUnread, setShowOnlyUnread] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
+  // Error boundary effect
+  useEffect(() => {
+    const handleError = (event: ErrorEvent) => {
+      console.error('Notifications component error:', event.error);
+      setError('Failed to load notifications');
+    };
+    
+    window.addEventListener('error', handleError);
+    return () => window.removeEventListener('error', handleError);
+  }, []);
 
   useEffect(() => {
     const mockNotifications: Notification[] = [
@@ -198,6 +210,27 @@ export default function Notifications() {
   };
 
   const unreadCount = notifications.filter(n => !n.read).length;
+
+  // Error state
+  if (error) {
+    return (
+      <div className="p-6">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <h2 className="text-lg font-semibold text-red-800 mb-2">Error Loading Notifications</h2>
+          <p className="text-red-700 mb-4">{error}</p>
+          <button
+            onClick={() => {
+              setError(null);
+              window.location.reload();
+            }}
+            className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+          >
+            Reload Page
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6">
