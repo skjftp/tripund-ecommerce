@@ -453,10 +453,10 @@ export default function Settings() {
           <label className="flex items-center">
             <input
               type="checkbox"
-              checked={settings.notifications.order_confirmation}
+              checked={settings.notifications?.order_confirmation || false}
               onChange={(e) => setSettings({
                 ...settings,
-                notifications: { ...settings.notifications, order_confirmation: e.target.checked }
+                notifications: { ...(settings.notifications || {}), order_confirmation: e.target.checked }
               })}
               className="mr-3"
             />
@@ -468,10 +468,10 @@ export default function Settings() {
           <label className="flex items-center">
             <input
               type="checkbox"
-              checked={settings.notifications.order_shipped}
+              checked={settings.notifications?.order_shipped || false}
               onChange={(e) => setSettings({
                 ...settings,
-                notifications: { ...settings.notifications, order_shipped: e.target.checked }
+                notifications: { ...(settings.notifications || {}), order_shipped: e.target.checked }
               })}
               className="mr-3"
             />
@@ -483,10 +483,10 @@ export default function Settings() {
           <label className="flex items-center">
             <input
               type="checkbox"
-              checked={settings.notifications.promotional_emails}
+              checked={settings.notifications?.promotional_emails || false}
               onChange={(e) => setSettings({
                 ...settings,
-                notifications: { ...settings.notifications, promotional_emails: e.target.checked }
+                notifications: { ...(settings.notifications || {}), promotional_emails: e.target.checked }
               })}
               className="mr-3"
             />
@@ -504,10 +504,10 @@ export default function Settings() {
           <label className="flex items-center">
             <input
               type="checkbox"
-              checked={settings.notifications.sms_notifications}
+              checked={settings.notifications?.sms_notifications || false}
               onChange={(e) => setSettings({
                 ...settings,
-                notifications: { ...settings.notifications, sms_notifications: e.target.checked }
+                notifications: { ...(settings.notifications || {}), sms_notifications: e.target.checked }
               })}
               className="mr-3"
             />
@@ -519,10 +519,10 @@ export default function Settings() {
           <label className="flex items-center">
             <input
               type="checkbox"
-              checked={settings.notifications.whatsapp_notifications}
+              checked={settings.notifications?.whatsapp_notifications || false}
               onChange={(e) => setSettings({
                 ...settings,
-                notifications: { ...settings.notifications, whatsapp_notifications: e.target.checked }
+                notifications: { ...(settings.notifications || {}), whatsapp_notifications: e.target.checked }
               })}
               className="mr-3"
             />
