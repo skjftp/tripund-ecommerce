@@ -513,10 +513,20 @@ Complete professional e-commerce platform with advanced features:
 3. **Settings Management**: GST configuration, email templates, all centralized
 
 #### Customer Workflow:
-1. **Payment Success** → Elegant confirmation email + invoice generated
-2. **Order Shipped** → Shipping email with courier tracking + invoice link  
-3. **Invoice Access** → Direct from orders page or email links
-4. **Authentication**: Login modal if accessing invoice while logged out
+1. **Payment Success** → Elegant confirmation email + invoice generated + stock decremented
+2. **Shipping Selection** → Standard (free above ₹2000) or Express (₹200) options
+3. **Order Shipped** → Shipping email with courier tracking + invoice link  
+4. **Invoice Access** → Direct from orders page or email links
+5. **Authentication**: Login modal with returnTo redirect if accessing invoice while logged out
+
+#### Enhanced Admin Features (September 2025):
+- **Customer Management**: Real customer names and profiles in orders
+- **Order Details**: Complete order modal with all information
+- **Tracking Integration**: Custom courier URL modal when marking as shipped
+- **Image Management**: Team member photo uploads with drag-and-drop
+- **Dynamic Categories**: All 10 categories from database in product form
+- **Express Shipping**: Conditional display based on settings
+- **Error Prevention**: Null safety checks preventing admin panel crashes
 
 ## Contact & Support
 - **Repository**: https://github.com/skjftp/tripund-ecommerce
@@ -707,6 +717,11 @@ Add this A record to your DNS provider:
 31. **Custom tracking**: Admin-provided courier URLs in shipping confirmation emails
 32. **Authentication flow**: Login modal with returnTo redirect for invoice access
 33. **Clean navigation**: Removed duplicate pages, unified invoice access from orders page
+34. **Express shipping**: Dynamic option in checkout when rate > 0 in settings
+35. **Team member images**: Upload functionality for About Us section instead of URLs
+36. **Admin panel stability**: Fixed null pointer crashes in notifications and security sections
+37. **Customer identification**: Real names in admin orders instead of "Guest User"
+38. **Dynamic categories**: Product form shows all 10 categories from database
 23. **Current admin credentials: admin@tripund.com / password (change immediately after login)**
 24. **RBAC system active: 5 roles, 23 permissions, permission-based UI controls implemented**
 
@@ -816,11 +831,15 @@ Add this A record to your DNS provider:
 - `ProductForm.tsx` - Comprehensive product management form
 
 ---
-Last Updated: September 1, 2025
+Last Updated: September 2, 2025
 Platform: TRIPUND E-Commerce - Enhanced Professional System
 Version: 1.0.22+ (Enhanced)
-Backend: Cloud Run revision 00130-5br with complete functionality
+Backend: Cloud Run revision 00131-nrs with complete functionality
 Frontend: Fully responsive with mobile optimization
-Email System: Database templates operational
-Invoice System: 12% GST compliance with auto-generation
-Tracking: Custom courier URL integration
+Admin Panel: Stable with crash fixes and enhanced features
+Email System: Database templates operational for both order and shipping
+Invoice System: 12% GST compliance with auto-generation and clean format
+Tracking: Custom courier URL integration with admin modal
+Shipping: Express shipping option with dynamic settings
+Customer Management: Real profile data display in admin orders
+Image Management: Team member upload functionality implemented
