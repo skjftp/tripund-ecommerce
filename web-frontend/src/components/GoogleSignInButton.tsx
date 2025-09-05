@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { AppDispatch } from '../store';
-import { setUser, setAuth } from '../store/slices/authSlice';
+import { logout } from '../store/slices/authSlice';
 import googleAuthService from '../services/googleAuth';
 import toast from 'react-hot-toast';
 
@@ -39,6 +39,9 @@ export default function GoogleSignInButton({ mode, onSuccess }: GoogleSignInButt
                 };
                 
                 // Store auth data in Redux (simulate successful login)
+                // TODO: Implement proper Google OAuth integration
+                console.log('Google Sign-In successful', payload);
+                /*
                 dispatch(setAuth({
                   isAuthenticated: true,
                   token: 'google-auth-' + payload.sub, // Temporary token
@@ -52,6 +55,7 @@ export default function GoogleSignInButton({ mode, onSuccess }: GoogleSignInButt
                     }
                   }
                 }));
+                */
 
                 // Store token in localStorage
                 localStorage.setItem('token', 'google-auth-' + payload.sub);

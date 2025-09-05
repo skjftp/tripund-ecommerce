@@ -327,6 +327,62 @@ const categoryFilters: Record<string, FilterSection[]> = {
         { label: 'Above ₹5000', value: '5000-' }
       ]
     }
+  ],
+  'Bestsellers': [
+    {
+      title: 'Price',
+      key: 'price',
+      options: [
+        { label: 'Under ₹1000', value: '0-1000' },
+        { label: '₹1000 - ₹3000', value: '1000-3000' },
+        { label: '₹3000 - ₹7000', value: '3000-7000' },
+        { label: '₹7000 - ₹15000', value: '7000-15000' },
+        { label: 'Above ₹15000', value: '15000-' }
+      ]
+    },
+    {
+      title: 'Material',
+      key: 'material',
+      options: [
+        { label: 'Brass', value: 'brass' },
+        { label: 'Wood', value: 'wood' },
+        { label: 'Metal', value: 'metal' },
+        { label: 'Clay', value: 'clay' }
+      ]
+    }
+  ],
+  'new-in': [
+    {
+      title: 'Price',
+      key: 'price', 
+      options: [
+        { label: 'Under ₹1000', value: '0-1000' },
+        { label: '₹1000 - ₹5000', value: '1000-5000' },
+        { label: 'Above ₹5000', value: '5000-' }
+      ]
+    }
+  ],
+  'sale': [
+    {
+      title: 'Discount',
+      key: 'discount',
+      options: [
+        { label: '10-20% Off', value: '10-20' },
+        { label: '20-30% Off', value: '20-30' },
+        { label: '30-40% Off', value: '30-40' },
+        { label: 'Above 40% Off', value: '40-' }
+      ]
+    },
+    {
+      title: 'Price',
+      key: 'price',
+      options: [
+        { label: 'Under ₹1000', value: '0-1000' },
+        { label: '₹1000 - ₹3000', value: '1000-3000' },
+        { label: '₹3000 - ₹7000', value: '3000-7000' },
+        { label: 'Above ₹7000', value: '7000-' }
+      ]
+    }
   ]
 };
 
@@ -365,6 +421,21 @@ const categoryInfo: Record<string, { name: string; description: string; banner?:
     name: 'Gifting',
     description: 'Find the perfect gift for every occasion with our thoughtfully curated gift sets and hampers.',
     banner: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=1600&h=400&fit=crop'
+  },
+  'Bestsellers': {
+    name: 'Bestsellers',
+    description: 'High Demand, Fast Moving articles - Our most popular and trending products.',
+    banner: 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=1600&h=400&fit=crop'
+  },
+  'new-in': {
+    name: 'NEW In',
+    description: 'Latest collection - Discover our newest arrivals and trending designs.',
+    banner: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1600&h=400&fit=crop'
+  },
+  'sale': {
+    name: 'Sale',
+    description: 'Selling fast - Amazing deals and discounts on premium handicrafts.',
+    banner: 'https://images.unsplash.com/photo-1607083206968-13611e3d76db?w=1600&h=400&fit=crop'
   }
 };
 
