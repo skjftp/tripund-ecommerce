@@ -16,6 +16,7 @@ import {
   XCircle,
   Clock,
   AlertTriangle,
+  X,
 } from 'lucide-react';
 
 interface WhatsAppTemplate {
@@ -87,6 +88,8 @@ export default function WhatsApp() {
   const [messages, setMessages] = useState<WhatsAppMessage[]>([]);
   const [conversations, setConversations] = useState<Record<string, WhatsAppMessage[]>>({});
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
+  const [conversationMessages, setConversationMessages] = useState<WhatsAppMessage[]>([]);
+  const [newMessage, setNewMessage] = useState('');
   const [contacts, setContacts] = useState<WhatsAppContact[]>([]);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
@@ -301,6 +304,67 @@ export default function WhatsApp() {
     }
   };
 
+  const openConversation = async (phoneNumber: string) => {
+    setSelectedConversation(phoneNumber);
+    
+    // Fetch messages for this specific conversation
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://tripund-backend-665685012221.asia-south1.run.app/api/v1'}/admin/whatsapp/messages?phone_number=${phoneNumber}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
+        },
+      });
+      const data = await response.json();
+      
+      if (data.messages) {
+        // Sort messages chronologically (oldest first for chat display)
+        setConversationMessages(data.messages.reverse());
+      }
+    } catch (error) {
+      console.error('Error fetching conversation:', error);
+    }
+  };
+
+  const closeConversation = () => {
+    setSelectedConversation(null);
+    setConversationMessages([]);
+    setNewMessage('');
+  };
+
+  const sendMessageToConversation = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedConversation || !newMessage.trim()) return;
+    
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://tripund-backend-665685012221.asia-south1.run.app/api/v1'}/admin/whatsapp/send`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
+        },
+        body: JSON.stringify({
+          phone_number: selectedConversation,
+          message: newMessage,
+          type: 'text',
+        }),
+      });
+
+      if (response.ok) {
+        setNewMessage('');
+        // Refresh conversation messages
+        openConversation(selectedConversation);
+        // Refresh conversations list
+        fetchMessages();
+      } else {
+        const error = await response.json();
+        alert(`Error: ${error.error}`);
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+      alert('Error sending message');
+    }
+  };
+
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'sent':
@@ -450,7 +514,7 @@ export default function WhatsApp() {
                     <div 
                       key={phoneNumber} 
                       className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 cursor-pointer"
-                      onClick={() => setSelectedConversation(phoneNumber)}
+                      onClick={() => openConversation(phoneNumber)}
                     >
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
@@ -969,6 +1033,93 @@ export default function WhatsApp() {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Conversation Modal */}
+      {selectedConversation && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[80vh] flex flex-col">
+            {/* Modal Header */}
+            <div className="flex justify-between items-center p-4 border-b">
+              <div className="flex items-center space-x-3">
+                <MessageCircle className="w-5 h-5 text-green-600" />
+                <h3 className="text-lg font-medium">Conversation with {selectedConversation}</h3>
+              </div>
+              <button
+                onClick={closeConversation}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Messages Area */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-0">
+              {conversationMessages.map((message) => (
+                <div
+                  key={message.id}
+                  className={`flex ${message.direction === 'outgoing' ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div
+                    className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                      message.direction === 'outgoing'
+                        ? 'bg-green-500 text-white'
+                        : 'bg-gray-100 text-gray-900'
+                    }`}
+                  >
+                    <p className="text-sm">{message.content}</p>
+                    <div className="flex justify-between items-center mt-1">
+                      <span className="text-xs opacity-70">
+                        {message.type === 'template' ? '📄 Template' : '💬 Text'}
+                      </span>
+                      <div className="flex items-center space-x-1">
+                        <span className="text-xs opacity-70">
+                          {new Date(message.created_at).toLocaleTimeString()}
+                        </span>
+                        {message.direction === 'outgoing' && (
+                          <div className="ml-1">
+                            {getStatusIcon(message.status)}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              
+              {conversationMessages.length === 0 && (
+                <div className="text-center py-8 text-gray-500">
+                  <MessageCircle className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                  <p>No messages in this conversation yet</p>
+                </div>
+              )}
+            </div>
+
+            {/* Message Input */}
+            <div className="border-t p-4">
+              <form onSubmit={sendMessageToConversation} className="flex space-x-2">
+                <input
+                  type="text"
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  placeholder="Type your message..."
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                  autoFocus
+                />
+                <button
+                  type="submit"
+                  disabled={!newMessage.trim()}
+                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-gray-400 flex items-center"
+                >
+                  <Send className="w-4 h-4" />
+                </button>
+              </form>
+              <p className="text-xs text-gray-500 mt-1">
+                Press Enter to send • This will send a text message to {selectedConversation}
+              </p>
             </div>
           </div>
         </div>
