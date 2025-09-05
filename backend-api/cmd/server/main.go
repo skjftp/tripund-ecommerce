@@ -110,6 +110,9 @@ func main() {
 		// WhatsApp OTP (public endpoints)
 		api.POST("/whatsapp/send-otp", whatsappHandler.SendOTP)
 		api.POST("/whatsapp/verify-otp", whatsappHandler.VerifyOTP)
+		
+		// Order tracking redirect (public endpoint)
+		api.GET("/track/:orderNumber", orderHandler.GetTrackingRedirect)
 
 		// Guest checkout endpoints (no authentication required)
 		api.POST("/guest/orders", orderHandler.CreateGuestOrder)

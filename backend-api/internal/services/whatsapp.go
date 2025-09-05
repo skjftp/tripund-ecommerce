@@ -395,8 +395,11 @@ func (w *WhatsAppService) SendOTP(phoneNumber, otp, purpose string) error {
 
 // Send order confirmation using approved template
 func (w *WhatsAppService) SendOrderConfirmation(phoneNumber, customerName, orderID, amount string, items []string) error {
-	// Clean phone number (remove +, spaces, etc.)
+	// Ensure phone number has +91 prefix for India
 	cleanPhone := strings.ReplaceAll(strings.ReplaceAll(phoneNumber, "+", ""), " ", "")
+	if !strings.HasPrefix(cleanPhone, "91") {
+		cleanPhone = "91" + cleanPhone
+	}
 	
 	// Use the approved order_management_1 template
 	templateContent := &models.TemplateContent{
@@ -436,12 +439,21 @@ func (w *WhatsAppService) SendOrderConfirmation(phoneNumber, customerName, order
 
 // Send shipping confirmation using approved template shipping_v1
 func (w *WhatsAppService) SendShippingConfirmation(phoneNumber, customerName, orderID, trackingURL string) error {
-	// Clean phone number (remove +, spaces, etc.)
+	// Ensure phone number has +91 prefix for India
 	cleanPhone := strings.ReplaceAll(strings.ReplaceAll(phoneNumber, "+", ""), " ", "")
+	if !strings.HasPrefix(cleanPhone, "91") {
+		cleanPhone = "91" + cleanPhone
+	}
 	
-	// Use the approved shipping_v1 template
+	// Prepare button URL parameter - use tracking URL if provided, otherwise orders page
+	buttonURL := trackingURL
+	if buttonURL == "" || buttonURL == "https://tripundlifestyle.netlify.app/orders" {
+		buttonURL = "https://tripundlifestyle.com/orders"
+	}
+	
+	// Use the approved shipping_v2 template
 	templateContent := &models.TemplateContent{
-		Name: "shipping_v1",
+		Name: "shipping_v2",
 		Language: models.LanguageContent{
 			Code: "en_US",
 		},
@@ -451,6 +463,14 @@ func (w *WhatsAppService) SendShippingConfirmation(phoneNumber, customerName, or
 				Parameters: []models.ParameterContent{
 					{Type: "text", Text: customerName},
 					{Type: "text", Text: orderID},
+				},
+			},
+			{
+				Type: "button",
+				SubType: "url",
+				Index: "0",
+				Parameters: []models.ParameterContent{
+					{Type: "text", Text: orderID}, // This will replace {{1}} in the URL
 				},
 			},
 		},

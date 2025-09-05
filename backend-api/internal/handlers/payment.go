@@ -175,7 +175,28 @@ func (h *PaymentHandler) VerifyPayment(c *gin.Context) {
 		// Send WhatsApp order confirmation
 		if h.whatsappService != nil {
 			customerName := "Customer"
-			if order.GuestName != "" {
+			
+			// Get customer name - priority: registered user > guest name > fallback
+			if order.UserID != "" {
+				// Fetch user details from users collection
+				userDoc, userErr := h.db.Client.Collection("users").Doc(order.UserID).Get(h.db.Context)
+				if userErr == nil {
+					var user map[string]interface{}
+					if userDoc.DataTo(&user) == nil {
+						firstName, _ := user["first_name"].(string)
+						lastName, _ := user["last_name"].(string)
+						if firstName != "" {
+							customerName = firstName
+							if lastName != "" {
+								customerName = firstName + " " + lastName
+							}
+						} else if email, ok := user["email"].(string); ok && email != "" {
+							// Fallback to email if no name
+							customerName = email
+						}
+					}
+				}
+			} else if order.GuestName != "" {
 				customerName = order.GuestName
 			}
 			

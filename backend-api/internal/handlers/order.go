@@ -475,7 +475,28 @@ func (h *OrderHandler) UpdateOrderStatus(c *gin.Context) {
 			// Send WhatsApp shipping confirmation
 			if h.whatsappService != nil {
 				customerName := "Customer"
-				if order.GuestName != "" {
+				
+				// Get customer name - priority: registered user > guest name > fallback
+				if order.UserID != "" {
+					// Fetch user details from users collection
+					userDoc, userErr := h.db.Client.Collection("users").Doc(order.UserID).Get(h.db.Context)
+					if userErr == nil {
+						var user map[string]interface{}
+						if userDoc.DataTo(&user) == nil {
+							firstName, _ := user["first_name"].(string)
+							lastName, _ := user["last_name"].(string)
+							if firstName != "" {
+								customerName = firstName
+								if lastName != "" {
+									customerName = firstName + " " + lastName
+								}
+							} else if email, ok := user["email"].(string); ok && email != "" {
+								// Fallback to email if no name
+								customerName = email
+							}
+						}
+					}
+				} else if order.GuestName != "" {
 					customerName = order.GuestName
 				}
 				
@@ -486,7 +507,7 @@ func (h *OrderHandler) UpdateOrderStatus(c *gin.Context) {
 				
 				trackingURL := req.TrackingURL
 				if trackingURL == "" {
-					trackingURL = fmt.Sprintf("https://tripundlifestyle.netlify.app/orders")
+					trackingURL = fmt.Sprintf("https://tripundlifestyle.com/orders")
 				}
 				
 				if phoneNumber != "" {
@@ -498,7 +519,7 @@ func (h *OrderHandler) UpdateOrderStatus(c *gin.Context) {
 					); err != nil {
 						log.Printf("Failed to send WhatsApp shipping confirmation for order %s: %v", orderID, err)
 					} else {
-						log.Printf("WhatsApp shipping confirmation sent successfully for order %s", orderID)
+						log.Printf("WhatsApp shipping confirmation sent successfully for order %s to %s", orderID, customerName)
 					}
 				} else {
 					log.Printf("No phone number available for WhatsApp shipping notification for order %s", orderID)
@@ -508,6 +529,38 @@ func (h *OrderHandler) UpdateOrderStatus(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": message})
+}
+
+// GetTrackingRedirect redirects to the actual tracking URL for an order
+func (h *OrderHandler) GetTrackingRedirect(c *gin.Context) {
+	orderNumber := c.Param("orderNumber")
+	
+	// Find order by order number
+	iter := h.db.Client.Collection("orders").Where("order_number", "==", orderNumber).Documents(h.db.Context)
+	defer iter.Stop()
+	
+	doc, err := iter.Next()
+	if err != nil {
+		// If order not found, redirect to general orders page
+		c.Redirect(http.StatusFound, "https://tripundlifestyle.com/orders")
+		return
+	}
+	
+	var order models.Order
+	if err := doc.DataTo(&order); err != nil {
+		c.Redirect(http.StatusFound, "https://tripundlifestyle.com/orders")
+		return
+	}
+	
+	// Check if order has tracking URL
+	if order.Tracking != nil && order.Tracking.URL != "" {
+		// Redirect to the actual tracking URL provided by admin
+		c.Redirect(http.StatusFound, order.Tracking.URL)
+		return
+	}
+	
+	// Fallback: redirect to customer's order page
+	c.Redirect(http.StatusFound, "https://tripundlifestyle.com/orders")
 }
 
 // CreateGuestOrder creates an order for guest users (no authentication required)
