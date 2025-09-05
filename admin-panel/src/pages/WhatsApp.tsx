@@ -95,6 +95,7 @@ export default function WhatsApp() {
     message: '',
     type: 'text',
     template_id: '',
+    parameters: [] as { type: string; text: string }[],
   });
   const [isSending, setIsSending] = useState(false);
 
@@ -210,6 +211,7 @@ export default function WhatsApp() {
           message: '',
           type: 'text',
           template_id: '',
+          parameters: [],
         });
         fetchMessages();
       } else {
@@ -527,27 +529,88 @@ export default function WhatsApp() {
               </div>
 
               {sendMessageData.type === 'template' && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Select Template
-                  </label>
-                  <select
-                    value={sendMessageData.template_id}
-                    onChange={(e) => setSendMessageData({
-                      ...sendMessageData,
-                      template_id: e.target.value
-                    })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
-                    required
-                  >
-                    <option value="">Select a template</option>
-                    {templates.filter(t => t.status === 'APPROVED').map((template) => (
-                      <option key={template.id} value={template.name}>
-                        {template.name} ({template.language})
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Select Template
+                    </label>
+                    <select
+                      value={sendMessageData.template_id}
+                      onChange={(e) => setSendMessageData({
+                        ...sendMessageData,
+                        template_id: e.target.value
+                      })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                      required
+                    >
+                      <option value="">Select a template</option>
+                      {templates.filter(t => t.status === 'APPROVED').map((template) => (
+                        <option key={template.id} value={template.name}>
+                          {template.name} ({template.language})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  {sendMessageData.template_id === 'order_management_1' && (
+                    <div className="grid grid-cols-1 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Customer Name
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="John Doe"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                          onChange={(e) => setSendMessageData({
+                            ...sendMessageData,
+                            parameters: [
+                              { type: 'text', text: e.target.value },
+                              sendMessageData.parameters?.[1] || { type: 'text', text: '' },
+                              sendMessageData.parameters?.[2] || { type: 'text', text: '' }
+                            ]
+                          })}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Order Number
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="TRP001234"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                          onChange={(e) => setSendMessageData({
+                            ...sendMessageData,
+                            parameters: [
+                              sendMessageData.parameters?.[0] || { type: 'text', text: '' },
+                              { type: 'text', text: e.target.value },
+                              sendMessageData.parameters?.[2] || { type: 'text', text: '' }
+                            ]
+                          })}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Delivery Date
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="3-7 business days"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                          onChange={(e) => setSendMessageData({
+                            ...sendMessageData,
+                            parameters: [
+                              sendMessageData.parameters?.[0] || { type: 'text', text: '' },
+                              sendMessageData.parameters?.[1] || { type: 'text', text: '' },
+                              { type: 'text', text: e.target.value }
+                            ]
+                          })}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
 
               {sendMessageData.type === 'text' && (
