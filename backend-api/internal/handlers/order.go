@@ -475,8 +475,8 @@ func (h *OrderHandler) UpdateOrderStatus(c *gin.Context) {
 			// Send WhatsApp shipping confirmation
 			if h.whatsappService != nil {
 				customerName := "Customer"
-				if order.CustomerInfo.FirstName != "" {
-					customerName = order.CustomerInfo.FirstName + " " + order.CustomerInfo.LastName
+				if order.GuestName != "" {
+					customerName = order.GuestName
 				}
 				
 				phoneNumber := order.BillingAddress.Phone

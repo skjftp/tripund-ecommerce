@@ -175,24 +175,24 @@ func (h *PaymentHandler) VerifyPayment(c *gin.Context) {
 		// Send WhatsApp order confirmation
 		if h.whatsappService != nil {
 			customerName := "Customer"
-			if order.CustomerInfo.FirstName != "" {
-				customerName = order.CustomerInfo.FirstName + " " + order.CustomerInfo.LastName
+			if order.GuestName != "" {
+				customerName = order.GuestName
 			}
 			
 			// Build items list
 			var items []string
 			for _, item := range order.Items {
-				itemText := item.Name
-				if item.Variant.Color != "" || item.Variant.Size != "" {
+				itemText := item.ProductName
+				if item.VariantColor != "" || item.VariantSize != "" {
 					itemText += " ("
-					if item.Variant.Color != "" {
-						itemText += item.Variant.Color
+					if item.VariantColor != "" {
+						itemText += item.VariantColor
 					}
-					if item.Variant.Size != "" {
-						if item.Variant.Color != "" {
+					if item.VariantSize != "" {
+						if item.VariantColor != "" {
 							itemText += ", "
 						}
-						itemText += item.Variant.Size
+						itemText += item.VariantSize
 					}
 					itemText += ")"
 				}

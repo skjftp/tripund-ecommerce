@@ -27,6 +27,12 @@ func main() {
 
 	r.Use(middleware.CORSMiddleware(cfg.CORSOrigin))
 
+	// Initialize WhatsApp service first
+	whatsappService := services.NewWhatsAppService(cfg)
+	if err := whatsappService.Initialize(); err != nil {
+		log.Printf("Warning: Failed to initialize WhatsApp service: %v", err)
+	}
+	
 	authHandler := handlers.NewAuthHandler(db, cfg.JWTSecret)
 	productHandler := handlers.NewProductHandler(db)
 	paymentHandler := handlers.NewPaymentHandler(db, cfg.RazorpayKeyID, cfg.RazorpayKeySecret, cfg.RazorpayWebhookSecret, whatsappService)
@@ -46,11 +52,6 @@ func main() {
 	invoiceHandler := handlers.NewInvoiceHandler(db)
 	adminUserHandler := handlers.NewAdminUserHandler(db, cfg.JWTSecret)
 	
-	// Initialize WhatsApp service
-	whatsappService := services.NewWhatsAppService(cfg)
-	if err := whatsappService.Initialize(); err != nil {
-		log.Printf("Warning: Failed to initialize WhatsApp service: %v", err)
-	}
 	whatsappHandler := handlers.NewWhatsAppHandler(db, whatsappService)
 
 	api := r.Group("/api/v1")
