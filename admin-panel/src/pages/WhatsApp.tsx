@@ -56,6 +56,7 @@ interface WhatsAppMessage {
   template_id?: string;
   status: string;
   timestamp: string;
+  created_at: string;
 }
 
 interface WhatsAppContact {
@@ -84,6 +85,8 @@ export default function WhatsApp() {
   const [activeTab, setActiveTab] = useState('messages');
   const [templates, setTemplates] = useState<WhatsAppTemplate[]>([]);
   const [messages, setMessages] = useState<WhatsAppMessage[]>([]);
+  const [conversations, setConversations] = useState<Record<string, WhatsAppMessage[]>>({});
+  const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [contacts, setContacts] = useState<WhatsAppContact[]>([]);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
@@ -151,13 +154,19 @@ export default function WhatsApp() {
 
   const fetchMessages = async () => {
     try {
+      // Fetch all messages for conversation view
       const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://tripund-backend-665685012221.asia-south1.run.app/api/v1'}/admin/whatsapp/messages`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
         },
       });
       const data = await response.json();
-      setMessages(data.messages || []);
+      
+      if (data.conversations) {
+        setConversations(data.conversations);
+      } else if (data.messages) {
+        setMessages(data.messages);
+      }
     } catch (error) {
       console.error('Error fetching messages:', error);
     }
@@ -412,13 +421,13 @@ export default function WhatsApp() {
         {activeTab === 'messages' && (
           <div className="p-6">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-medium">Messages</h3>
+              <h3 className="text-lg font-medium">Conversations</h3>
               <div className="flex items-center space-x-4">
                 <div className="relative">
                   <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                   <input
                     type="text"
-                    placeholder="Search messages..."
+                    placeholder="Search phone numbers..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
@@ -427,63 +436,68 @@ export default function WhatsApp() {
               </div>
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Contact
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Message
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Type
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Time
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {filteredMessages.map((message) => (
-                    <tr key={message.id}>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">
-                            {message.phone_number}
+            <div className="space-y-4">
+              {Object.entries(conversations || {})
+                .filter(([phoneNumber]) => 
+                  phoneNumber.includes(searchTerm) || searchTerm === ''
+                )
+                .map(([phoneNumber, msgs]) => {
+                  const lastMessage = msgs[0]; // Most recent message
+                  const messageCount = msgs.length;
+                  const unreadCount = msgs.filter(m => m.direction === 'incoming' && m.status !== 'read').length;
+                  
+                  return (
+                    <div 
+                      key={phoneNumber} 
+                      className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 cursor-pointer"
+                      onClick={() => setSelectedConversation(phoneNumber)}
+                    >
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-3 mb-2">
+                            <h4 className="font-medium text-gray-900">{phoneNumber}</h4>
+                            <span className="text-xs text-gray-500">
+                              {messageCount} messages
+                            </span>
+                            {unreadCount > 0 && (
+                              <span className="bg-green-500 text-white text-xs px-2 py-1 rounded-full">
+                                {unreadCount} new
+                              </span>
+                            )}
                           </div>
-                          <div className="text-sm text-gray-500">
-                            {message.direction === 'incoming' ? 'Incoming' : 'Outgoing'}
+                          <div className="flex items-center space-x-2">
+                            <div className={`w-2 h-2 rounded-full ${
+                              lastMessage?.direction === 'incoming' ? 'bg-blue-500' : 'bg-gray-400'
+                            }`}></div>
+                            <p className="text-sm text-gray-600 flex-1 truncate">
+                              {lastMessage?.direction === 'incoming' ? '📱 ' : '📤 '}
+                              {lastMessage?.content || 'No messages'}
+                            </p>
                           </div>
                         </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="text-sm text-gray-900 max-w-md truncate">
-                          {message.content}
+                        <div className="text-right">
+                          <p className="text-xs text-gray-500">
+                            {lastMessage?.created_at ? new Date(lastMessage.created_at).toLocaleDateString() : ''}
+                          </p>
+                          <div className="flex items-center mt-1">
+                            {getStatusIcon(lastMessage?.status || 'unknown')}
+                            <span className="ml-1 text-xs text-gray-500 capitalize">
+                              {lastMessage?.status || ''}
+                            </span>
+                          </div>
                         </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <span className="capitalize">{message.type}</span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          {getStatusIcon(message.status)}
-                          <span className="ml-2 text-sm text-gray-900 capitalize">
-                            {message.status}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {new Date(message.timestamp).toLocaleString()}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                      </div>
+                    </div>
+                  );
+                })}
+              
+              {Object.keys(conversations || {}).length === 0 && (
+                <div className="text-center py-12">
+                  <MessageCircle className="w-12 h-12 mx-auto text-gray-400 mb-4" />
+                  <p className="text-gray-500">No conversations yet</p>
+                  <p className="text-sm text-gray-400">Messages will appear here when customers contact you via WhatsApp</p>
+                </div>
+              )}
             </div>
           </div>
         )}
