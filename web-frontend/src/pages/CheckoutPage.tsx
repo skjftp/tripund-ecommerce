@@ -19,7 +19,10 @@ const checkoutSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
   lastName: z.string().min(1, 'Last name is required'),
   email: z.string().email('Invalid email address'),
-  phone: z.string().min(10, 'Phone number must be at least 10 digits'),
+  countryCode: z.string().default('91'),
+  phone: z.string()
+    .length(10, 'Phone number must be exactly 10 digits')
+    .regex(/^[1-9][0-9]{9}$/, 'Phone number must be 10 digits and cannot start with 0'),
   address: z.object({
     line1: z.string().min(1, 'Address is required'),
     line2: z.string().optional(),
@@ -267,7 +270,7 @@ export default function CheckoutPage() {
       firstName: data.firstName,
       lastName: data.lastName,
       email: data.email,
-      phone: data.phone,
+      phone: `+${data.countryCode}${data.phone}`,
       address: {
         line1: data.address.line1,
         line2: data.address.line2 || '',
@@ -408,16 +411,42 @@ export default function CheckoutPage() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Phone
+                      Phone Number
                     </label>
-                    <input
-                      {...register('phone')}
-                      type="tel"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                    />
+                    <div className="flex">
+                      <select
+                        {...register('countryCode')}
+                        className="px-3 py-2 border border-r-0 border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white min-w-0 flex-shrink-0"
+                      >
+                        <option value="91">🇮🇳 +91</option>
+                        <option value="1">🇺🇸 +1</option>
+                        <option value="44">🇬🇧 +44</option>
+                        <option value="971">🇦🇪 +971</option>
+                        <option value="60">🇲🇾 +60</option>
+                        <option value="65">🇸🇬 +65</option>
+                      </select>
+                      <input
+                        {...register('phone')}
+                        type="tel"
+                        placeholder="9876543210"
+                        maxLength={10}
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-r-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                        onInput={(e) => {
+                          // Only allow digits and enforce 10-digit limit
+                          const target = e.target as HTMLInputElement;
+                          target.value = target.value.replace(/[^0-9]/g, '').slice(0, 10);
+                        }}
+                      />
+                    </div>
                     {errors.phone && (
                       <p className="text-red-500 text-sm mt-1">{errors.phone.message}</p>
                     )}
+                    {errors.countryCode && (
+                      <p className="text-red-500 text-sm mt-1">{errors.countryCode.message}</p>
+                    )}
+                    <p className="text-xs text-gray-500 mt-1">
+                      Enter 10-digit mobile number (cannot start with 0)
+                    </p>
                   </div>
                 </div>
               </div>
