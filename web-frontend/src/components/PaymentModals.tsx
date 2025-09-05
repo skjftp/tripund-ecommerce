@@ -113,7 +113,7 @@ export function PaymentFailedModal({ isOpen, onClose, onRetry }: PaymentFailedMo
             onClick={onClose}
             className="px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-semibold"
           >
-            Cancel
+            Continue Shopping
           </button>
           
           <button
@@ -123,7 +123,7 @@ export function PaymentFailedModal({ isOpen, onClose, onRetry }: PaymentFailedMo
             }}
             className="px-4 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-semibold"
           >
-            Retry Payment
+            Try Again
           </button>
         </div>
       </div>

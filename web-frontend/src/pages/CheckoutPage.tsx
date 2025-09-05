@@ -825,19 +825,27 @@ export default function CheckoutPage() {
       
       <PaymentFailedModal
         isOpen={showFailedModal}
-        onClose={() => setShowFailedModal(false)}
+        onClose={() => {
+          setShowFailedModal(false);
+          setLoading(false); // Reset loading state
+          navigate('/products'); // Continue shopping
+        }}
         onRetry={() => {
           setShowFailedModal(false);
-          // Stay on checkout page to retry
+          setLoading(false); // Reset loading state so user can try again
         }}
       />
       
       <PaymentCancelledModal
         isOpen={showCancelledModal}
-        onClose={() => setShowCancelledModal(false)}
+        onClose={() => {
+          setShowCancelledModal(false);
+          setLoading(false); // Reset loading state
+          navigate('/products'); // Continue shopping
+        }}
         onRetry={() => {
           setShowCancelledModal(false);
-          // Stay on checkout page to retry
+          setLoading(false); // Reset loading state so user can try again
         }}
       />
     </div>
