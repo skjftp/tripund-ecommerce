@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"sort"
+	"strings"
 	"time"
 
 	"cloud.google.com/go/firestore"
@@ -43,8 +44,7 @@ func NewOrderHandler(db *database.Firebase, whatsappService *services.WhatsAppSe
 }
 
 type CreateOrderRequest struct {
-	FirstName   string `json:"firstName" validate:"required"`
-	LastName    string `json:"lastName" validate:"required"`
+	Name        string `json:"name" validate:"required"`
 	Email       string `json:"email" validate:"required,email"`
 	Phone       string `json:"phone" validate:"required"`
 	Address     models.UserAddress `json:"address" validate:"required"`
@@ -309,7 +309,11 @@ func (h *OrderHandler) GetAllOrders(c *gin.Context) {
 				}
 				if userDoc.DataTo(&user) == nil {
 					// Override guest fields with actual user data
-					order.GuestName = user.Profile.FirstName + " " + user.Profile.LastName
+					// Build name from profile or use existing
+					fullName := strings.TrimSpace(user.Profile.FirstName + " " + user.Profile.LastName)
+					if fullName != "" {
+						order.GuestName = fullName
+					}
 					order.GuestEmail = user.Email
 					order.GuestPhone = user.Profile.Phone
 				}
@@ -644,7 +648,7 @@ func (h *OrderHandler) CreateGuestOrder(c *gin.Context) {
 		OrderNumber: orderNumber,
 		UserID:      "guest", // Mark as guest order
 		GuestEmail:  req.Email,
-		GuestName:   fmt.Sprintf("%s %s", req.FirstName, req.LastName),
+		GuestName:   req.Name,
 		GuestPhone:  req.Phone,
 		Items:       orderItems,
 		ShippingAddress: req.Address,

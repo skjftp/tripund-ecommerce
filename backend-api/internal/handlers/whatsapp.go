@@ -172,15 +172,15 @@ func (h *WhatsAppHandler) GetMessages(c *gin.Context) {
 		messages = append(messages, message)
 	}
 	
-	// Sort messages by created_at manually (newest first for conversations, oldest first for individual chats)
+	// Sort messages by created_at manually 
 	sort.Slice(messages, func(i, j int) bool {
 		timeI, _ := messages[i]["created_at"].(time.Time)
 		timeJ, _ := messages[j]["created_at"].(time.Time)
 		if phoneNumber != "" {
-			// For individual conversation, oldest first
+			// For individual conversation, oldest first (chat style - latest at bottom)
 			return timeI.Before(timeJ)
 		}
-		// For conversation list, newest first
+		// For conversation list, newest first (latest conversations on top)
 		return timeI.After(timeJ)
 	})
 	
