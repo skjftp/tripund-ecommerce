@@ -10,8 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/tripund-ecommerce/internal/config"
-	"github.com/tripund-ecommerce/internal/models"
+	"tripund-api/internal/config"
+	"tripund-api/internal/models"
 )
 
 type WhatsAppService struct {

@@ -11,10 +11,10 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/tripund-ecommerce/internal/database"
-	"github.com/tripund-ecommerce/internal/models"
-	"github.com/tripund-ecommerce/internal/services"
-	"github.com/tripund-ecommerce/internal/utils"
+	"tripund-api/internal/database"
+	"tripund-api/internal/models"
+	"tripund-api/internal/services"
+	"tripund-api/internal/utils"
 )
 
 type WhatsAppHandler struct {
