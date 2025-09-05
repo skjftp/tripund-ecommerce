@@ -413,10 +413,10 @@ export default function CheckoutPage() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Phone Number
                     </label>
-                    <div className="flex">
+                    <div className="flex w-full">
                       <select
                         {...register('countryCode')}
-                        className="px-3 py-2 border border-r-0 border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white min-w-0 flex-shrink-0"
+                        className="w-24 sm:w-32 px-2 sm:px-3 py-2 border border-r-0 border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white text-sm flex-shrink-0"
                       >
                         <option value="91">🇮🇳 +91</option>
                         <option value="1">🇺🇸 +1</option>
@@ -430,7 +430,7 @@ export default function CheckoutPage() {
                         type="tel"
                         placeholder="9876543210"
                         maxLength={10}
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-r-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                        className="flex-1 min-w-0 px-3 py-2 border border-gray-300 rounded-r-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                         onInput={(e) => {
                           // Only allow digits and enforce 10-digit limit
                           const target = e.target as HTMLInputElement;
