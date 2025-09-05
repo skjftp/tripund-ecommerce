@@ -140,13 +140,13 @@ export default function CheckoutPage() {
     };
   }, []);
 
-  // Auto-apply TRIPUND20 for first-time users
-  useEffect(() => {
-    if (!isAuthenticated && !appliedPromo && !localStorage.getItem('tripund_promo_used')) {
-      setPromoCode('TRIPUND20');
-      applyPromoCode('TRIPUND20');
-    }
-  }, [isAuthenticated, appliedPromo]);
+  // Auto-apply promo code removed - users can manually enter promo codes if needed
+  // useEffect(() => {
+  //   if (!isAuthenticated && !appliedPromo && !localStorage.getItem('tripund_promo_used')) {
+  //     setPromoCode('TRIPUND20');
+  //     applyPromoCode('TRIPUND20');
+  //   }
+  // }, [isAuthenticated, appliedPromo]);
 
   const applyPromoCode = async (code?: string) => {
     const codeToApply = code || promoCode;
