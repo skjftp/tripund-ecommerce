@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"tripund-api/internal/database"
+	"tripund-api/internal/models"
 	"tripund-api/internal/services"
 )
 
@@ -50,7 +51,13 @@ func (h *WhatsAppHandler) SendMessage(c *gin.Context) {
 
 	var request struct {
 		PhoneNumber string `json:"phone_number" binding:"required"`
-		Message     string `json:"message" binding:"required"`
+		Message     string `json:"message"`
+		Type        string `json:"type" binding:"required"` // "text" or "template"
+		TemplateID  string `json:"template_id"`
+		Parameters  []struct {
+			Type string `json:"type"`
+			Text string `json:"text"`
+		} `json:"parameters"`
 	}
 
 	if err := c.ShouldBindJSON(&request); err != nil {
@@ -58,7 +65,40 @@ func (h *WhatsAppHandler) SendMessage(c *gin.Context) {
 		return
 	}
 
-	message, err := h.whatsappService.SendTextMessage(request.PhoneNumber, request.Message)
+	// Validate based on message type
+	if request.Type == "text" && request.Message == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Message is required for text messages"})
+		return
+	}
+	
+	if request.Type == "template" && request.TemplateID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Template ID is required for template messages"})
+		return
+	}
+
+	var message *models.WhatsAppMessage
+	var err error
+
+	if request.Type == "template" && request.TemplateID != "" {
+		// Convert parameters
+		parameters := make([]models.ParameterContent, len(request.Parameters))
+		for i, p := range request.Parameters {
+			parameters[i] = models.ParameterContent{
+				Type: p.Type,
+				Text: p.Text,
+			}
+		}
+		
+		message, err = h.whatsappService.SendTemplateMessage(
+			request.PhoneNumber,
+			request.TemplateID,
+			"en_US", // Default language
+			parameters,
+		)
+	} else {
+		message, err = h.whatsappService.SendTextMessage(request.PhoneNumber, request.Message)
+	}
+
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
