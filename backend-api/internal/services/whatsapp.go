@@ -393,49 +393,102 @@ func (w *WhatsAppService) SendOTP(phoneNumber, otp, purpose string) error {
 	return err
 }
 
-// Send order confirmation via WhatsApp
+// Send order confirmation using approved template
 func (w *WhatsAppService) SendOrderConfirmation(phoneNumber, customerName, orderID, amount string, items []string) error {
-	itemList := strings.Join(items, "\n• ")
+	// Clean phone number (remove +, spaces, etc.)
+	cleanPhone := strings.ReplaceAll(strings.ReplaceAll(phoneNumber, "+", ""), " ", "")
 	
-	message := fmt.Sprintf(`🎉 Order Confirmed!
-
-Dear %s,
-
-Your order #%s has been confirmed successfully.
-
-📦 Items:
-• %s
-
-💰 Total Amount: ₹%s
-
-We'll notify you once your order is shipped. Thank you for choosing TRIPUND!
-
-🌐 Track your order: https://tripundlifestyle.netlify.app/orders
-
-Have questions? Reply to this message.`, customerName, orderID, itemList, amount)
+	// Use the approved order_management_1 template
+	templateContent := &models.TemplateContent{
+		Name: "order_management_1",
+		Language: models.LanguageContent{
+			Code: "en_US",
+		},
+		Components: []models.ComponentContent{
+			{
+				Type: "body",
+				Parameters: []models.ParameterContent{
+					{Type: "text", Text: customerName},
+					{Type: "text", Text: orderID},
+					{Type: "text", Text: "3-7 business days"}, // Standard delivery time
+				},
+			},
+		},
+	}
 	
-	_, err := w.SendTextMessage(phoneNumber, message)
-	return err
+	requestBody := models.SendMessageRequest{
+		MessagingProduct: "whatsapp",
+		RecipientType:    "individual",
+		To:               cleanPhone,
+		Type:             "template",
+		Template:         templateContent,
+	}
+	
+	_, err := w.sendMessage(requestBody)
+	if err != nil {
+		log.Printf("Failed to send WhatsApp order confirmation to %s: %v", phoneNumber, err)
+		return err
+	}
+	
+	log.Printf("WhatsApp order confirmation sent successfully to %s using template order_management_1", phoneNumber)
+	return nil
 }
 
-// Send shipping confirmation via WhatsApp
+// Send shipping confirmation using approved template shipping_v1
 func (w *WhatsAppService) SendShippingConfirmation(phoneNumber, customerName, orderID, trackingURL string) error {
-	message := fmt.Sprintf(`🚚 Order Shipped!
-
-Dear %s,
-
-Great news! Your order #%s has been shipped and is on its way to you.
-
-📱 Track your shipment: %s
-
-Expected delivery: 3-7 business days
-
-Thank you for shopping with TRIPUND!
-
-Have questions? Reply to this message.`, customerName, orderID, trackingURL)
+	// Clean phone number (remove +, spaces, etc.)
+	cleanPhone := strings.ReplaceAll(strings.ReplaceAll(phoneNumber, "+", ""), " ", "")
 	
-	_, err := w.SendTextMessage(phoneNumber, message)
-	return err
+	// Use the approved shipping_v1 template
+	templateContent := &models.TemplateContent{
+		Name: "shipping_v1",
+		Language: models.LanguageContent{
+			Code: "en_US",
+		},
+		Components: []models.ComponentContent{
+			{
+				Type: "body",
+				Parameters: []models.ParameterContent{
+					{Type: "text", Text: customerName},
+					{Type: "text", Text: orderID},
+				},
+			},
+		},
+	}
+	
+	// If tracking URL is provided, add it as a button parameter
+	// Note: The template button URL pattern is https://www.example.com/{{1}}
+	// We need to replace this with the actual tracking URL
+	// For now, the template will use the default button since we can't dynamically change button URLs
+	
+	requestBody := models.SendMessageRequest{
+		MessagingProduct: "whatsapp",
+		RecipientType:    "individual",
+		To:               cleanPhone,
+		Type:             "template",
+		Template:         templateContent,
+	}
+	
+	_, err := w.sendMessage(requestBody)
+	if err != nil {
+		log.Printf("Failed to send WhatsApp shipping confirmation to %s: %v", phoneNumber, err)
+		return err
+	}
+	
+	log.Printf("WhatsApp shipping confirmation sent successfully to %s using template shipping_v1", phoneNumber)
+	
+	// Also send tracking URL as a separate text message if provided
+	if trackingURL != "" && trackingURL != "https://tripundlifestyle.netlify.app/orders" {
+		trackingMessage := fmt.Sprintf("📦 Track your shipment here: %s", trackingURL)
+		_, textErr := w.SendTextMessage(phoneNumber, trackingMessage)
+		if textErr != nil {
+			log.Printf("Failed to send tracking URL to %s: %v", phoneNumber, textErr)
+		} else {
+			log.Printf("Tracking URL sent successfully to %s", phoneNumber)
+		}
+	}
+	
+	return nil
 }
 
 // Helper function to generate IDs
@@ -489,3 +542,4 @@ func (w *WhatsAppService) ProcessWebhookMessage(webhook models.WebhookMessage) e
 	
 	return nil
 }
+
