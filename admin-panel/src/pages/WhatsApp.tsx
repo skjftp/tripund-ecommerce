@@ -317,8 +317,8 @@ export default function WhatsApp() {
       const data = await response.json();
       
       if (data.messages) {
-        // Sort messages chronologically (oldest first for chat display)
-        setConversationMessages(data.messages.reverse());
+        // Messages should already be sorted oldest first from backend
+        setConversationMessages(data.messages);
       }
     } catch (error) {
       console.error('Error fetching conversation:', error);
