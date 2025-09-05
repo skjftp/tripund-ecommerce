@@ -16,8 +16,7 @@ import { formatPrice } from '../utils/pricing';
 import { calculateCartStateBasedGST, INDIAN_STATES, type GSTBreakdown } from '../utils/gst';
 
 const checkoutSchema = z.object({
-  firstName: z.string().min(1, 'First name is required'),
-  lastName: z.string().min(1, 'Last name is required'),
+  name: z.string().min(2, 'Name is required (minimum 2 characters)'),
   email: z.string().email('Invalid email address'),
   countryCode: z.string().default('91'),
   phone: z.string()
@@ -126,8 +125,9 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     if (user) {
-      setValue('firstName', user.profile.first_name);
-      setValue('lastName', user.profile.last_name);
+      // Combine first name and last name into single name field
+      const fullName = [user.profile.first_name, user.profile.last_name].filter(Boolean).join(' ');
+      setValue('name', fullName);
       setValue('email', user.email);
       setValue('phone', user.profile.phone);
     }
@@ -267,8 +267,7 @@ export default function CheckoutPage() {
 
     // Transform the data to match backend structure
     const orderData = {
-      firstName: data.firstName,
-      lastName: data.lastName,
+      name: data.name,
       email: data.email,
       phone: `+${data.countryCode}${data.phone}`,
       address: {
@@ -371,29 +370,18 @@ export default function CheckoutPage() {
                   <User className="mr-2" size={20} />
                   Contact Information
                 </h2>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      First Name
+                      Full Name
                     </label>
                     <input
-                      {...register('firstName')}
+                      {...register('name')}
+                      placeholder="Enter your full name"
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                     />
-                    {errors.firstName && (
-                      <p className="text-red-500 text-sm mt-1">{errors.firstName.message}</p>
-                    )}
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Last Name
-                    </label>
-                    <input
-                      {...register('lastName')}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                    />
-                    {errors.lastName && (
-                      <p className="text-red-500 text-sm mt-1">{errors.lastName.message}</p>
+                    {errors.name && (
+                      <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
                     )}
                   </div>
                   <div>
@@ -403,50 +391,56 @@ export default function CheckoutPage() {
                     <input
                       {...register('email')}
                       type="email"
+                      placeholder="your.email@example.com"
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                     />
                     {errors.email && (
                       <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
                     )}
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Phone Number
-                    </label>
-                    <div className="flex w-full">
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Country Code
+                      </label>
                       <select
                         {...register('countryCode')}
-                        className="w-24 sm:w-32 px-2 sm:px-3 py-2 border border-r-0 border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white text-sm flex-shrink-0"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white"
                       >
-                        <option value="91">🇮🇳 +91</option>
-                        <option value="1">🇺🇸 +1</option>
-                        <option value="44">🇬🇧 +44</option>
-                        <option value="971">🇦🇪 +971</option>
-                        <option value="60">🇲🇾 +60</option>
-                        <option value="65">🇸🇬 +65</option>
+                        <option value="91">🇮🇳 India (+91)</option>
+                        <option value="1">🇺🇸 USA (+1)</option>
+                        <option value="44">🇬🇧 United Kingdom (+44)</option>
+                        <option value="971">🇦🇪 UAE (+971)</option>
+                        <option value="60">🇲🇾 Malaysia (+60)</option>
+                        <option value="65">🇸🇬 Singapore (+65)</option>
                       </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Phone Number
+                      </label>
                       <input
                         {...register('phone')}
                         type="tel"
                         placeholder="9876543210"
                         maxLength={10}
-                        className="flex-1 min-w-0 px-3 py-2 border border-gray-300 rounded-r-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                         onInput={(e) => {
                           // Only allow digits and enforce 10-digit limit
                           const target = e.target as HTMLInputElement;
                           target.value = target.value.replace(/[^0-9]/g, '').slice(0, 10);
                         }}
                       />
+                      {errors.phone && (
+                        <p className="text-red-500 text-sm mt-1">{errors.phone.message}</p>
+                      )}
+                      {errors.countryCode && (
+                        <p className="text-red-500 text-sm mt-1">{errors.countryCode.message}</p>
+                      )}
+                      <p className="text-xs text-gray-500 mt-1">
+                        Enter 10-digit mobile number (cannot start with 0)
+                      </p>
                     </div>
-                    {errors.phone && (
-                      <p className="text-red-500 text-sm mt-1">{errors.phone.message}</p>
-                    )}
-                    {errors.countryCode && (
-                      <p className="text-red-500 text-sm mt-1">{errors.countryCode.message}</p>
-                    )}
-                    <p className="text-xs text-gray-500 mt-1">
-                      Enter 10-digit mobile number (cannot start with 0)
-                    </p>
                   </div>
                 </div>
               </div>
