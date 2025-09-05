@@ -14,7 +14,7 @@ import {
   ShoppingBag
 } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { RootState, AppDispatch } from '../../store';
 import { fetchCategories } from '../../store/slices/categoriesSlice';
 
@@ -46,6 +46,8 @@ export default function CategoryIcons() {
   const dispatch = useDispatch<AppDispatch>();
   const { categories } = useSelector((state: RootState) => state.categories);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [isUserScrolling, setIsUserScrolling] = useState(false);
+  const [userScrollTimeout, setUserScrollTimeout] = useState<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (categories.length === 0) {
@@ -124,7 +126,7 @@ export default function CategoryIcons() {
         }
       ];
 
-  // Auto scroll animation
+  // Auto scroll animation that respects user interaction
   useEffect(() => {
     const scrollContainer = scrollRef.current;
     if (!scrollContainer) return;
@@ -134,37 +136,86 @@ export default function CategoryIcons() {
     let animationId: number;
     
     const animate = () => {
-      scrollPosition += scrollSpeed;
-      
-      // Reset scroll when reaching halfway (since we duplicated categories)
-      const maxScroll = scrollContainer.scrollWidth / 2;
-      if (scrollPosition >= maxScroll) {
-        scrollPosition = 0;
+      // Only auto-scroll if user is not actively scrolling
+      if (!isUserScrolling) {
+        scrollPosition += scrollSpeed;
+        
+        // Reset scroll when reaching halfway (since we duplicated categories)
+        const maxScroll = scrollContainer.scrollWidth / 2;
+        if (scrollPosition >= maxScroll) {
+          scrollPosition = 0;
+        }
+        
+        scrollContainer.scrollLeft = scrollPosition;
+      } else {
+        // Update scroll position to match user's scroll
+        scrollPosition = scrollContainer.scrollLeft;
       }
       
-      scrollContainer.scrollLeft = scrollPosition;
       animationId = requestAnimationFrame(animate);
     };
     
     animationId = requestAnimationFrame(animate);
     
-    // Pause on hover
-    const handleMouseEnter = () => {
-      if (animationId) cancelAnimationFrame(animationId);
-    };
-    const handleMouseLeave = () => {
-      animationId = requestAnimationFrame(animate);
+    // Handle user scroll interactions
+    const handleScroll = () => {
+      setIsUserScrolling(true);
+      
+      // Clear existing timeout
+      if (userScrollTimeout) {
+        clearTimeout(userScrollTimeout);
+      }
+      
+      // Resume auto-scroll after user stops scrolling for 3 seconds
+      const timeout = setTimeout(() => {
+        setIsUserScrolling(false);
+        // Sync scroll position for smooth transition
+        scrollPosition = scrollContainer.scrollLeft;
+      }, 3000);
+      
+      setUserScrollTimeout(timeout);
     };
     
-    scrollContainer.addEventListener('mouseenter', handleMouseEnter);
-    scrollContainer.addEventListener('mouseleave', handleMouseLeave);
+    // Handle touch/mouse interactions to pause auto-scroll
+    const handleInteractionStart = () => {
+      setIsUserScrolling(true);
+      if (userScrollTimeout) {
+        clearTimeout(userScrollTimeout);
+      }
+    };
+    
+    const handleInteractionEnd = () => {
+      // Resume auto-scroll after 2 seconds of no interaction
+      const timeout = setTimeout(() => {
+        setIsUserScrolling(false);
+        scrollPosition = scrollContainer.scrollLeft;
+      }, 2000);
+      
+      setUserScrollTimeout(timeout);
+    };
+    
+    // Add event listeners
+    scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
+    scrollContainer.addEventListener('touchstart', handleInteractionStart, { passive: true });
+    scrollContainer.addEventListener('touchend', handleInteractionEnd, { passive: true });
+    scrollContainer.addEventListener('mousedown', handleInteractionStart);
+    scrollContainer.addEventListener('mouseup', handleInteractionEnd);
+    scrollContainer.addEventListener('mouseenter', handleInteractionStart);
+    scrollContainer.addEventListener('mouseleave', handleInteractionEnd);
     
     return () => {
       if (animationId) cancelAnimationFrame(animationId);
-      scrollContainer.removeEventListener('mouseenter', handleMouseEnter);
-      scrollContainer.removeEventListener('mouseleave', handleMouseLeave);
+      if (userScrollTimeout) clearTimeout(userScrollTimeout);
+      
+      scrollContainer.removeEventListener('scroll', handleScroll);
+      scrollContainer.removeEventListener('touchstart', handleInteractionStart);
+      scrollContainer.removeEventListener('touchend', handleInteractionEnd);
+      scrollContainer.removeEventListener('mousedown', handleInteractionStart);
+      scrollContainer.removeEventListener('mouseup', handleInteractionEnd);
+      scrollContainer.removeEventListener('mouseenter', handleInteractionStart);
+      scrollContainer.removeEventListener('mouseleave', handleInteractionEnd);
     };
-  }, []);
+  }, [isUserScrolling, userScrollTimeout]);
 
   return (
     <div className="bg-white border-b border-gray-100">
