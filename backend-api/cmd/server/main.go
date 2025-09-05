@@ -9,6 +9,7 @@ import (
 	"tripund-api/internal/handlers"
 	"tripund-api/internal/middleware"
 	"tripund-api/internal/models"
+	"tripund-api/internal/services"
 )
 
 func main() {
@@ -28,8 +29,8 @@ func main() {
 
 	authHandler := handlers.NewAuthHandler(db, cfg.JWTSecret)
 	productHandler := handlers.NewProductHandler(db)
-	paymentHandler := handlers.NewPaymentHandler(db, cfg.RazorpayKeyID, cfg.RazorpayKeySecret, cfg.RazorpayWebhookSecret)
-	orderHandler := handlers.NewOrderHandler(db)
+	paymentHandler := handlers.NewPaymentHandler(db, cfg.RazorpayKeyID, cfg.RazorpayKeySecret, cfg.RazorpayWebhookSecret, whatsappService)
+	orderHandler := handlers.NewOrderHandler(db, whatsappService)
 	categoryHandler := handlers.NewCategoryHandler(db)
 	contentHandler := handlers.NewContentHandler(db)
 	settingsHandler := handlers.NewSettingsHandler(db)
@@ -44,6 +45,13 @@ func main() {
 	promotionHandler := handlers.NewPromotionHandler(db)
 	invoiceHandler := handlers.NewInvoiceHandler(db)
 	adminUserHandler := handlers.NewAdminUserHandler(db, cfg.JWTSecret)
+	
+	// Initialize WhatsApp service
+	whatsappService := services.NewWhatsAppService(cfg)
+	if err := whatsappService.Initialize(); err != nil {
+		log.Printf("Warning: Failed to initialize WhatsApp service: %v", err)
+	}
+	whatsappHandler := handlers.NewWhatsAppHandler(db, whatsappService)
 
 	api := r.Group("/api/v1")
 	{
@@ -97,6 +105,10 @@ func main() {
 		// Promotion validation (public)
 		api.POST("/promotions/validate", promotionHandler.ValidatePromotion)
 		api.GET("/promotions/active", promotionHandler.GetActivePromotions)
+		
+		// WhatsApp OTP (public endpoints)
+		api.POST("/whatsapp/send-otp", whatsappHandler.SendOTP)
+		api.POST("/whatsapp/verify-otp", whatsappHandler.VerifyOTP)
 
 		// Guest checkout endpoints (no authentication required)
 		api.POST("/guest/orders", orderHandler.CreateGuestOrder)
@@ -242,9 +254,31 @@ func main() {
 			admin.PUT("/invoices/:id/status", invoiceHandler.UpdateInvoiceStatus)
 			admin.DELETE("/invoices/:id", invoiceHandler.DeleteInvoice)
 			admin.GET("/invoices/stats", invoiceHandler.GetInvoiceStats)
+			
+			// WhatsApp management (admin only)
+			whatsapp := admin.Group("/whatsapp")
+			{
+				// Template management
+				whatsapp.GET("/templates", whatsappHandler.GetTemplates)
+				whatsapp.POST("/templates", whatsappHandler.CreateTemplate)
+				
+				// Message management
+				whatsapp.POST("/send", whatsappHandler.SendMessage)
+				whatsapp.POST("/send-bulk", whatsappHandler.SendBulkMessages)
+				whatsapp.GET("/messages", whatsappHandler.GetMessages)
+				
+				// Contact management
+				whatsapp.GET("/contacts", whatsappHandler.GetContacts)
+				
+				// Campaign management
+				whatsapp.GET("/campaigns", whatsappHandler.GetCampaigns)
+			}
 		}
 
 		api.POST("/webhook/razorpay", paymentHandler.RazorpayWebhook)
+		
+		// WhatsApp webhook (public endpoint)
+		api.Any("/webhook/whatsapp", whatsappHandler.Webhook)
 	}
 
 	log.Printf("Server starting on port %s", cfg.Port)

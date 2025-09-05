@@ -28,9 +28,10 @@ type PaymentHandler struct {
 	webhookSecret       string
 	notificationHandler *NotificationHandler
 	emailService        *services.SendGridEmailService
+	whatsappService     *services.WhatsAppService
 }
 
-func NewPaymentHandler(db *database.Firebase, keyID, keySecret, webhookSecret string) *PaymentHandler {
+func NewPaymentHandler(db *database.Firebase, keyID, keySecret, webhookSecret string, whatsappService *services.WhatsAppService) *PaymentHandler {
 	client := razorpay.NewClient(keyID, keySecret)
 	
 	// Initialize email service
@@ -47,6 +48,7 @@ func NewPaymentHandler(db *database.Firebase, keyID, keySecret, webhookSecret st
 		webhookSecret:       webhookSecret,
 		notificationHandler: NewNotificationHandler(db),
 		emailService:        emailService,
+		whatsappService:     whatsappService,
 	}
 }
 
@@ -168,6 +170,56 @@ func (h *PaymentHandler) VerifyPayment(c *gin.Context) {
 			}
 		} else {
 			log.Printf("Email service not available for order %s", req.OrderID)
+		}
+		
+		// Send WhatsApp order confirmation
+		if h.whatsappService != nil {
+			customerName := "Customer"
+			if order.CustomerInfo.FirstName != "" {
+				customerName = order.CustomerInfo.FirstName + " " + order.CustomerInfo.LastName
+			}
+			
+			// Build items list
+			var items []string
+			for _, item := range order.Items {
+				itemText := item.Name
+				if item.Variant.Color != "" || item.Variant.Size != "" {
+					itemText += " ("
+					if item.Variant.Color != "" {
+						itemText += item.Variant.Color
+					}
+					if item.Variant.Size != "" {
+						if item.Variant.Color != "" {
+							itemText += ", "
+						}
+						itemText += item.Variant.Size
+					}
+					itemText += ")"
+				}
+				itemText += fmt.Sprintf(" x%d", item.Quantity)
+				items = append(items, itemText)
+			}
+			
+			phoneNumber := order.BillingAddress.Phone
+			if phoneNumber == "" {
+				phoneNumber = order.ShippingAddress.Phone
+			}
+			
+			if phoneNumber != "" {
+				if err := h.whatsappService.SendOrderConfirmation(
+					phoneNumber,
+					customerName,
+					order.OrderNumber,
+					fmt.Sprintf("%.2f", order.Totals.Total),
+					items,
+				); err != nil {
+					log.Printf("Failed to send WhatsApp order confirmation for order %s: %v", req.OrderID, err)
+				} else {
+					log.Printf("WhatsApp order confirmation sent successfully for order %s", req.OrderID)
+				}
+			} else {
+				log.Printf("No phone number available for WhatsApp notification for order %s", req.OrderID)
+			}
 		}
 	}()
 

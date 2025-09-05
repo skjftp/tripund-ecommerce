@@ -18,6 +18,11 @@ type Config struct {
 	JWTSecret             string
 	CORSOrigin            string
 	StorageBucket         string
+	// WhatsApp Business API
+	WhatsAppAccessToken   string
+	WhatsAppBusinessID    string
+	WhatsAppPhoneNumberID string
+	WhatsAppWebhookSecret string
 }
 
 func Load() *Config {
@@ -36,6 +41,11 @@ func Load() *Config {
 		JWTSecret:             getEnv("JWT_SECRET", "your-secret-key"),
 		CORSOrigin:            getEnv("CORS_ORIGIN", "http://localhost:5173"),
 		StorageBucket:         getEnv("STORAGE_BUCKET", ""),
+		// WhatsApp Business API
+		WhatsAppAccessToken:   getEnv("WHATSAPP_ACCESS_TOKEN", ""),
+		WhatsAppBusinessID:    getEnv("WHATSAPP_BUSINESS_ID", "657280173978203"),
+		WhatsAppPhoneNumberID: getEnv("WHATSAPP_PHONE_NUMBER_ID", ""),
+		WhatsAppWebhookSecret: getEnv("WHATSAPP_WEBHOOK_SECRET", "tripund-wa-secret"),
 	}
 }
 

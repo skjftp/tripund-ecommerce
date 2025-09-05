@@ -20,9 +20,10 @@ type OrderHandler struct {
 	db                   *database.Firebase
 	notificationHandler  *NotificationHandler
 	emailService         *services.SendGridEmailService
+	whatsappService      *services.WhatsAppService
 }
 
-func NewOrderHandler(db *database.Firebase) *OrderHandler {
+func NewOrderHandler(db *database.Firebase, whatsappService *services.WhatsAppService) *OrderHandler {
 	// Initialize SendGrid email service
 	log.Printf("Initializing SendGrid email service...")
 	emailService, err := services.NewSendGridEmailService()
@@ -36,6 +37,7 @@ func NewOrderHandler(db *database.Firebase) *OrderHandler {
 	return &OrderHandler{
 		db:                  db,
 		notificationHandler: NewNotificationHandler(db),
+		whatsappService:     whatsappService,
 		emailService:        emailService,
 	}
 }
@@ -458,7 +460,7 @@ func (h *OrderHandler) UpdateOrderStatus(c *gin.Context) {
 	if req.Status == "shipped" && order.Status != "shipped" {
 		message = "Order marked as shipped and product stock updated"
 		
-		// Send shipping confirmation email
+		// Send shipping confirmation email and WhatsApp
 		go func() {
 			if h.emailService != nil {
 				if err := h.emailService.SendShippingConfirmation(order); err != nil {
@@ -468,6 +470,39 @@ func (h *OrderHandler) UpdateOrderStatus(c *gin.Context) {
 				}
 			} else {
 				log.Printf("Email service not available, skipping shipping confirmation email for order %s", orderID)
+			}
+			
+			// Send WhatsApp shipping confirmation
+			if h.whatsappService != nil {
+				customerName := "Customer"
+				if order.CustomerInfo.FirstName != "" {
+					customerName = order.CustomerInfo.FirstName + " " + order.CustomerInfo.LastName
+				}
+				
+				phoneNumber := order.BillingAddress.Phone
+				if phoneNumber == "" {
+					phoneNumber = order.ShippingAddress.Phone
+				}
+				
+				trackingURL := req.TrackingURL
+				if trackingURL == "" {
+					trackingURL = fmt.Sprintf("https://tripundlifestyle.netlify.app/orders")
+				}
+				
+				if phoneNumber != "" {
+					if err := h.whatsappService.SendShippingConfirmation(
+						phoneNumber,
+						customerName,
+						order.OrderNumber,
+						trackingURL,
+					); err != nil {
+						log.Printf("Failed to send WhatsApp shipping confirmation for order %s: %v", orderID, err)
+					} else {
+						log.Printf("WhatsApp shipping confirmation sent successfully for order %s", orderID)
+					}
+				} else {
+					log.Printf("No phone number available for WhatsApp shipping notification for order %s", orderID)
+				}
 			}
 		}()
 	}

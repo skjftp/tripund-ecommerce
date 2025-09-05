@@ -1,0 +1,41 @@
+#!/bin/bash
+
+# Restore TRIPUND settings with GST configuration
+echo "🔧 Restoring TRIPUND settings with GST configuration..."
+
+# Wait for deployment to complete
+echo "⏳ Waiting for backend deployment to complete..."
+sleep 60
+
+# Get latest admin token (you'll need to provide this)
+echo "📡 Using admin token to restore settings..."
+
+curl -X PUT "https://tripund-backend-665685012221.asia-south1.run.app/api/v1/admin/settings" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWluQHRyaXB1bmQuY29tIiwiZXhwIjoxNzU5MTgzNjQ4LCJmaXJzdF9uYW1lIjoiU3VwZXIiLCJpYXQiOjE3NTY1OTE2NDgsImlzcyI6InRyaXB1bmQtYmFja2VuZCIsImxhc3RfbmFtZSI6IkFkbWluaXN0cmF0b3IiLCJwZXJtaXNzaW9ucyI6WyJ1c2Vycy52aWV3IiwidXNlcnMuY3JlYXRlIiwidXNlcnMuZWRpdCIsInVzZXJzLmRlbGV0ZSIsInByb2R1Y3RzLnZpZXciLCJwcm9kdWN0cy5jcmVhdGUiLCJwcm9kdWN0cy5lZGl0IiwicHJvZHVjdHMuZGVsZXRlIiwib3JkZXJzLnZpZXciLCJvcmRlcnMuZWRpdCIsIm9yZGVycy5kZWxldGUiLCJvcmRlcnMucmVmdW5kIiwiY2F0ZWdvcmllcy52aWV3IiwiY2F0ZWdvcmllcy5jcmVhdGUiLCJjYXRlZ29yaWVzLmVkaXQiLCJjYXRlZ29yaWVzLmRlbGV0ZSIsImFuYWx5dGljcy52aWV3IiwicmVwb3J0cy52aWV3IiwicmVwb3J0cy5leHBvcnQiLCJzZXR0aW5ncy52aWV3Iiwic2V0dGluZ3MuZWRpdCIsInN5c3RlbS5sb2dzIiwic3lzdGVtLmJhY2t1cCIsInN5c3RlbS5tYWludGVuYW5jZSJdLCJyb2xlIjoic3VwZXJfYWRtaW4iLCJzdWIiOiJIZUc5Zkg1eDh2ZGNIaUQ5RVlZdSIsInVzZXJfaWQiOiJIZUc5Zkg1eDh2ZGNIaUQ5RVlZdSJ9.b5GhFhdPddpE_erkMCK0Eois5lJP6LdJ3H2LM7L_voo" \
+  -d @complete-settings-restore.json
+
+if [ $? -eq 0 ]; then
+  echo "✅ Settings restored successfully!"
+  
+  # Test invoice generation
+  echo "🧾 Testing invoice generation..."
+  curl -X POST "https://tripund-backend-665685012221.asia-south1.run.app/api/v1/admin/invoices/generate" \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWluQHRyaXB1bmQuY29tIiwiZXhwIjoxNzU5MTgzNjQ4LCJmaXJzdF9uYW1lIjoiU3VwZXIiLCJpYXQiOjE3NTY1OTE2NDgsImlzcyI6InRyaXB1bmQtYmFja2VuZCIsImxhc3RfbmFtZSI6IkFkbWluaXN0cmF0b3IiLCJwZXJtaXNzaW9ucyI6WyJ1c2Vycy52aWV3IiwidXNlcnMuY3JlYXRlIiwidXNlcnMuZWRpdCIsInVzZXJzLmRlbGV0ZSIsInByb2R1Y3RzLnZpZXciLCJwcm9kdWN0cy5jcmVhdGUiLCJwcm9kdWN0cy5lZGl0IiwicHJvZHVjdHMuZGVsZXRlIiwib3JkZXJzLnZpZXciLCJvcmRlcnMuZWRpdCIsIm9yZGVycy5kZWxldGUiLCJvcmRlcnMucmVmdW5kIiwiY2F0ZWdvcmllcy52aWV3IiwiY2F0ZWdvcmllcy5jcmVhdGUiLCJjYXRlZ29yaWVzLmVkaXQiLCJjYXRlZ29yaWVzLmRlbGV0ZSIsImFuYWx5dGljcy52aWV3IiwicmVwb3J0cy52aWV3IiwicmVwb3J0cy5leHBvcnQiLCJzZXR0aW5ncy52aWV3Iiwic2V0dGluZ3MuZWRpdCIsInN5c3RlbS5sb2dzIiwic3lzdGVtLmJhY2t1cCIsInN5c3RlbS5tYWludGVuYW5jZSJdLCJyb2xlIjoic3VwZXJfYWRtaW4iLCJzdWIiOiJIZUc5Zkg1eDh2ZGNIaUQ5RVlZdSIsInVzZXJfaWQiOiJIZUc5Zkg1eDh2ZGNIaUQ5RVlZdSJ9.b5GhFhdPddpE_erkMCK0Eois5lJP6LdJ3H2LM7L_voo" \
+    -d '{
+      "order_id": "3e0ebfa0cb0415611ede1d0c33e82c25",
+      "due_days": 30
+    }'
+  
+  echo ""
+  echo "🧾 Testing invoice API..."
+  curl -s "https://tripund-backend-665685012221.asia-south1.run.app/api/v1/admin/invoices?page=1&limit=5" \
+    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWluQHRyaXB1bmQuY29tIiwiZXhwIjoxNzU5MTgzNjQ4LCJmaXJzdF9uYW1lIjoiU3VwZXIiLCJpYXQiOjE3NTY1OTE2NDgsImlzcyI6InRyaXB1bmQtYmFja2VuZCIsImxhc3RfbmFtZSI6IkFkbWluaXN0cmF0b3IiLCJwZXJtaXNzaW9ucyI6WyJ1c2Vycy52aWV3IiwidXNlcnMuY3JlYXRlIiwidXNlcnMuZWRpdCIsInVzZXJzLmRlbGV0ZSIsInByb2R1Y3RzLnZpZXciLCJwcm9kdWN0cy5jcmVhdGUiLCJwcm9kdWN0cy5lZGl0IiwicHJvZHVjdHMuZGVsZXRlIiwib3JkZXJzLnZpZXciLCJvcmRlcnMuZWRpdCIsIm9yZGVycy5kZWxldGUiLCJvcmRlcnMucmVmdW5kIiwiY2F0ZWdvcmllcy52aWV3IiwiY2F0ZWdvcmllcy5jcmVhdGUiLCJjYXRlZ29yaWVzLmVkaXQiLCJjYXRlZ29yaWVzLmRlbGV0ZSIsImFuYWx5dGljcy52aWV3IiwicmVwb3J0cy52aWV3IiwicmVwb3J0cy5leHBvcnQiLCJzZXR0aW5ncy52aWV3Iiwic2V0dGluZ3MuZWRpdCIsInN5c3RlbS5sb2dzIiwic3lzdGVtLmJhY2t1cCIsInN5c3RlbS5tYWludGVuYW5jZSJdLCJyb2xlIjoic3VwZXJfYWRtaW4iLCJzdWIiOiJIZUc5Zkg1eDh2ZGNIaUQ5RVlZdSIsInVzZXJfaWQiOiJIZUc5Zkg1eDh2ZGNIaUQ5RVlZdSJ9.b5GhFhdPddpE_erkMCK0Eois5lJP6LdJ3H2LM7L_voo"
+else
+  echo "❌ Failed to restore settings"
+fi
+
+echo ""
+echo "📋 Invoice system restoration complete!"
+echo "📧 Next: Test admin panel GST settings save functionality"

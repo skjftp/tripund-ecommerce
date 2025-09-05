@@ -1,0 +1,53 @@
+{
+  "general": {
+    "store_name": "TRIPUND Lifestyle",
+    "store_email": "orders@tripundlifestyle.com", 
+    "store_phone": "+91 9711441830",
+    "store_address": "A-509, Logix Technova, Sector-132, NOIDA, UP 201301",
+    "currency": "INR",
+    "maintenance_mode": false
+  },
+  "shipping": {
+    "free_shipping_threshold": 2000,
+    "standard_shipping_rate": 100,
+    "express_shipping_rate": 200,
+    "processing_time": 2,
+    "delivery_zones": [
+      "Metro Cities (3-5 days)",
+      "Tier 1 Cities (5-7 days)", 
+      "Tier 2/3 Cities (7-10 days)",
+      "Remote Areas (10-15 days)"
+    ]
+  },
+  "payment": {
+    "razorpay_enabled": true,
+    "razorpay_key": "rzp_live_R8hjOfsT9hUkwE",
+    "cod_enabled": true,
+    "cod_limit": 10000,
+    "tax_rate": 18,
+    "prepaid_discount": 0
+  },
+  "invoice": {
+    "gstin": "09AALCT9072D1ZY",
+    "registered_name": "Tripund Lifestyle Private Limited", 
+    "home_state": "Uttar Pradesh",
+    "home_state_code": "09",
+    "registered_address": "Floor No.: Tower-A, Building No./Flat No.: Office No.-509, Name Of Premises/Building: Logix Technova, Road/Street: Sector-132, City: Greater Noida, State: Uttar Pradesh",
+    "pan": "AALCT9072D",
+    "contact_person": "",
+    "address_line1": "Office No.-509, Logix Technova, Tower-A",
+    "address_line2": "Sector-132, Greater Noida",
+    "city": "Greater Noida",
+    "postal_code": "201310",
+    "invoice_prefix": "TLS",
+    "invoice_start_number": 1000,
+    "hsn_code": "67029900",
+    "place_of_supply": "Greater Noida",
+    "bank_name": "HDFC Bank",
+    "bank_account": "50200012345678",
+    "bank_ifsc": "HDFC0000123",
+    "bank_branch": "Noida Sector 132",
+    "terms_conditions": "Thank you for your business! Payment due within 30 days.",
+    "footer_note": "This is a computer generated invoice."
+  }
+}

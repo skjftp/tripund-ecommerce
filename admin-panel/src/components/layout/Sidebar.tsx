@@ -17,6 +17,7 @@ import {
   MessageSquare,
   Receipt,
   Mail,
+  MessageCircle,
 } from 'lucide-react';
 import { useDispatch } from 'react-redux';
 import { logout } from '../../store/slices/authSlice';
@@ -39,6 +40,7 @@ export default function Sidebar({ isOpen = true, onClose }: SidebarProps) {
     { icon: Users, label: 'Customers', path: '/customers', pageId: 'customers' },
     { icon: UserCog, label: 'Admin Users', path: '/users', pageId: 'users' },
     { icon: MessageSquare, label: 'Messages', path: '/contact-messages', pageId: 'contact-messages' },
+    { icon: MessageCircle, label: 'WhatsApp', path: '/whatsapp', pageId: 'whatsapp' },
     { icon: FolderTree, label: 'Categories', path: '/categories', pageId: 'categories' },
     { icon: FileText, label: 'Content', path: '/content', pageId: 'content' },
     { icon: Shield, label: 'Legal', path: '/legal', pageId: 'legal' },
