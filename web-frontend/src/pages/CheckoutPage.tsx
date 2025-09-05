@@ -832,7 +832,7 @@ export default function CheckoutPage() {
         }}
         onRetry={() => {
           setShowFailedModal(false);
-          setLoading(false); // Reset loading state so user can try again
+          setLoading(false); // Reset loading state to enable retry on same page
         }}
       />
       
@@ -845,7 +845,7 @@ export default function CheckoutPage() {
         }}
         onRetry={() => {
           setShowCancelledModal(false);
-          setLoading(false); // Reset loading state so user can try again
+          setLoading(false); // Reset loading state to enable retry on same page
         }}
       />
     </div>
