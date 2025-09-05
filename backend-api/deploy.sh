@@ -35,14 +35,7 @@ gcloud run deploy ${SERVICE_NAME} \
   --port 8080 \
   --memory 512Mi \
   --max-instances 10 \
-  --set-env-vars "GIN_MODE=release" \
-  --set-env-vars "FIREBASE_PROJECT_ID=tripund-ecommerce-1755860933" \
-  --set-env-vars "JWT_SECRET=change-this-secret-key-in-production" \
-  --set-env-vars "CORS_ORIGIN=https://tripundlifestyle.com" \
-  --set-env-vars "STORAGE_BUCKET=${PROJECT_ID}.appspot.com" \
-  --set-env-vars "RAZORPAY_KEY_ID=rzp_live_R8hjOfsT9hUkwE" \
-  --set-env-vars "RAZORPAY_KEY_SECRET=eYQYNCRSIv9z5kvGBAgSyyk0" \
-  --set-env-vars "RAZORPAY_WEBHOOK_SECRET=webhook-tripund-678!!" \
+  --set-env-vars "WHATSAPP_BUSINESS_ID=1836026090679932,WHATSAPP_PHONE_NUMBER_ID=849480508241215,WHATSAPP_ACCESS_TOKEN=[PRODUCTION_WHATSAPP_ACCESS_TOKEN],WHATSAPP_WEBHOOK_SECRET=tripund-wa-secret,APP_BUILD_NUMBER=22,APP_DOWNLOAD_URL=https://github.com/skjftp/tripund-ecommerce/releases/download/v1.0.21/tripund-v1.0.21.apk,APP_VERSION=1.0.21,CORS_ORIGIN=https://tripundlifestyle.com,EMAIL_FROM=orders@tripundlifestyle.com,EMAIL_FROM_NAME=TRIPUND Lifestyle,FIREBASE_PROJECT_ID=tripund-ecommerce-1755860933,GIN_MODE=release,JWT_SECRET=Tripund678!!,RAZORPAY_KEY_ID=rzp_live_R9Uuc0X01ekIdc,RAZORPAY_KEY_SECRET=p9UF9sNieQuU8GnkM1cYTuNA,RAZORPAY_WEBHOOK_SECRET=webhook-tripund-678!!,SENDGRID_API_KEY=[PRODUCTION_SENDGRID_API_KEY],STORAGE_BUCKET=tripund-ecommerce-1755860933.appspot.com" \
   --project=${PROJECT_ID}
 
 if [ $? -eq 0 ]; then

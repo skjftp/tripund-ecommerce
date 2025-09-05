@@ -12,6 +12,15 @@ yarn-error.log*
 .env.production
 .env.development
 
+# WhatsApp Business API credentials (NEVER COMMIT)
+sys_user_token.xlsx
+*token*.xlsx
+whatsapp-credentials.*
+.whatsapp-env
+
+# Deployment scripts with sensitive environment variables (NEVER COMMIT)
+backend-api/deploy.sh
+
 # Build outputs
 dist/
 build/

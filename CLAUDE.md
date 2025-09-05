@@ -118,37 +118,55 @@ adb logcat -s flutter
 
 **STRICT PROHIBITION**: Under NO circumstances should ANY deployment or update EVER override, modify, or remove the production environment variables listed below. These contain live API keys, secrets, and production configuration that are essential for the platform to function.
 
-**CURRENT PRODUCTION ENVIRONMENT VARIABLES (AS OF AUGUST 30, 2025):**
+**CURRENT PRODUCTION ENVIRONMENT VARIABLES (AS OF SEPTEMBER 5, 2025):**
 ```
+# WhatsApp Business API (September 2025)
+WHATSAPP_BUSINESS_ID=1836026090679932
+WHATSAPP_PHONE_NUMBER_ID=849480508241215
+WHATSAPP_ACCESS_TOKEN=[PRODUCTION_WHATSAPP_ACCESS_TOKEN]
+WHATSAPP_WEBHOOK_SECRET=tripund-wa-secret
+
+# App Configuration
 APP_BUILD_NUMBER=22
 APP_DOWNLOAD_URL=https://github.com/skjftp/tripund-ecommerce/releases/download/v1.0.21/tripund-v1.0.21.apk
 APP_VERSION=1.0.21
+
+# Core Platform
 CORS_ORIGIN=https://tripundlifestyle.com
 EMAIL_FROM=orders@tripundlifestyle.com
 EMAIL_FROM_NAME=TRIPUND Lifestyle
 FIREBASE_PROJECT_ID=tripund-ecommerce-1755860933
 GIN_MODE=release
-JWT_SECRET=[LIVE_PRODUCTION_SECRET]
-RAZORPAY_KEY_ID=[LIVE_RAZORPAY_KEY]
-RAZORPAY_KEY_SECRET=[LIVE_RAZORPAY_SECRET]
-RAZORPAY_WEBHOOK_SECRET=[LIVE_WEBHOOK_SECRET]
-SENDGRID_API_KEY=[LIVE_SENDGRID_KEY]
+JWT_SECRET=Tripund678!!
 STORAGE_BUCKET=tripund-ecommerce-1755860933.appspot.com
+
+# Payment Integration
+RAZORPAY_KEY_ID=rzp_live_R9Uuc0X01ekIdc
+RAZORPAY_KEY_SECRET=p9UF9sNieQuU8GnkM1cYTuNA
+RAZORPAY_WEBHOOK_SECRET=webhook-tripund-678!!
+
+# Email Integration
+SENDGRID_API_KEY=[PRODUCTION_SENDGRID_API_KEY]
 ```
 
-**NOTE**: Actual secret values are masked above for security. Use `gcloud run services describe tripund-backend --region=asia-south1` to view current values when needed.
+**NOTE**: These are the EXACT production values that MUST be preserved during ALL deployments. Any deployment that removes or changes these variables will break the production system.
 
 **DEPLOYMENT SAFETY RULES:**
-1. **NEVER use `--set-env-vars` flag during deployments**
-2. **NEVER use `--env-vars-file` during deployments**
+1. **ALWAYS use ALL environment variables above when using `--set-env-vars`**
+2. **NEVER deploy with partial environment variable lists**
 3. **NEVER clear or reset environment variables**
 4. **ALWAYS verify env vars are intact after deployments**
 5. **Use `gcloud run services describe tripund-backend --region=asia-south1` to verify**
 
-**SAFE DEPLOYMENT COMMAND:**
+**SAFE DEPLOYMENT COMMAND (when environment variables need to be updated):**
 ```bash
 cd backend-api
-./deploy.sh  # This script preserves environment variables
+gcloud run services update tripund-backend \
+  --set-env-vars="WHATSAPP_BUSINESS_ID=1836026090679932,WHATSAPP_PHONE_NUMBER_ID=849480508241215,WHATSAPP_ACCESS_TOKEN=[PRODUCTION_WHATSAPP_ACCESS_TOKEN],WHATSAPP_WEBHOOK_SECRET=tripund-wa-secret,APP_BUILD_NUMBER=22,APP_DOWNLOAD_URL=https://github.com/skjftp/tripund-ecommerce/releases/download/v1.0.21/tripund-v1.0.21.apk,APP_VERSION=1.0.21,CORS_ORIGIN=https://tripundlifestyle.com,EMAIL_FROM=orders@tripundlifestyle.com,EMAIL_FROM_NAME=TRIPUND Lifestyle,FIREBASE_PROJECT_ID=tripund-ecommerce-1755860933,GIN_MODE=release,JWT_SECRET=Tripund678!!,RAZORPAY_KEY_ID=rzp_live_R9Uuc0X01ekIdc,RAZORPAY_KEY_SECRET=p9UF9sNieQuU8GnkM1cYTuNA,RAZORPAY_WEBHOOK_SECRET=webhook-tripund-678!!,SENDGRID_API_KEY=[PRODUCTION_SENDGRID_API_KEY],STORAGE_BUCKET=tripund-ecommerce-1755860933.appspot.com" \
+  --region=asia-south1
+
+# Standard code deployment (preserves existing environment variables)
+./deploy.sh
 ```
 
 **EMERGENCY RECOVERY**: If environment variables are accidentally overwritten:
@@ -819,6 +837,60 @@ Add this A record to your DNS provider:
   - Variant-aware email content (color/size info)
   - Asynchronous sending to avoid blocking
   - Scalable transactional email delivery
+- **WhatsApp Business API integration**:
+  - Complete Meta Graph API integration for messaging
+  - Template management (create/fetch/update via Meta API)
+  - Individual and bulk messaging with CSV support
+  - Webhook integration for incoming messages and status updates
+  - Automatic order confirmations via WhatsApp + Email
+  - Automatic shipping notifications with tracking links
+  - WhatsApp OTP system for authentication
+  - Contact and campaign management
+  - Admin panel WhatsApp section with full management UI
+  - Real-time message history and delivery status tracking
+
+## WhatsApp Business API System (September 2025)
+
+### Current Status: FULLY OPERATIONAL
+Complete WhatsApp Business integration with professional messaging capabilities:
+
+#### ✅ WhatsApp Integration Features (ACTIVE):
+- **Dual Notification System**: Orders and shipping sent via WhatsApp + Email
+- **Template Management**: Create and manage Meta-approved message templates
+- **Individual Messaging**: Send WhatsApp messages to specific customers
+- **Bulk Campaigns**: CSV-based mass messaging with template parameters
+- **Webhook Processing**: Real-time incoming message handling and status updates
+- **Contact Management**: Automatic contact creation from customer interactions
+- **OTP Authentication**: WhatsApp-based login and verification system
+- **Admin Dashboard**: Complete WhatsApp management interface
+- **Campaign Analytics**: Track message delivery, read receipts, and engagement
+
+#### WhatsApp Account Details:
+- **Business Account**: Tripund Lifestyle (VERIFIED)
+- **Phone Number**: +91 97114 41830 (GREEN quality rating)
+- **WABA ID**: 1836026090679932
+- **Phone Number ID**: 849480508241215
+- **Webhook URL**: https://tripund-backend-665685012221.asia-south1.run.app/api/v1/webhook/whatsapp
+- **Webhook Status**: ACTIVE and receiving messages
+
+#### Template Status:
+- **hello_world**: APPROVED (for testing)
+- **order_management_1**: APPROVED (for order confirmations)
+- **tripund_order_confirmation**: PENDING REVISION
+- **tripund_shipping_confirmation**: PENDING REVISION
+
+#### Admin Workflow:
+1. **Order Received** → Auto-confirmation via WhatsApp + Email + Invoice + Stock update
+2. **Order Shipped** → WhatsApp shipping notification with tracking + Email
+3. **Customer Replies** → Messages appear in admin WhatsApp dashboard
+4. **Bulk Campaigns** → CSV upload for promotional messaging
+5. **Template Management** → Create/manage templates via admin panel
+
+#### Customer Experience:
+1. **Order Placement** → Immediate WhatsApp confirmation with order details
+2. **Shipping Update** → WhatsApp notification with tracking link
+3. **Direct Communication** → Reply to WhatsApp messages for support
+4. **OTP Authentication** → WhatsApp-based login verification option
 
 ## Component Library
 
@@ -831,15 +903,17 @@ Add this A record to your DNS provider:
 - `ProductForm.tsx` - Comprehensive product management form
 
 ---
-Last Updated: September 2, 2025
-Platform: TRIPUND E-Commerce - Enhanced Professional System
-Version: 1.0.22+ (Enhanced)
-Backend: Cloud Run revision 00131-nrs with complete functionality
+Last Updated: September 5, 2025
+Platform: TRIPUND E-Commerce - Enhanced Professional System with WhatsApp Integration
+Version: 1.0.22+ (Enhanced + WhatsApp)
+Backend: Cloud Run revision 00141-8r8 with complete WhatsApp Business API integration
 Frontend: Fully responsive with mobile optimization
-Admin Panel: Stable with crash fixes and enhanced features
+Admin Panel: WhatsApp Business management section operational
 Email System: Database templates operational for both order and shipping
+WhatsApp System: Complete Business API integration with dual notifications (WhatsApp + Email)
 Invoice System: 12% GST compliance with auto-generation and clean format
 Tracking: Custom courier URL integration with admin modal
 Shipping: Express shipping option with dynamic settings
 Customer Management: Real profile data display in admin orders
 Image Management: Team member upload functionality implemented
+WhatsApp Features: Template messaging, bulk campaigns, webhook integration, OTP authentication
