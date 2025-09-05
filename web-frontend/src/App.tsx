@@ -30,6 +30,7 @@ import ShippingPage from './pages/ShippingPage';
 import ReturnsPage from './pages/ReturnsPage';
 import InvoicesPage from './pages/InvoicesPage';
 import InvoiceDetailPage from './pages/InvoiceDetailPage';
+import TrackingRedirect from './pages/TrackingRedirect';
 import AppInitializer from './components/AppInitializer';
 
 function App() {
@@ -64,6 +65,7 @@ function App() {
             <Route path="/invoices/:id" element={<InvoiceDetailPage />} />
             <Route path="/order-status/:orderId" element={<OrderStatusPage />} />
             <Route path="/order-confirmation/:orderId" element={<OrderConfirmationPage />} />
+            <Route path="/track/:orderNumber" element={<TrackingRedirect />} />
             <Route path="/about" element={<AboutPage />} />
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
