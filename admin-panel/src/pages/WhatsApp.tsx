@@ -546,10 +546,39 @@ export default function WhatsApp() {
                       <option value="">Select a template</option>
                       {templates.filter(t => t.status === 'APPROVED').map((template) => (
                         <option key={template.id} value={template.name}>
-                          {template.name} ({template.language})
+                          {template.name} ({template.language}) - {template.category}
                         </option>
                       ))}
                     </select>
+                    
+                    {/* Show template details when selected */}
+                    {sendMessageData.template_id && (
+                      <div className="mt-3 p-3 bg-gray-50 rounded-md">
+                        {(() => {
+                          const selectedTemplate = templates.find(t => t.name === sendMessageData.template_id);
+                          if (!selectedTemplate) return null;
+                          
+                          return (
+                            <div>
+                              <h4 className="font-medium text-gray-900 mb-2">Template Preview:</h4>
+                              {selectedTemplate.components.map((component, index) => (
+                                <div key={index} className="mb-2">
+                                  <strong className="text-sm text-gray-600 uppercase">{component.type}:</strong>
+                                  <p className="text-sm text-gray-800">{component.text}</p>
+                                  {component.buttons && component.buttons.map((button, btnIndex) => (
+                                    <div key={btnIndex} className="mt-1 p-2 bg-blue-50 rounded">
+                                      <span className="text-sm text-blue-600">
+                                        Button: "{button.text}" → {button.url}
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              ))}
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    )}
                   </div>
                   
                   {sendMessageData.template_id === 'order_management_1' && (
