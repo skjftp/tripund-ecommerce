@@ -483,16 +483,32 @@ func (h *OrderHandler) UpdateOrderStatus(c *gin.Context) {
 					if userErr == nil {
 						var user map[string]interface{}
 						if userDoc.DataTo(&user) == nil {
-							firstName, _ := user["first_name"].(string)
-							lastName, _ := user["last_name"].(string)
-							if firstName != "" {
-								customerName = firstName
-								if lastName != "" {
-									customerName = firstName + " " + lastName
+							// Check for profile nested object (new structure)
+							if profile, ok := user["profile"].(map[string]interface{}); ok {
+								firstName, _ := profile["first_name"].(string)
+								lastName, _ := profile["last_name"].(string)
+								if firstName != "" {
+									customerName = firstName
+									if lastName != "" {
+										customerName = firstName + " " + lastName
+									}
 								}
-							} else if email, ok := user["email"].(string); ok && email != "" {
-								// Fallback to email if no name
-								customerName = email
+							} else {
+								// Fallback to root level (old structure)
+								firstName, _ := user["first_name"].(string)
+								lastName, _ := user["last_name"].(string)
+								if firstName != "" {
+									customerName = firstName
+									if lastName != "" {
+										customerName = firstName + " " + lastName
+									}
+								}
+							}
+							// Final fallback to email if no name found
+							if customerName == "Customer" {
+								if email, ok := user["email"].(string); ok && email != "" {
+									customerName = email
+								}
 							}
 						}
 					}
@@ -500,7 +516,11 @@ func (h *OrderHandler) UpdateOrderStatus(c *gin.Context) {
 					customerName = order.GuestName
 				}
 				
-				phoneNumber := order.BillingAddress.Phone
+				// Get phone number - priority: guest_phone > billing > shipping
+				phoneNumber := order.GuestPhone
+				if phoneNumber == "" {
+					phoneNumber = order.BillingAddress.Phone
+				}
 				if phoneNumber == "" {
 					phoneNumber = order.ShippingAddress.Phone
 				}
