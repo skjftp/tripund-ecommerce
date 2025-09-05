@@ -136,9 +136,9 @@ export default function WhatsApp() {
 
   const fetchTemplates = async () => {
     try {
-      const response = await fetch('/api/v1/admin/whatsapp/templates', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://tripund-backend-665685012221.asia-south1.run.app/api/v1'}/admin/whatsapp/templates`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
         },
       });
       const data = await response.json();
@@ -150,9 +150,9 @@ export default function WhatsApp() {
 
   const fetchMessages = async () => {
     try {
-      const response = await fetch('/api/v1/admin/whatsapp/messages', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://tripund-backend-665685012221.asia-south1.run.app/api/v1'}/admin/whatsapp/messages`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
         },
       });
       const data = await response.json();
@@ -164,9 +164,9 @@ export default function WhatsApp() {
 
   const fetchContacts = async () => {
     try {
-      const response = await fetch('/api/v1/admin/whatsapp/contacts', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://tripund-backend-665685012221.asia-south1.run.app/api/v1'}/admin/whatsapp/contacts`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
         },
       });
       const data = await response.json();
@@ -178,9 +178,9 @@ export default function WhatsApp() {
 
   const fetchCampaigns = async () => {
     try {
-      const response = await fetch('/api/v1/admin/whatsapp/campaigns', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://tripund-backend-665685012221.asia-south1.run.app/api/v1'}/admin/whatsapp/campaigns`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
         },
       });
       const data = await response.json();
@@ -194,11 +194,11 @@ export default function WhatsApp() {
     e.preventDefault();
     setIsSending(true);
     try {
-      const response = await fetch('/api/v1/admin/whatsapp/send', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://tripund-backend-665685012221.asia-south1.run.app/api/v1'}/admin/whatsapp/send`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
         },
         body: JSON.stringify(sendMessageData),
       });
@@ -228,11 +228,11 @@ export default function WhatsApp() {
     e.preventDefault();
     setIsSendingBulk(true);
     try {
-      const response = await fetch('/api/v1/admin/whatsapp/send-bulk', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://tripund-backend-665685012221.asia-south1.run.app/api/v1'}/admin/whatsapp/send-bulk`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
         },
         body: JSON.stringify(bulkMessageData),
       });
@@ -261,11 +261,11 @@ export default function WhatsApp() {
   const handleCreateTemplate = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch('/api/v1/admin/whatsapp/templates', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://tripund-backend-665685012221.asia-south1.run.app/api/v1'}/admin/whatsapp/templates`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
         },
         body: JSON.stringify(templateData),
       });
