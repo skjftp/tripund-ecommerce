@@ -434,6 +434,10 @@ func (w *WhatsAppService) SendOrderConfirmation(phoneNumber, customerName, order
 	}
 	
 	log.Printf("WhatsApp order confirmation sent successfully to %s using template order_management_1", phoneNumber)
+	
+	// TODO: Save outgoing message to database here if needed
+	// This would require database access in the service
+	
 	return nil
 }
 
