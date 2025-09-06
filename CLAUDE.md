@@ -114,9 +114,15 @@ adb logcat -s flutter
 
 ### Backend (.env)
 
-## ⚠️ CRITICAL WARNING - NEVER OVERRIDE ENVIRONMENT VARIABLES ⚠️
+## 🚨 CRITICAL WARNING - NEVER OVERRIDE ENVIRONMENT VARIABLES ⚠️
 
-**STRICT PROHIBITION**: Under NO circumstances should ANY deployment or update EVER override, modify, or remove the production environment variables listed below. These contain live API keys, secrets, and production configuration that are essential for the platform to function.
+**ABSOLUTE PROHIBITION**: Under NO circumstances should ANY deployment, update, or code change EVER:
+1. **Override, modify, or remove production environment variables**
+2. **Use `--set-env-vars` flag during deployments**
+3. **Put real API keys, tokens, or secrets in ANY git files**
+4. **Commit actual production credentials to version control**
+
+**VIOLATION OF THESE RULES WILL BREAK THE LIVE PRODUCTION SYSTEM**
 
 **CURRENT PRODUCTION ENVIRONMENT VARIABLES (AS OF SEPTEMBER 5, 2025):**
 ```
@@ -137,36 +143,47 @@ EMAIL_FROM=orders@tripundlifestyle.com
 EMAIL_FROM_NAME=TRIPUND Lifestyle
 FIREBASE_PROJECT_ID=tripund-ecommerce-1755860933
 GIN_MODE=release
-JWT_SECRET=Tripund678!!
+JWT_SECRET=[PRODUCTION_JWT_SECRET]
 STORAGE_BUCKET=tripund-ecommerce-1755860933.appspot.com
 
 # Payment Integration
-RAZORPAY_KEY_ID=rzp_live_R9Uuc0X01ekIdc
-RAZORPAY_KEY_SECRET=p9UF9sNieQuU8GnkM1cYTuNA
-RAZORPAY_WEBHOOK_SECRET=webhook-tripund-678!!
+RAZORPAY_KEY_ID=[PRODUCTION_RAZORPAY_KEY_ID]
+RAZORPAY_KEY_SECRET=[PRODUCTION_RAZORPAY_KEY_SECRET]
+RAZORPAY_WEBHOOK_SECRET=[PRODUCTION_RAZORPAY_WEBHOOK_SECRET]
 
 # Email Integration
 SENDGRID_API_KEY=[PRODUCTION_SENDGRID_API_KEY]
 ```
 
-**NOTE**: These are the EXACT production values that MUST be preserved during ALL deployments. Any deployment that removes or changes these variables will break the production system.
+**NOTE**: These are placeholder values for reference. ACTUAL production values are stored in Cloud Run and MUST NEVER be overwritten.
 
 **DEPLOYMENT SAFETY RULES:**
-1. **ALWAYS use ALL environment variables above when using `--set-env-vars`**
-2. **NEVER deploy with partial environment variable lists**
+1. **NEVER use `--set-env-vars` flag during deployments**
+2. **NEVER put real API keys in git files**
 3. **NEVER clear or reset environment variables**
-4. **ALWAYS verify env vars are intact after deployments**
-5. **Use `gcloud run services describe tripund-backend --region=asia-south1` to verify**
+4. **ALWAYS use deploy.sh which preserves existing environment variables**
+5. **NEVER commit actual production credentials to version control**
+6. **Use `gcloud run services describe tripund-backend --region=asia-south1` to view current values if needed**
 
-**SAFE DEPLOYMENT COMMAND (when environment variables need to be updated):**
+**🚨 AI ASSISTANT RULES:**
+- NEVER put real API keys in any files
+- NEVER use --set-env-vars during deployments
+- NEVER overwrite production environment variables
+- ALWAYS use placeholder values like [PRODUCTION_KEY_NAME]
+
+**SAFE DEPLOYMENT COMMAND:**
 ```bash
 cd backend-api
-gcloud run services update tripund-backend \
-  --set-env-vars="WHATSAPP_BUSINESS_ID=1836026090679932,WHATSAPP_PHONE_NUMBER_ID=849480508241215,WHATSAPP_ACCESS_TOKEN=[PRODUCTION_WHATSAPP_ACCESS_TOKEN],WHATSAPP_WEBHOOK_SECRET=tripund-wa-secret,APP_BUILD_NUMBER=22,APP_DOWNLOAD_URL=https://github.com/skjftp/tripund-ecommerce/releases/download/v1.0.21/tripund-v1.0.21.apk,APP_VERSION=1.0.21,CORS_ORIGIN=https://tripundlifestyle.com,EMAIL_FROM=orders@tripundlifestyle.com,EMAIL_FROM_NAME=TRIPUND Lifestyle,FIREBASE_PROJECT_ID=tripund-ecommerce-1755860933,GIN_MODE=release,JWT_SECRET=Tripund678!!,RAZORPAY_KEY_ID=rzp_live_R9Uuc0X01ekIdc,RAZORPAY_KEY_SECRET=p9UF9sNieQuU8GnkM1cYTuNA,RAZORPAY_WEBHOOK_SECRET=webhook-tripund-678!!,SENDGRID_API_KEY=[PRODUCTION_SENDGRID_API_KEY],STORAGE_BUCKET=tripund-ecommerce-1755860933.appspot.com" \
-  --region=asia-south1
 
-# Standard code deployment (preserves existing environment variables)
+# ONLY use this command - it preserves ALL existing environment variables
 ./deploy.sh
+```
+
+**FORBIDDEN COMMANDS:**
+```bash
+# NEVER use these commands:
+gcloud run deploy --set-env-vars="..."  # This overwrites environment variables
+gcloud run services update --set-env-vars="..."  # This overwrites environment variables
 ```
 
 **EMERGENCY RECOVERY**: If environment variables are accidentally overwritten:
