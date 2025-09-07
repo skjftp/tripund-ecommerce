@@ -13,7 +13,6 @@ import (
 	"tripund-api/internal/database"
 	"tripund-api/internal/models"
 	"tripund-api/internal/utils"
-	"google.golang.org/api/iterator"
 )
 
 type AnalyticsHandler struct {
