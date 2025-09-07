@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   TrendingUp,
   TrendingDown,
@@ -15,6 +15,11 @@ import {
   Monitor,
   ArrowUp,
   ArrowDown,
+  Instagram,
+  Target,
+  MousePointer,
+  Globe,
+  BarChart3,
 } from 'lucide-react';
 import {
   LineChart,
@@ -34,6 +39,29 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { format } from 'date-fns';
+
+interface AnalyticsSummary {
+  total_visits: number;
+  unique_visitors: number;
+  bounce_rate: number;
+  avg_session_duration: number;
+  traffic_sources: Record<string, number>;
+  conversion_rate: number;
+  total_orders: number;
+  revenue: number;
+  device_breakdown: Record<string, number>;
+  country_breakdown: Record<string, number>;
+  date_range: string;
+}
+
+interface InstagramPerformance {
+  campaign_name: string;
+  clicks: number;
+  conversions: number;
+  revenue: number;
+  conversion_rate: number;
+  revenue_per_click: number;
+}
 
 export default function Analytics() {
   const [dateRange, setDateRange] = useState('last30days');

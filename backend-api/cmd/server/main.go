@@ -53,6 +53,7 @@ func main() {
 	adminUserHandler := handlers.NewAdminUserHandler(db, cfg.JWTSecret)
 	
 	whatsappHandler := handlers.NewWhatsAppHandler(db, whatsappService)
+	analyticsHandler := handlers.NewAnalyticsHandler(db)
 
 	api := r.Group("/api/v1")
 	{
@@ -113,6 +114,10 @@ func main() {
 		
 		// Order tracking redirect (public endpoint)
 		api.GET("/track/:orderNumber", orderHandler.GetTrackingRedirect)
+		
+		// Analytics tracking (public endpoints)
+		api.POST("/analytics/track/visit", analyticsHandler.TrackPageVisit)
+		api.POST("/analytics/track/action", analyticsHandler.TrackUserAction)
 
 		// Guest checkout endpoints (no authentication required)
 		api.POST("/guest/orders", orderHandler.CreateGuestOrder)
@@ -276,6 +281,13 @@ func main() {
 				
 				// Campaign management
 				whatsapp.GET("/campaigns", whatsappHandler.GetCampaigns)
+			}
+			
+			// Analytics management (admin only)
+			analytics := admin.Group("/analytics")
+			{
+				analytics.GET("/summary", analyticsHandler.GetAnalyticsSummary)
+				analytics.GET("/instagram", analyticsHandler.GetInstagramAdPerformance)
 			}
 		}
 
