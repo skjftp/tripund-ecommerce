@@ -66,6 +66,54 @@ interface InstagramPerformance {
 export default function Analytics() {
   const [dateRange, setDateRange] = useState('last30days');
   const [selectedMetric, setSelectedMetric] = useState('revenue');
+  
+  // Instagram Analytics State
+  const [instagramSummary, setInstagramSummary] = useState<AnalyticsSummary | null>(null);
+  const [instagramPerformance, setInstagramPerformance] = useState<InstagramPerformance[]>([]);
+  const [instagramLoading, setInstagramLoading] = useState(false);
+
+  useEffect(() => {
+    fetchInstagramAnalytics();
+  }, [dateRange]);
+
+  const fetchInstagramAnalytics = async () => {
+    setInstagramLoading(true);
+    try {
+      // Convert dateRange to days
+      const days = dateRange === 'today' ? 1 : 
+                  dateRange === 'last7days' ? 7 :
+                  dateRange === 'last30days' ? 30 : 
+                  dateRange === 'last90days' ? 90 : 30;
+
+      // Fetch Instagram analytics summary
+      const summaryResponse = await fetch(`/api/v1/admin/analytics/summary?days=${days}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
+        },
+      });
+      
+      if (summaryResponse.ok) {
+        const summaryData = await summaryResponse.json();
+        setInstagramSummary(summaryData);
+      }
+
+      // Fetch Instagram specific performance
+      const instagramResponse = await fetch(`/api/v1/admin/analytics/instagram?days=${days}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
+        },
+      });
+      
+      if (instagramResponse.ok) {
+        const instagramData = await instagramResponse.json();
+        setInstagramPerformance(instagramData.instagram_performance || []);
+      }
+    } catch (error) {
+      console.error('Error fetching Instagram analytics:', error);
+    } finally {
+      setInstagramLoading(false);
+    }
+  };
 
   // Mock data for charts
   const revenueData = [
@@ -387,6 +435,135 @@ export default function Analytics() {
             View All Locations →
           </button>
         </div>
+      </div>
+
+      {/* Instagram Performance Section */}
+      <div className="bg-gradient-to-r from-pink-50 to-purple-50 rounded-lg border-2 border-pink-200 p-6 mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center">
+            <Instagram className="w-6 h-6 text-pink-600 mr-3" />
+            <div>
+              <h3 className="text-xl font-bold text-gray-900">Instagram Ad Performance</h3>
+              <p className="text-sm text-gray-600">Real-time tracking of your Instagram campaigns</p>
+            </div>
+          </div>
+          <div className="text-right">
+            <p className="text-sm text-gray-500">
+              {instagramSummary ? instagramSummary.date_range : 'Loading...'}
+            </p>
+            {instagramLoading && (
+              <div className="animate-pulse text-pink-600">Updating...</div>
+            )}
+          </div>
+        </div>
+
+        {/* Instagram KPI Cards */}
+        {instagramSummary && (
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div className="bg-white p-4 rounded-lg shadow border border-pink-100">
+              <div className="flex items-center">
+                <Target className="w-8 h-8 text-pink-600" />
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-500">Instagram Visits</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {instagramSummary.traffic_sources?.instagram || 0}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white p-4 rounded-lg shadow border border-pink-100">
+              <div className="flex items-center">
+                <ShoppingCart className="w-8 h-8 text-green-600" />
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-500">Conversions</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {Math.round((instagramSummary.traffic_sources?.instagram || 0) * (instagramSummary.conversion_rate / 100))}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white p-4 rounded-lg shadow border border-pink-100">
+              <div className="flex items-center">
+                <DollarSign className="w-8 h-8 text-yellow-600" />
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-500">Instagram Revenue</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    ₹{(instagramSummary.revenue * ((instagramSummary.traffic_sources?.instagram || 0) / instagramSummary.total_visits || 0)).toLocaleString()}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white p-4 rounded-lg shadow border border-pink-100">
+              <div className="flex items-center">
+                <BarChart3 className="w-8 h-8 text-purple-600" />
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-500">Conv. Rate</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {instagramSummary.conversion_rate.toFixed(2)}%
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Instagram Campaign Performance Table */}
+        {instagramPerformance.length > 0 ? (
+          <div className="bg-white rounded-lg shadow border border-pink-100">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h4 className="text-lg font-semibold text-gray-900">Campaign Performance</h4>
+              <p className="text-sm text-gray-600">Performance breakdown by Instagram campaign</p>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="text-left py-3 px-6 text-sm font-medium text-gray-700">Campaign</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">Clicks</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">Conversions</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">Revenue</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">Conv. Rate</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">Revenue/Click</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {instagramPerformance.map((campaign, index) => (
+                    <tr key={index} className="hover:bg-gray-50">
+                      <td className="py-4 px-6">
+                        <div className="flex items-center">
+                          <Instagram className="w-4 h-4 text-pink-500 mr-2" />
+                          <span className="font-medium text-gray-900">{campaign.campaign_name}</span>
+                        </div>
+                      </td>
+                      <td className="py-4 px-4 text-sm text-gray-900">{campaign.clicks}</td>
+                      <td className="py-4 px-4 text-sm text-gray-900">{campaign.conversions}</td>
+                      <td className="py-4 px-4 text-sm font-medium text-gray-900">₹{campaign.revenue.toLocaleString()}</td>
+                      <td className="py-4 px-4 text-sm text-gray-900">{campaign.conversion_rate.toFixed(2)}%</td>
+                      <td className="py-4 px-4 text-sm text-gray-900">₹{campaign.revenue_per_click.toFixed(2)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-white rounded-lg shadow border border-pink-100 p-8 text-center">
+            <Instagram className="w-12 h-12 text-pink-400 mx-auto mb-4" />
+            <h4 className="text-lg font-medium text-gray-900 mb-2">Start Tracking Instagram Ads</h4>
+            <p className="text-gray-600 mb-4">
+              Add UTM parameters to your Instagram ads to see performance data here
+            </p>
+            <div className="bg-gray-100 rounded-lg p-4 text-left">
+              <p className="text-sm font-medium text-gray-700 mb-2">Example Instagram Ad URL:</p>
+              <code className="text-xs text-gray-600 break-all">
+                https://tripundlifestyle.com?utm_source=instagram&utm_campaign=diwali_collection&utm_content=brass_idols
+              </code>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Top Products Table */}
