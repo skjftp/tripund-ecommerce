@@ -70,27 +70,39 @@ export interface Product {
 
 export interface User {
   id: string;
-  email: string;
+  mobile_number: string;
+  name: string;
+  email?: string; // Optional
+  
   profile: {
-    first_name: string;
-    last_name: string;
-    phone: string;
-    avatar: string;
+    first_name?: string;
+    last_name?: string;
+    avatar?: string;
+    date_of_birth?: string;
+    gender?: string;
   };
-  addresses: Address[];
+  
+  is_active: boolean;
+  is_verified: boolean;
+  role: string;
+  
   preferences: {
     newsletter: boolean;
     email_notifications: boolean;
     sms_notifications: boolean;
     language: string;
     currency: string;
-    categories: string[];
+    categories?: string[];
   };
-  wishlist: string[];
-  order_history: string[];
-  role: string;
-  created_at: string;
+  
   last_login_at: string;
+  created_at: string;
+  updated_at: string;
+  
+  // Shopping data
+  wishlist?: string[];
+  addresses?: Address[];
+  order_history?: string[];
 }
 
 export interface Address {

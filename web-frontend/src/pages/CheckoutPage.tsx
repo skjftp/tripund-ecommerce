@@ -126,10 +126,10 @@ export default function CheckoutPage() {
   useEffect(() => {
     if (user) {
       // Combine first name and last name into single name field
-      const fullName = [user.profile.first_name, user.profile.last_name].filter(Boolean).join(' ');
+      const fullName = user.name || [user.profile?.first_name, user.profile?.last_name].filter(Boolean).join(' ') || '';
       setValue('name', fullName);
-      setValue('email', user.email);
-      setValue('phone', user.profile.phone);
+      setValue('email', user.email || '');
+      setValue('phone', user.mobile_number?.replace('+91', '') || '');
     }
   }, [user, setValue]);
 

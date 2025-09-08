@@ -55,7 +55,7 @@ export default function ProfilePage() {
     defaultValues: {
       first_name: user?.profile.first_name || '',
       last_name: user?.profile.last_name || '',
-      phone: user?.profile.phone || '',
+      phone: user?.mobile_number || '',
       email: user?.email || '',
     },
   });
@@ -97,7 +97,7 @@ export default function ProfilePage() {
     if (user) {
       setProfileValue('first_name', user.profile.first_name || '');
       setProfileValue('last_name', user.profile.last_name || '');
-      setProfileValue('phone', user.profile.phone || '');
+      setProfileValue('phone', user.mobile_number || '');
       setProfileValue('email', user.email || '');
     }
   }, [user, setProfileValue]);
@@ -173,9 +173,11 @@ export default function ProfilePage() {
                 </div>
                 <div>
                   <h1 className="text-xl sm:text-2xl font-bold">
-                    {user.profile.first_name} {user.profile.last_name}
+                    {user.name || (user.profile?.first_name && user.profile?.last_name ? user.profile.first_name + ' ' + user.profile.last_name : 'User')}
                   </h1>
-                  <p className="text-gray-600 text-sm sm:text-base">{user.email}</p>
+                  <p className="text-gray-600 text-sm sm:text-base">
+                    {user.mobile_number || user.email || 'Contact not available'}
+                  </p>
                 </div>
               </div>
               <button
@@ -255,30 +257,31 @@ export default function ProfilePage() {
 
                   {!isEditing ? (
                     <div className="space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-4">
+                        {/* Name Field - Handle both mobile and email users */}
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">
-                            First Name
+                            Name
                           </label>
-                          <p className="text-gray-900">{user.profile.first_name}</p>
+                          <p className="text-gray-900">
+                            {user.name || (user.profile?.first_name && user.profile?.last_name ? user.profile.first_name + ' ' + user.profile.last_name : 'Not provided')}
+                          </p>
                         </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Last Name
-                          </label>
-                          <p className="text-gray-900">{user.profile.last_name}</p>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Email
-                          </label>
-                          <p className="text-gray-900">{user.email}</p>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Phone
-                          </label>
-                          <p className="text-gray-900">{user.profile.phone || 'Not provided'}</p>
+                        
+                        {/* Contact Information */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Mobile Number
+                            </label>
+                            <p className="text-gray-900">{user.mobile_number || 'Not provided'}</p>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Email
+                            </label>
+                            <p className="text-gray-900">{user.email || 'Not provided'}</p>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -637,7 +640,7 @@ export default function ProfilePage() {
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           Phone
                         </label>
-                        <p className="text-gray-900">{user.profile.phone || 'Not provided'}</p>
+                        <p className="text-gray-900">{user.mobile_number || 'Not provided'}</p>
                       </div>
                     </div>
                   </div>
