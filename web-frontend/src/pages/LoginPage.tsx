@@ -1,10 +1,14 @@
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import { Smartphone, ArrowRight, Shield, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { AppDispatch } from '../store';
+import { fetchProfile } from '../store/slices/authSlice';
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const dispatch = useDispatch<AppDispatch>();
   const [searchParams] = useSearchParams();
   const returnTo = searchParams.get('returnTo');
   
@@ -101,6 +105,8 @@ export default function LoginPage() {
           setStep('profile');
         } else {
           toast.success('Welcome back!');
+          // Fetch profile to update auth state
+          dispatch(fetchProfile());
           navigate(returnTo || '/');
         }
       } else {
@@ -142,6 +148,8 @@ export default function LoginPage() {
 
       if (response.ok) {
         toast.success('Profile completed successfully!');
+        // Fetch profile to update auth state
+        dispatch(fetchProfile());
         navigate(returnTo || '/');
       } else {
         toast.error(result.error || 'Failed to update profile');
@@ -165,18 +173,18 @@ export default function LoginPage() {
   const seconds = remainingTime % 60;
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-4 px-4">
-      <div className="max-w-sm w-full space-y-4">
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-purple-50 flex items-center justify-center py-4 px-4">
+      <div className="max-w-xs w-full bg-white rounded-2xl shadow-xl border border-primary-100 p-6 space-y-4">
         <div className="text-center">
           <Smartphone className="mx-auto h-8 w-8 text-primary-600" />
           <h2 className="mt-3 text-2xl font-bold text-gray-900">
-            {step === 'mobile' && 'Enter Mobile'}
+            {step === 'mobile' && 'Login/Signup'}
             {step === 'delivery' && 'Choose Delivery'}
             {step === 'otp' && 'Enter OTP'}
             {step === 'profile' && 'Complete Profile'}
           </h2>
           <p className="mt-1 text-sm text-gray-600">
-            {step === 'mobile' && 'Universal login for all users'}
+            {step === 'mobile' && 'Enter mobile number'}
             {step === 'delivery' && 'How should we send your OTP?'}
             {step === 'otp' && `Code sent to +91 ${mobileNumber}`}
             {step === 'profile' && 'Tell us about yourself'}
@@ -219,11 +227,6 @@ export default function LoginPage() {
               Continue
             </button>
 
-            <div className="text-center">
-              <p className="text-xs text-gray-500">
-                New users will be automatically registered
-              </p>
-            </div>
           </form>
         )}
 
