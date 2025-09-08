@@ -52,12 +52,11 @@ export default function Products() {
   const [totalPages, setTotalPages] = useState(0);
   const ITEMS_PER_PAGE = 20;
 
-  const fetchProducts = async (category?: string, status?: string, page: number = 1) => {
+  const fetchProducts = async (category?: string, status?: string) => {
     try {
       setLoading(true);
-      // Build query parameters with pagination
-      const offset = (page - 1) * ITEMS_PER_PAGE;
-      let queryParams = `limit=${ITEMS_PER_PAGE}&offset=${offset}`;
+      // Fetch all products (no pagination on backend)
+      let queryParams = 'limit=200'; // Fetch all products
       
       // Add status filter (default to 'all' for admin)
       if (status && status !== 'all') {
@@ -73,13 +72,12 @@ export default function Products() {
       
       const response = await api.get(`/products?${queryParams}`);
       const fetchedProducts = response.data.products || [];
-      const total = response.data.total || fetchedProducts.length;
       
       setProducts(fetchedProducts);
-      setTotalProducts(total);
-      setTotalPages(Math.ceil(total / ITEMS_PER_PAGE));
+      setTotalProducts(fetchedProducts.length);
+      setTotalPages(Math.ceil(fetchedProducts.length / ITEMS_PER_PAGE));
       
-      console.log(`Loaded ${fetchedProducts.length} products (Page ${page}/${Math.ceil(total / ITEMS_PER_PAGE)}) - Total: ${total}`);
+      console.log(`Loaded ${fetchedProducts.length} total products - Frontend pagination: ${Math.ceil(fetchedProducts.length / ITEMS_PER_PAGE)} pages`);
     } catch (error) {
       console.error('Error fetching products:', error);
       toast.error('Failed to load products');
@@ -91,27 +89,40 @@ export default function Products() {
 
   // Fetch products when component mounts
   useEffect(() => {
-    fetchProducts(selectedCategory, selectedStatus, currentPage);
+    fetchProducts(selectedCategory, selectedStatus);
   }, []);
 
-  // Fetch products when filters or page change
+  // Fetch products when filters change and reset page
   useEffect(() => {
     setCurrentPage(1); // Reset to page 1 when filters change
-    fetchProducts(selectedCategory, selectedStatus, 1);
+    fetchProducts(selectedCategory, selectedStatus);
   }, [selectedCategory, selectedStatus]);
 
-  // Fetch products when page changes (without resetting page)
-  useEffect(() => {
-    fetchProducts(selectedCategory, selectedStatus, currentPage);
-  }, [currentPage]);
-
   // Client-side filtering only for search (category and status are server-side)
-  const filteredProducts = products.filter((product) => {
+  // Client-side filtering and pagination
+  const allFilteredProducts = products.filter((product) => {
     if (!searchQuery) return true;
     const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          product.sku.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesSearch;
   });
+
+  // Apply frontend pagination
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const filteredProducts = allFilteredProducts.slice(startIndex, endIndex);
+
+  // Update pagination when search changes
+  useEffect(() => {
+    const totalFiltered = allFilteredProducts.length;
+    setTotalProducts(totalFiltered);
+    setTotalPages(Math.ceil(totalFiltered / ITEMS_PER_PAGE));
+    
+    // Reset to page 1 if current page is beyond available pages
+    if (currentPage > Math.ceil(totalFiltered / ITEMS_PER_PAGE) && totalFiltered > 0) {
+      setCurrentPage(1);
+    }
+  }, [allFilteredProducts.length, currentPage]);
 
   const handleDelete = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this product?')) {
@@ -203,7 +214,7 @@ export default function Products() {
         </div>
         <div className="flex items-center space-x-3">
           <button 
-            onClick={() => fetchProducts(selectedCategory, selectedStatus, currentPage)}
+            onClick={() => fetchProducts(selectedCategory, selectedStatus)}
             disabled={loading}
             className="flex items-center space-x-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
           >
