@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -49,8 +49,12 @@ const INDIAN_STATES = [
 export default function ProfilePage() {
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
+  const [searchParams] = useSearchParams();
   const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
-  const [activeTab, setActiveTab] = useState('profile');
+  
+  // Check URL parameter for tab
+  const tabFromUrl = searchParams.get('tab');
+  const [activeTab, setActiveTab] = useState(tabFromUrl || 'profile');
   const [isEditing, setIsEditing] = useState(false);
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [editingAddress, setEditingAddress] = useState<string | null>(null);
