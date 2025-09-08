@@ -14,6 +14,7 @@ import (
 	"tripund-api/internal/database"
 	"tripund-api/internal/middleware"
 	"tripund-api/internal/models"
+	"tripund-api/internal/utils"
 )
 
 type AuthHandler struct {
@@ -410,16 +411,20 @@ func (h *AuthHandler) GetAllUsers(c *gin.Context) {
 			}
 		}
 
-		// Get order count for this user
+		// Get order count for this user (only paid orders)
 		orderDocs, _ := h.db.Client.Collection("orders").Where("user_id", "==", user.ID).Documents(h.db.Context).GetAll()
-		orderCount := len(orderDocs)
-
-		// Calculate total spent
+		
+		// Calculate stats for only paid/confirmed orders
+		paidOrderCount := 0
 		totalSpent := 0.0
 		for _, orderDoc := range orderDocs {
 			var order models.Order
 			if err := orderDoc.DataTo(&order); err == nil {
-				totalSpent += order.Totals.Total
+				// Only count orders with confirmed payment
+				if order.Payment.Status == "confirmed" || order.Payment.Status == "paid" {
+					paidOrderCount++
+					totalSpent += order.Totals.Total
+				}
 			}
 		}
 
@@ -431,7 +436,7 @@ func (h *AuthHandler) GetAllUsers(c *gin.Context) {
 			"phone":        user.Profile.Phone,
 			"role":         user.Role,
 			"status":       "active", // Default status
-			"orders_count": orderCount,
+			"orders_count": paidOrderCount,
 			"total_spent":  totalSpent,
 			"created_at":   user.CreatedAt,
 			"last_login":   user.LastLoginAt,
@@ -471,16 +476,23 @@ func (h *AuthHandler) GetUserDetails(c *gin.Context) {
 	}
 	user.ID = doc.Ref.ID
 
-	// Get user's orders
+	// Get user's orders (only include paid orders in stats)
 	orderDocs, _ := h.db.Client.Collection("orders").Where("user_id", "==", userID).Documents(h.db.Context).GetAll()
 	
 	orders := []map[string]interface{}{}
 	totalSpent := 0.0
+	paidOrdersCount := 0
+	
 	for _, orderDoc := range orderDocs {
 		var order models.Order
 		if err := orderDoc.DataTo(&order); err == nil {
 			order.ID = orderDoc.Ref.ID
-			totalSpent += order.Totals.Total
+			
+			// Only count paid orders in stats
+			if order.Payment.Status == "confirmed" || order.Payment.Status == "paid" {
+				totalSpent += order.Totals.Total
+				paidOrdersCount++
+			}
 			
 			orders = append(orders, map[string]interface{}{
 				"id":           order.ID,
@@ -508,7 +520,7 @@ func (h *AuthHandler) GetUserDetails(c *gin.Context) {
 			"role":         user.Role,
 			"created_at":   user.CreatedAt,
 			"last_login":   user.LastLoginAt,
-			"orders_count": len(orders),
+			"orders_count": paidOrdersCount,
 			"total_spent":  totalSpent,
 		},
 		"orders": orders,
@@ -547,6 +559,165 @@ func (h *AuthHandler) GetProfileAddresses(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"addresses": user.Addresses,
 		"total": len(user.Addresses),
+	})
+}
+
+// AddAddress adds a new address to user profile
+func (h *AuthHandler) AddAddress(c *gin.Context) {
+	userID := c.GetString("user_id")
+	
+	var req models.UserAddress
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	
+	// Generate ID for the address
+	req.ID = utils.GenerateIDWithPrefix("addr")
+	
+	// Get user document
+	userDoc := h.db.Client.Collection("mobile_users").Doc(userID)
+	doc, err := userDoc.Get(h.db.Context)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+	
+	var user models.MobileUser
+	if err := doc.DataTo(&user); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to parse user data"})
+		return
+	}
+	
+	// Add new address to user's addresses array
+	if user.Addresses == nil {
+		user.Addresses = []models.UserAddress{}
+	}
+	user.Addresses = append(user.Addresses, req)
+	
+	// Update user document
+	_, err = userDoc.Update(h.db.Context, []firestore.Update{
+		{Path: "addresses", Value: user.Addresses},
+		{Path: "updated_at", Value: time.Now()},
+	})
+	
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save address"})
+		return
+	}
+	
+	c.JSON(http.StatusCreated, gin.H{
+		"message": "Address added successfully",
+		"address": req,
+	})
+}
+
+// UpdateAddress updates an existing address
+func (h *AuthHandler) UpdateAddress(c *gin.Context) {
+	userID := c.GetString("user_id")
+	addressID := c.Param("id")
+	
+	var req models.UserAddress
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	
+	// Get user document
+	userDoc := h.db.Client.Collection("mobile_users").Doc(userID)
+	doc, err := userDoc.Get(h.db.Context)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+	
+	var user models.MobileUser
+	if err := doc.DataTo(&user); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to parse user data"})
+		return
+	}
+	
+	// Find and update the address
+	found := false
+	for i, addr := range user.Addresses {
+		if addr.ID == addressID {
+			req.ID = addressID // Preserve the ID
+			user.Addresses[i] = req
+			found = true
+			break
+		}
+	}
+	
+	if !found {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Address not found"})
+		return
+	}
+	
+	// Update user document
+	_, err = userDoc.Update(h.db.Context, []firestore.Update{
+		{Path: "addresses", Value: user.Addresses},
+		{Path: "updated_at", Value: time.Now()},
+	})
+	
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update address"})
+		return
+	}
+	
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Address updated successfully",
+		"address": req,
+	})
+}
+
+// DeleteAddress removes an address from user profile
+func (h *AuthHandler) DeleteAddress(c *gin.Context) {
+	userID := c.GetString("user_id")
+	addressID := c.Param("id")
+	
+	// Get user document
+	userDoc := h.db.Client.Collection("mobile_users").Doc(userID)
+	doc, err := userDoc.Get(h.db.Context)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+	
+	var user models.MobileUser
+	if err := doc.DataTo(&user); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to parse user data"})
+		return
+	}
+	
+	// Find and remove the address
+	newAddresses := []models.UserAddress{}
+	found := false
+	for _, addr := range user.Addresses {
+		if addr.ID != addressID {
+			newAddresses = append(newAddresses, addr)
+		} else {
+			found = true
+		}
+	}
+	
+	if !found {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Address not found"})
+		return
+	}
+	
+	// Update user document
+	_, err = userDoc.Update(h.db.Context, []firestore.Update{
+		{Path: "addresses", Value: newAddresses},
+		{Path: "updated_at", Value: time.Now()},
+	})
+	
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete address"})
+		return
+	}
+	
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Address deleted successfully",
 	})
 }
 

@@ -152,8 +152,7 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 		return
 	}
 
-	// Create notification for new order
-	h.notificationHandler.NotifyNewOrder(orderID, orderNumber, req.Totals.Total)
+	// Note: Notification will be sent when payment is verified, not when order is created
 
 	// Note: Order confirmation email will be sent after payment confirmation
 

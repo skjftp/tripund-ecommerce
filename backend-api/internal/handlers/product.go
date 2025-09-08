@@ -113,14 +113,9 @@ func (h *ProductHandler) GetProducts(c *gin.Context) {
 		}
 		
 		products = append(products, product)
-		
-		// Stop if we have enough products
-		if len(products) >= limit {
-			break
-		}
 	}
 
-	// Ensure we don't exceed the requested limit
+	// Apply limit to results if needed
 	if len(products) > limit {
 		products = products[:limit]
 	}

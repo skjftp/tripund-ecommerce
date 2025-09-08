@@ -138,6 +138,9 @@ func main() {
 			protected.PUT("/profile", authHandler.UpdateProfile)
 			protected.GET("/profile/wishlist", authHandler.GetProfileWishlist)
 			protected.GET("/profile/addresses", authHandler.GetProfileAddresses)
+			protected.POST("/profile/addresses", authHandler.AddAddress)
+			protected.PUT("/profile/addresses/:id", authHandler.UpdateAddress)
+			protected.DELETE("/profile/addresses/:id", authHandler.DeleteAddress)
 
 			// Mobile user profile endpoints
 			protected.GET("/mobile/profile", mobileAuthHandler.GetProfile)
