@@ -154,69 +154,62 @@ export default function RegisterPage() {
   const seconds = remainingTime % 60;
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-4 px-4">
+      <div className="max-w-sm w-full space-y-4">
         <div className="text-center">
-          <UserPlus className="mx-auto h-12 w-12 text-primary-600" />
-          <h2 className="mt-6 text-3xl font-bold text-gray-900">
-            {step === 'mobile' && 'Join TRIPUND'}
-            {step === 'otp' && 'Verify Mobile Number'}
-            {step === 'profile' && 'Complete Your Profile'}
+          <UserPlus className="mx-auto h-8 w-8 text-primary-600" />
+          <h2 className="mt-3 text-2xl font-bold text-gray-900">
+            {step === 'mobile' && 'Sign Up'}
+            {step === 'otp' && 'Enter OTP'}
+            {step === 'profile' && 'Complete Profile'}
           </h2>
-          <p className="mt-2 text-sm text-gray-600">
-            {step === 'mobile' && 'Create account with your Indian mobile number'}
-            {step === 'otp' && `OTP sent to +91 ${mobileNumber}`}
-            {step === 'profile' && 'Tell us a bit about yourself'}
+          <p className="mt-1 text-sm text-gray-600">
+            {step === 'mobile' && 'Create your account'}
+            {step === 'otp' && `Sent to +91 ${mobileNumber}`}
+            {step === 'profile' && 'Almost done!'}
           </p>
         </div>
 
         {step === 'mobile' && (
-          <form className="mt-8 space-y-6" onSubmit={handleSendOTP}>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Indian Mobile Number
-                </label>
-                <div className="flex">
-                  <span className="inline-flex items-center px-3 py-3 border border-r-0 border-gray-300 rounded-l-lg bg-gray-50 text-gray-500 text-sm">
-                    🇮🇳 +91
-                  </span>
-                  <input
-                    type="tel"
-                    value={mobileNumber}
-                    onChange={(e) => {
-                      const value = e.target.value.replace(/\D/g, '').slice(0, 10);
-                      setMobileNumber(value);
-                    }}
-                    placeholder="9876543210"
-                    className="flex-1 px-4 py-3 border border-gray-300 rounded-r-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-lg"
-                    required
-                  />
-                </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  Enter 10-digit mobile number (must start with 6, 7, 8, or 9)
-                </p>
+          <form className="mt-4 space-y-4" onSubmit={handleSendOTP}>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Mobile Number
+              </label>
+              <div className="flex">
+                <span className="inline-flex items-center px-3 py-2 border border-r-0 border-gray-300 rounded-l-lg bg-gray-50 text-gray-600 text-sm">
+                  🇮🇳 +91
+                </span>
+                <input
+                  type="tel"
+                  value={mobileNumber}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, '').slice(0, 10);
+                    setMobileNumber(value);
+                  }}
+                  placeholder="9876543210"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-r-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  required
+                />
               </div>
+              <p className="text-xs text-gray-500 mt-1">
+                10 digits, starts with 6-9
+              </p>
             </div>
 
             <button
               type="submit"
               disabled={loading || mobileNumber.length !== 10}
-              className="w-full flex justify-center py-3 px-4 text-lg font-medium rounded-lg text-white bg-primary-600 hover:bg-primary-700 disabled:bg-gray-400"
+              className="w-full py-2 text-white bg-primary-600 hover:bg-primary-700 disabled:bg-gray-400 rounded-lg font-medium"
             >
-              {loading ? 'Sending OTP...' : (
-                <>
-                  Get OTP
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </>
-              )}
+              {loading ? 'Sending...' : 'Get OTP'}
             </button>
 
             <div className="text-center">
               <p className="text-sm text-gray-600">
-                Already have an account?{' '}
+                Have account?{' '}
                 <Link to="/login" className="font-medium text-primary-600 hover:text-primary-500">
-                  Sign in with mobile number
+                  Sign In
                 </Link>
               </p>
             </div>
@@ -224,7 +217,7 @@ export default function RegisterPage() {
         )}
 
         {step === 'otp' && (
-          <form className="mt-8 space-y-6" onSubmit={handleVerifyOTP}>
+          <form className="mt-4 space-y-4" onSubmit={handleVerifyOTP}>
             <div className="space-y-4">
               <div className="text-center">
                 <div className="bg-green-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
@@ -297,7 +290,7 @@ export default function RegisterPage() {
         )}
 
         {step === 'profile' && (
-          <form className="mt-8 space-y-6" onSubmit={handleCompleteProfile}>
+          <form className="mt-4 space-y-4" onSubmit={handleCompleteProfile}>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">

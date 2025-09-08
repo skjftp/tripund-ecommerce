@@ -113,127 +113,110 @@ export default function LoginPage() {
   const seconds = remainingTime % 60;
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-4 px-4">
+      <div className="max-w-sm w-full space-y-4">
         <div className="text-center">
-          <Smartphone className="mx-auto h-12 w-12 text-primary-600" />
-          <h2 className="mt-6 text-3xl font-bold text-gray-900">
-            {step === 'mobile' ? 'Sign in to TRIPUND' : 'Verify OTP'}
+          <Smartphone className="mx-auto h-8 w-8 text-primary-600" />
+          <h2 className="mt-3 text-2xl font-bold text-gray-900">
+            {step === 'mobile' ? 'Sign In' : 'Enter OTP'}
           </h2>
-          <p className="mt-2 text-sm text-gray-600">
+          <p className="mt-1 text-sm text-gray-600">
             {step === 'mobile' 
-              ? 'Enter your Indian mobile number to receive OTP'
-              : `OTP sent to +91 ${mobileNumber}`
+              ? 'Enter mobile number'
+              : `Sent to +91 ${mobileNumber}`
             }
           </p>
         </div>
 
         {step === 'mobile' ? (
-          <form className="mt-8 space-y-6" onSubmit={handleSendOTP}>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Indian Mobile Number
-                </label>
-                <div className="flex">
-                  <span className="inline-flex items-center px-3 py-3 border border-r-0 border-gray-300 rounded-l-lg bg-gray-50 text-gray-500 text-sm">
-                    🇮🇳 +91
-                  </span>
-                  <input
-                    type="tel"
-                    value={mobileNumber}
-                    onChange={(e) => {
-                      const value = e.target.value.replace(/\D/g, '').slice(0, 10);
-                      setMobileNumber(value);
-                    }}
-                    placeholder="9876543210"
-                    className="flex-1 px-4 py-3 border border-gray-300 rounded-r-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-lg"
-                    required
-                  />
-                </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  Enter 10-digit mobile number (must start with 6, 7, 8, or 9)
-                </p>
+          <form className="mt-4 space-y-4" onSubmit={handleSendOTP}>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Mobile Number
+              </label>
+              <div className="flex">
+                <span className="inline-flex items-center px-3 py-2 border border-r-0 border-gray-300 rounded-l-lg bg-gray-50 text-gray-600 text-sm">
+                  🇮🇳 +91
+                </span>
+                <input
+                  type="tel"
+                  value={mobileNumber}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, '').slice(0, 10);
+                    setMobileNumber(value);
+                  }}
+                  placeholder="9876543210"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-r-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  required
+                />
               </div>
+              <p className="text-xs text-gray-500 mt-1">
+                10 digits, starts with 6-9
+              </p>
             </div>
 
             <button
               type="submit"
               disabled={loading || mobileNumber.length !== 10}
-              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-lg font-medium rounded-lg text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:bg-gray-400 disabled:cursor-not-allowed"
+              className="w-full py-2 text-white bg-primary-600 hover:bg-primary-700 disabled:bg-gray-400 rounded-lg font-medium"
             >
-              {loading ? 'Sending OTP...' : (
-                <>
-                  Send OTP
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </>
-              )}
+              {loading ? 'Sending...' : 'Send OTP'}
             </button>
 
             <div className="text-center">
               <p className="text-sm text-gray-600">
-                New to TRIPUND?{' '}
+                New user?{' '}
                 <Link to="/register" className="font-medium text-primary-600 hover:text-primary-500">
-                  Create account with mobile number
+                  Sign Up
                 </Link>
               </p>
             </div>
           </form>
         ) : (
-          <form className="mt-8 space-y-6" onSubmit={handleVerifyOTP}>
-            <div className="space-y-4">
-              <div className="text-center">
-                <div className="bg-green-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                  <Shield className="w-8 h-8 text-green-600" />
-                </div>
-                <p className="text-sm text-gray-600 mb-4">
-                  We've sent a 6-digit verification code to
-                </p>
-                <p className="font-medium text-gray-900">
-                  +91 {mobileNumber}
-                </p>
+          <form className="mt-4 space-y-4" onSubmit={handleVerifyOTP}>
+            <div className="text-center mb-4">
+              <div className="bg-green-100 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-2">
+                <Shield className="w-6 h-6 text-green-600" />
               </div>
+              <p className="text-sm text-gray-600">
+                OTP sent to +91 {mobileNumber}
+              </p>
+            </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Enter OTP
-                </label>
-                <input
-                  type="text"
-                  value={otp}
-                  onChange={(e) => {
-                    const value = e.target.value.replace(/\D/g, '').slice(0, 6);
-                    setOTP(value);
-                  }}
-                  placeholder="123456"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-center text-2xl tracking-widest"
-                  maxLength={6}
-                  autoFocus
-                  required
-                />
-                {remainingTime > 0 ? (
-                  <p className="text-xs text-gray-500 mt-1 text-center">
-                    OTP expires in {minutes}:{seconds.toString().padStart(2, '0')}
-                  </p>
-                ) : (
-                  <p className="text-xs text-red-500 mt-1 text-center">
-                    OTP has expired
-                  </p>
-                )}
-              </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Enter OTP
+              </label>
+              <input
+                type="text"
+                value={otp}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, '').slice(0, 6);
+                  setOTP(value);
+                }}
+                placeholder="123456"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-center text-xl tracking-widest"
+                maxLength={6}
+                autoFocus
+                required
+              />
+              {remainingTime > 0 ? (
+                <p className="text-xs text-gray-500 mt-1 text-center">
+                  Expires in {minutes}:{seconds.toString().padStart(2, '0')}
+                </p>
+              ) : (
+                <p className="text-xs text-red-500 mt-1 text-center">
+                  OTP expired
+                </p>
+              )}
             </div>
 
             <button
               type="submit"
               disabled={loading || otp.length !== 6}
-              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-lg font-medium rounded-lg text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:bg-gray-400 disabled:cursor-not-allowed"
+              className="w-full py-2 text-white bg-primary-600 hover:bg-primary-700 disabled:bg-gray-400 rounded-lg font-medium"
             >
-              {loading ? 'Verifying...' : (
-                <>
-                  <CheckCircle className="mr-2 h-5 w-5" />
-                  Verify & Login
-                </>
-              )}
+              {loading ? 'Verifying...' : 'Verify & Login'}
             </button>
 
             <div className="flex items-center justify-between">
@@ -242,31 +225,26 @@ export default function LoginPage() {
                 onClick={() => setStep('mobile')}
                 className="text-sm text-gray-500 hover:text-gray-700"
               >
-                ← Change mobile number
+                ← Change number
               </button>
               
               {remainingTime <= 0 && (
                 <button
                   type="button"
                   onClick={handleResendOTP}
-                  className="text-sm text-primary-600 hover:text-primary-500 font-medium"
+                  className="text-sm text-primary-600 hover:text-primary-500"
                 >
-                  Resend OTP
+                  Resend
                 </button>
               )}
             </div>
           </form>
         )}
 
-        {/* Security Note */}
-        <div className="mt-6 text-center">
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-            <div className="flex items-center justify-center mb-2">
-              <Shield className="w-5 h-5 text-green-600 mr-2" />
-              <span className="text-sm font-medium text-green-800">🇮🇳 Indian Mobile Only</span>
-            </div>
+        <div className="mt-3 text-center">
+          <div className="bg-green-50 border border-green-200 rounded-lg p-2">
             <p className="text-xs text-green-700">
-              Secure OTP-based authentication for Indian mobile numbers only
+              🇮🇳 Indian mobile numbers only • Secure OTP
             </p>
           </div>
         </div>
