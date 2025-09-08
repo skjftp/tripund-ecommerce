@@ -129,7 +129,7 @@ export default function AddressesPage() {
             
             // Auto-populate form fields
             setValue('line1', locationData.locality || '');
-            setValue('line2', locationData.localityInfo?.informative?.[0]?.description || '');
+            setValue('line2', ''); // Clear line2 to avoid irrelevant data
             setValue('city', locationData.city || '');
             setValue('state', locationData.principalSubdivision || '');
             setValue('postal_code', locationData.postcode || '');

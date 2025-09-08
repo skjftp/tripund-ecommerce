@@ -227,7 +227,6 @@ export default function ProfilePage() {
 
   const tabs = [
     { id: 'profile', name: 'Profile', icon: User },
-    { id: 'addresses', name: 'Addresses', icon: MapPin },
     { id: 'settings', name: 'Settings', icon: Settings },
   ];
 
@@ -428,10 +427,7 @@ export default function ProfilePage() {
                 </div>
               )}
 
-              {activeTab === 'addresses' && (
-                <div>
-                  <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-xl font-semibold">Delivery Addresses</h2>
+              {/* Addresses tab removed - now uses dedicated /addresses page */}
                     <button
                       onClick={() => setShowAddressForm(true)}
                       className="flex items-center space-x-2 bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700"
