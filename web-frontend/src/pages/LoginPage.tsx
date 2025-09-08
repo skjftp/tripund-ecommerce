@@ -8,13 +8,18 @@ export default function LoginPage() {
   const [searchParams] = useSearchParams();
   const returnTo = searchParams.get('returnTo');
   
-  const [step, setStep] = useState<'mobile' | 'otp'>('mobile');
+  const [step, setStep] = useState<'mobile' | 'delivery' | 'otp' | 'profile'>('mobile');
   const [mobileNumber, setMobileNumber] = useState('');
   const [otp, setOTP] = useState('');
   const [loading, setLoading] = useState(false);
   const [otpExpiry, setOtpExpiry] = useState<number | null>(null);
+  const [deliveryMethod, setDeliveryMethod] = useState<'whatsapp' | 'sms'>('whatsapp');
+  const [isNewUser, setIsNewUser] = useState(false);
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [token, setToken] = useState('');
 
-  const handleSendOTP = async (e: React.FormEvent) => {
+  const handleMobileSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     // Validate Indian mobile number
@@ -23,10 +28,15 @@ export default function LoginPage() {
       return;
     }
 
+    // Show delivery choice popup
+    setStep('delivery');
+  };
+
+  const handleSendOTP = async () => {
     setLoading(true);
     
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://tripund-backend-665685012221.asia-south1.run.app/api/v1'}/auth/mobile/send-otp`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://tripund-backend-665685012221.asia-south1.run.app/api/v1'}/auth/send-otp`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -34,22 +44,19 @@ export default function LoginPage() {
         body: JSON.stringify({
           mobile_number: mobileNumber,
           country_code: '91',
-          purpose: 'login'
+          delivery_method: deliveryMethod
         }),
       });
 
       const result = await response.json();
 
       if (response.ok) {
-        toast.success('OTP sent to your mobile number');
+        const deliveryText = deliveryMethod === 'whatsapp' ? 'WhatsApp' : 'SMS';
+        toast.success(`OTP sent to your mobile via ${deliveryText}`);
         setStep('otp');
         setOtpExpiry(Date.now() + 5 * 60 * 1000);
       } else {
-        if (result.error?.includes('not registered')) {
-          toast.error('Mobile number not found. Please register first.');
-        } else {
-          toast.error(result.error || 'Failed to send OTP');
-        }
+        toast.error(result.error || 'Failed to send OTP');
       }
     } catch (error) {
       console.error('Send OTP error:', error);
@@ -70,7 +77,7 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://tripund-backend-665685012221.asia-south1.run.app/api/v1'}/auth/mobile/verify-otp`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://tripund-backend-665685012221.asia-south1.run.app/api/v1'}/auth/verify-otp`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -78,7 +85,6 @@ export default function LoginPage() {
         body: JSON.stringify({
           mobile_number: mobileNumber,
           otp: otp,
-          purpose: 'login'
         }),
       });
 
@@ -87,9 +93,16 @@ export default function LoginPage() {
       if (response.ok) {
         localStorage.setItem('token', result.token);
         localStorage.setItem('userId', result.user.id);
+        setToken(result.token);
+        setIsNewUser(result.is_new_user);
         
-        toast.success('Login successful!');
-        navigate(returnTo || '/');
+        if (result.is_new_user) {
+          toast.success('Welcome! Please complete your profile.');
+          setStep('profile');
+        } else {
+          toast.success('Welcome back!');
+          navigate(returnTo || '/');
+        }
       } else {
         toast.error(result.error || 'Invalid OTP');
         setOTP('');
@@ -104,8 +117,47 @@ export default function LoginPage() {
 
   const handleResendOTP = () => {
     setOTP('');
-    setStep('mobile');
+    setStep('delivery');
     setOtpExpiry(null);
+  };
+
+  const handleCompleteProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!name.trim()) {
+      toast.error('Please enter your name');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://tripund-backend-665685012221.asia-south1.run.app/api/v1'}/mobile/profile`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          name: name,
+          email: email,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        toast.success('Profile completed successfully!');
+        navigate(returnTo || '/');
+      } else {
+        toast.error(result.error || 'Failed to update profile');
+      }
+    } catch (error) {
+      console.error('Profile completion error:', error);
+      toast.error('Failed to complete profile. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const remainingTime = otpExpiry ? Math.max(0, Math.ceil((otpExpiry - Date.now()) / 1000)) : 0;
@@ -118,18 +170,21 @@ export default function LoginPage() {
         <div className="text-center">
           <Smartphone className="mx-auto h-8 w-8 text-primary-600" />
           <h2 className="mt-3 text-2xl font-bold text-gray-900">
-            {step === 'mobile' ? 'Sign In' : 'Enter OTP'}
+            {step === 'mobile' && 'Enter Mobile'}
+            {step === 'delivery' && 'Choose Delivery'}
+            {step === 'otp' && 'Enter OTP'}
+            {step === 'profile' && 'Complete Profile'}
           </h2>
           <p className="mt-1 text-sm text-gray-600">
-            {step === 'mobile' 
-              ? 'Enter mobile number'
-              : `Sent to +91 ${mobileNumber}`
-            }
+            {step === 'mobile' && 'Universal login for all users'}
+            {step === 'delivery' && 'How should we send your OTP?'}
+            {step === 'otp' && `Code sent to +91 ${mobileNumber}`}
+            {step === 'profile' && 'Tell us about yourself'}
           </p>
         </div>
 
         {step === 'mobile' ? (
-          <form className="mt-4 space-y-4" onSubmit={handleSendOTP}>
+          <form className="mt-4 space-y-4" onSubmit={handleMobileSubmit}>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Mobile Number
@@ -160,19 +215,87 @@ export default function LoginPage() {
               disabled={loading || mobileNumber.length !== 10}
               className="w-full py-2 text-white bg-primary-600 hover:bg-primary-700 disabled:bg-gray-400 rounded-lg font-medium"
             >
-              {loading ? 'Sending...' : 'Send OTP'}
+              Continue
             </button>
 
             <div className="text-center">
-              <p className="text-sm text-gray-600">
-                New user?{' '}
-                <Link to="/register" className="font-medium text-primary-600 hover:text-primary-500">
-                  Sign Up
-                </Link>
+              <p className="text-xs text-gray-500">
+                New users will be automatically registered
               </p>
             </div>
           </form>
-        ) : (
+        )}
+
+        {step === 'delivery' && (
+          <div className="mt-4 space-y-4">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
+              <p className="text-sm text-blue-800 font-medium">📱 Choose OTP Delivery Method</p>
+            </div>
+
+            <div className="space-y-3">
+              {/* WhatsApp Option (Recommended) */}
+              <button
+                onClick={() => {
+                  setDeliveryMethod('whatsapp');
+                  handleSendOTP();
+                }}
+                disabled={loading}
+                className="w-full p-4 border-2 border-green-300 bg-green-50 rounded-lg hover:bg-green-100 transition-colors disabled:bg-gray-100"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                      <span className="text-white text-sm">📱</span>
+                    </div>
+                    <div className="text-left">
+                      <p className="font-medium text-green-800">WhatsApp</p>
+                      <p className="text-xs text-green-600">Recommended • Instant delivery</p>
+                    </div>
+                  </div>
+                  <span className="bg-green-500 text-white text-xs px-2 py-1 rounded-full">✨ Best</span>
+                </div>
+              </button>
+
+              {/* SMS Option */}
+              <button
+                onClick={() => {
+                  setDeliveryMethod('sms');
+                  handleSendOTP();
+                }}
+                disabled={loading}
+                className="w-full p-4 border border-gray-300 bg-white rounded-lg hover:bg-gray-50 transition-colors disabled:bg-gray-100"
+              >
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                    <span className="text-white text-sm">💬</span>
+                  </div>
+                  <div className="text-left">
+                    <p className="font-medium text-gray-800">SMS</p>
+                    <p className="text-xs text-gray-600">Traditional text message</p>
+                  </div>
+                </div>
+              </button>
+            </div>
+
+            <div className="text-center">
+              <button
+                onClick={() => setStep('mobile')}
+                className="text-sm text-gray-500 hover:text-gray-700"
+              >
+                ← Change number
+              </button>
+            </div>
+
+            {loading && (
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-600 mx-auto"></div>
+                <p className="text-sm text-gray-600 mt-2">Sending OTP...</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {step === 'otp' && (
           <form className="mt-4 space-y-4" onSubmit={handleVerifyOTP}>
             <div className="text-center mb-4">
               <div className="bg-green-100 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-2">
@@ -237,6 +360,69 @@ export default function LoginPage() {
                   Resend
                 </button>
               )}
+            </div>
+          </form>
+        )}
+
+        {step === 'profile' && (
+          <form className="mt-4 space-y-4" onSubmit={handleCompleteProfile}>
+            <div className="text-center mb-4">
+              <div className="bg-blue-100 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-2">
+                <CheckCircle className="w-6 h-6 text-blue-600" />
+              </div>
+              <p className="text-sm text-gray-600">
+                Welcome to TRIPUND! Let's set up your profile.
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Full Name *
+                </label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Enter your full name"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Email (Optional)
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="your.email@example.com"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Email helps us send order confirmations
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading || !name.trim()}
+              className="w-full py-2 text-white bg-primary-600 hover:bg-primary-700 disabled:bg-gray-400 rounded-lg font-medium"
+            >
+              {loading ? 'Completing...' : 'Complete Profile'}
+            </button>
+
+            <div className="text-center">
+              <button
+                type="button"
+                onClick={() => navigate(returnTo || '/')}
+                className="text-sm text-gray-500 hover:text-gray-700"
+              >
+                Skip for now →
+              </button>
             </div>
           </form>
         )}
