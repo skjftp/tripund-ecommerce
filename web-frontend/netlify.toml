@@ -5,6 +5,7 @@
 [build.environment]
   NODE_VERSION = "20"
   CI = "true"
+  BUILD_TIMESTAMP = "2025-09-08"
 
 [[redirects]]
   from = "/*"
