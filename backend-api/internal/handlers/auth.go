@@ -55,7 +55,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		CreatedAt: time.Now(),
 	}
 
-	docRef, _, err := h.db.Client.Collection("users").Add(h.db.Context, user)
+	docRef, _, err := h.db.Client.Collection("mobile_users").Add(h.db.Context, user)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
 		return
@@ -87,7 +87,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	query := h.db.Client.Collection("users").Where("email", "==", req.Email).Limit(1)
+	query := h.db.Client.Collection("mobile_users").Where("email", "==", req.Email).Limit(1)
 	docs, err := query.Documents(h.db.Context).GetAll()
 	if err != nil || len(docs) == 0 {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
@@ -175,7 +175,7 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 	}
 
 	// Fetch the user from database to ensure they still exist
-	doc, err := h.db.Client.Collection("users").Doc(claims.UserID).Get(h.db.Context)
+	doc, err := h.db.Client.Collection("mobile_users").Doc(claims.UserID).Get(h.db.Context)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
 		return
@@ -203,13 +203,15 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 
 func (h *AuthHandler) GetProfile(c *gin.Context) {
 	userID := c.GetString("user_id")
-	doc, err := h.db.Client.Collection("users").Doc(userID).Get(h.db.Context)
+	
+	// Get mobile user (mobile-only authentication)
+	doc, err := h.db.Client.Collection("mobile_users").Doc(userID).Get(h.db.Context)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
 	}
 
-	var user models.User
+	var user models.MobileUser
 	if err := doc.DataTo(&user); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to parse user data"})
 		return
@@ -279,7 +281,7 @@ func (h *AuthHandler) UpdateProfile(c *gin.Context) {
 		log.Printf("Update %d: Path=%s, Value=%+v", i, update.Path, update.Value)
 	}
 
-	_, err := h.db.Client.Collection("users").Doc(userID).Update(h.db.Context, updates)
+	_, err := h.db.Client.Collection("mobile_users").Doc(userID).Update(h.db.Context, updates)
 
 	if err != nil {
 		log.Printf("Error updating Firestore: %v", err)
@@ -327,7 +329,7 @@ func (h *AuthHandler) AdminLogin(c *gin.Context) {
 	}
 
 	// Check database for admin users
-	query := h.db.Client.Collection("users").Where("email", "==", req.Email).Where("role", "==", "admin").Limit(1)
+	query := h.db.Client.Collection("mobile_users").Where("email", "==", req.Email).Where("role", "==", "admin").Limit(1)
 	docs, err := query.Documents(h.db.Context).GetAll()
 	if err != nil || len(docs) == 0 {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid admin credentials"})
@@ -370,7 +372,7 @@ func (h *AuthHandler) GetAllUsers(c *gin.Context) {
 	status := c.Query("status")
 
 	// Start with base query
-	query := h.db.Client.Collection("users").Query
+	query := h.db.Client.Collection("mobile_users").Query
 
 	// Apply filters if provided
 	if role != "" && role != "all" {
@@ -456,7 +458,7 @@ func (h *AuthHandler) GetUserDetails(c *gin.Context) {
 	userID := c.Param("id")
 
 	// Get user document
-	doc, err := h.db.Client.Collection("users").Doc(userID).Get(h.db.Context)
+	doc, err := h.db.Client.Collection("mobile_users").Doc(userID).Get(h.db.Context)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return

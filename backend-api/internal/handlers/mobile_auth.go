@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -16,18 +17,20 @@ import (
 )
 
 type MobileAuthHandler struct {
-	db          *database.Firebase
-	msg91       *services.MSG91Service
-	jwtSecret   string
+	db               *database.Firebase
+	msg91            *services.MSG91Service
+	whatsappService  *services.WhatsAppService
+	jwtSecret        string
 }
 
-func NewMobileAuthHandler(db *database.Firebase, jwtSecret string, cfg *config.Config) *MobileAuthHandler {
+func NewMobileAuthHandler(db *database.Firebase, jwtSecret string, cfg *config.Config, whatsappService *services.WhatsAppService) *MobileAuthHandler {
 	msg91Service := services.NewMSG91Service(cfg)
 	
 	return &MobileAuthHandler{
-		db:          db,
-		msg91:       msg91Service,
-		jwtSecret:   jwtSecret,
+		db:               db,
+		msg91:            msg91Service,
+		whatsappService:  whatsappService,
+		jwtSecret:        jwtSecret,
 	}
 }
 
@@ -48,18 +51,11 @@ func (h *MobileAuthHandler) SendOTP(c *gin.Context) {
 		return
 	}
 
-	// Check if user exists for login, or allow new registration
-	userExists := false
-	if req.Purpose == "login" {
-		// Check if user exists
-		docs, err := h.db.Client.Collection("mobile_users").Where("mobile_number", "==", formattedMobile).Documents(h.db.Context).GetAll()
-		if err == nil && len(docs) > 0 {
-			userExists = true
-		} else {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Mobile number not registered. Please sign up first."})
-			return
-		}
-	}
+	// Universal login: Check if user exists (no separate login/register flow)
+	userDocs, err := h.db.Client.Collection("mobile_users").Where("mobile_number", "==", formattedMobile).Documents(h.db.Context).GetAll()
+	userExists := err == nil && len(userDocs) > 0
+	
+	log.Printf("Universal login: mobile=%s, userExists=%v", formattedMobile, userExists)
 
 	// Check for recent OTP (rate limiting)
 	recentOTPs, err := h.db.Client.Collection("mobile_otps").
@@ -82,7 +78,7 @@ func (h *MobileAuthHandler) SendOTP(c *gin.Context) {
 		ID:           utils.GenerateIDWithPrefix("otp"),
 		MobileNumber: formattedMobile,
 		OTP:          otp,
-		Purpose:      req.Purpose,
+		Purpose:      "universal", // Universal login (no separate login/register)
 		ExpiresAt:    time.Now().Add(5 * time.Minute),
 		IsUsed:       false,
 		IsVerified:   false,
@@ -96,14 +92,46 @@ func (h *MobileAuthHandler) SendOTP(c *gin.Context) {
 		return
 	}
 
-	// Send OTP via MSG91
-	if err := h.msg91.SendOTP(formattedMobile, otp); err != nil {
-		log.Printf("Failed to send OTP via MSG91: %v", err)
-		// Try backup method
-		if err := h.msg91.SendOTPDirect(formattedMobile, otp); err != nil {
-			log.Printf("Failed to send OTP via backup method: %v", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send OTP"})
-			return
+	// Send OTP based on delivery method choice
+	var deliveryError error
+	
+	if req.DeliveryMethod == "whatsapp" {
+		// Send via WhatsApp first
+		if h.whatsappService != nil {
+			deliveryError = h.sendWhatsAppOTP(formattedMobile, otp)
+		} else {
+			deliveryError = fmt.Errorf("WhatsApp service not available")
+		}
+	} else {
+		// Send via SMS (MSG91)
+		deliveryError = h.msg91.SendOTP(formattedMobile, otp)
+	}
+	
+	// If primary method fails, try the other method as backup
+	if deliveryError != nil {
+		log.Printf("Primary delivery method (%s) failed: %v", req.DeliveryMethod, deliveryError)
+		
+		if req.DeliveryMethod == "whatsapp" {
+			// Fallback to SMS
+			log.Printf("Falling back to SMS delivery")
+			if err := h.msg91.SendOTP(formattedMobile, otp); err != nil {
+				log.Printf("SMS fallback also failed: %v", err)
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send OTP via both WhatsApp and SMS"})
+				return
+			}
+		} else {
+			// Fallback to WhatsApp
+			log.Printf("Falling back to WhatsApp delivery")
+			if h.whatsappService != nil {
+				if err := h.sendWhatsAppOTP(formattedMobile, otp); err != nil {
+					log.Printf("WhatsApp fallback also failed: %v", err)
+					c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send OTP via both SMS and WhatsApp"})
+					return
+				}
+			} else {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send OTP"})
+				return
+			}
 		}
 	}
 
@@ -127,26 +155,52 @@ func (h *MobileAuthHandler) VerifyOTP(c *gin.Context) {
 	// Format mobile number
 	formattedMobile := h.msg91.FormatMobileNumber(req.MobileNumber)
 
-	// Find valid OTP
+	// Find valid OTP with simplified query to avoid composite index requirement
+	log.Printf("Verifying OTP: mobile=%s, otp=%s", formattedMobile, req.OTP)
+	
+	// Get all OTPs for this mobile number (simple query)
 	docs, err := h.db.Client.Collection("mobile_otps").
 		Where("mobile_number", "==", formattedMobile).
-		Where("otp", "==", req.OTP).
-		Where("purpose", "==", req.Purpose).
-		Where("is_used", "==", false).
-		Where("expires_at", ">", time.Now()).
 		Documents(h.db.Context).GetAll()
 
-	if err != nil || len(docs) == 0 {
+	if err != nil {
+		log.Printf("Database error during OTP verification: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
+		return
+	}
+	
+	log.Printf("Found %d OTP records for mobile %s", len(docs), formattedMobile)
+	
+	// Find matching OTP manually (to avoid composite index)
+	var validOtpDoc *firestore.DocumentSnapshot
+	for _, doc := range docs {
+		var otpRecord models.MobileOTP
+		if err := doc.DataTo(&otpRecord); err == nil {
+			log.Printf("Checking OTP: otp=%s, purpose=%s, used=%v, expires=%v", 
+				otpRecord.OTP, otpRecord.Purpose, otpRecord.IsUsed, otpRecord.ExpiresAt.After(time.Now()))
+			
+			// Check all conditions manually (no purpose check for universal login)
+			if otpRecord.OTP == req.OTP && 
+			   !otpRecord.IsUsed && 
+			   otpRecord.ExpiresAt.After(time.Now()) {
+				validOtpDoc = doc
+				log.Printf("Found valid matching OTP!")
+				break
+			}
+		}
+	}
+	
+	if validOtpDoc == nil {
+		log.Printf("No valid OTP found for mobile=%s, otp=%s", formattedMobile, req.OTP)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid or expired OTP"})
 		return
 	}
 
-	otpDoc := docs[0]
 	var otpRecord models.MobileOTP
-	otpDoc.DataTo(&otpRecord)
+	validOtpDoc.DataTo(&otpRecord)
 
 	// Update OTP as used
-	otpDoc.Ref.Update(h.db.Context, []firestore.Update{
+	validOtpDoc.Ref.Update(h.db.Context, []firestore.Update{
 		{Path: "is_used", Value: true},
 		{Path: "is_verified", Value: true},
 		{Path: "used_at", Value: time.Now()},
@@ -289,4 +343,21 @@ func (h *MobileAuthHandler) GetProfile(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"user": user,
 	})
+}
+
+// Send OTP via WhatsApp using the new 'otp' template
+func (h *MobileAuthHandler) sendWhatsAppOTP(mobileNumber, otp string) error {
+	if h.whatsappService == nil {
+		return fmt.Errorf("WhatsApp service not available")
+	}
+	
+	// Use the new 'otp' template for authentication
+	return h.whatsappService.SendTemplateMessage(
+		mobileNumber,
+		"otp", // Your new OTP template name
+		"en_US",
+		[]models.ParameterContent{
+			{Type: "text", Text: otp}, // {{1}} parameter for login code
+		},
+	)
 }

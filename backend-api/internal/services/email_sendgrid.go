@@ -120,7 +120,7 @@ func (s *SendGridEmailService) SendOrderConfirmation(order models.Order) error {
 	if order.UserID != "guest" && order.GuestEmail == "" {
 		if s.db != nil {
 			// Get user email from Firestore
-			userDoc, err := s.db.Collection("users").Doc(order.UserID).Get(context.Background())
+			userDoc, err := s.db.Collection("mobile_users").Doc(order.UserID).Get(context.Background())
 			if err != nil {
 				return fmt.Errorf("failed to get user email for order %s: %v", order.ID, err)
 			}
@@ -190,7 +190,7 @@ func (s *SendGridEmailService) SendShippingConfirmation(order models.Order) erro
 	if order.UserID != "guest" && order.GuestEmail == "" {
 		if s.db != nil {
 			// Get user email from Firestore
-			userDoc, err := s.db.Collection("users").Doc(order.UserID).Get(context.Background())
+			userDoc, err := s.db.Collection("mobile_users").Doc(order.UserID).Get(context.Background())
 			if err != nil {
 				return fmt.Errorf("failed to get user email for order %s: %v", order.ID, err)
 			}

@@ -56,14 +56,13 @@ type MobileUserProfile struct {
 // OTP verification request/response structures
 type SendOTPRequest struct {
 	MobileNumber string `json:"mobile_number" binding:"required"`
-	Purpose      string `json:"purpose" binding:"required"` // login, register
 	CountryCode  string `json:"country_code" binding:"required"`
+	DeliveryMethod string `json:"delivery_method" binding:"required"` // whatsapp, sms
 }
 
 type VerifyOTPRequest struct {
 	MobileNumber string `json:"mobile_number" binding:"required"`
 	OTP          string `json:"otp" binding:"required"`
-	Purpose      string `json:"purpose" binding:"required"`
 }
 
 type MobileAuthResponse struct {

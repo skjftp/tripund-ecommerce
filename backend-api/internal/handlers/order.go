@@ -297,7 +297,7 @@ func (h *OrderHandler) GetAllOrders(c *gin.Context) {
 		
 		// For logged-in users, populate customer information from user profile
 		if order.UserID != "" && order.UserID != "guest" {
-			userDoc, err := h.db.Client.Collection("users").Doc(order.UserID).Get(h.db.Context)
+			userDoc, err := h.db.Client.Collection("mobile_users").Doc(order.UserID).Get(h.db.Context)
 			if err == nil {
 				var user struct {
 					Email   string `firestore:"email"`
@@ -483,7 +483,7 @@ func (h *OrderHandler) UpdateOrderStatus(c *gin.Context) {
 				// Get customer name - priority: registered user > guest name > fallback
 				if order.UserID != "" {
 					// Fetch user details from users collection
-					userDoc, userErr := h.db.Client.Collection("users").Doc(order.UserID).Get(h.db.Context)
+					userDoc, userErr := h.db.Client.Collection("mobile_users").Doc(order.UserID).Get(h.db.Context)
 					if userErr == nil {
 						var user map[string]interface{}
 						if userDoc.DataTo(&user) == nil {

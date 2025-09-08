@@ -54,7 +54,7 @@ func main() {
 	
 	whatsappHandler := handlers.NewWhatsAppHandler(db, whatsappService)
 	analyticsHandler := handlers.NewAnalyticsHandler(db)
-	mobileAuthHandler := handlers.NewMobileAuthHandler(db, cfg.JWTSecret, cfg)
+	mobileAuthHandler := handlers.NewMobileAuthHandler(db, cfg.JWTSecret, cfg, whatsappService)
 
 	api := r.Group("/api/v1")
 	{
@@ -79,12 +79,9 @@ func main() {
 			auth.POST("/refresh", authHandler.RefreshToken)
 		}
 
-		// Mobile OTP Authentication
-		mobileAuth := api.Group("/auth/mobile")
-		{
-			mobileAuth.POST("/send-otp", mobileAuthHandler.SendOTP)
-			mobileAuth.POST("/verify-otp", mobileAuthHandler.VerifyOTP)
-		}
+		// Universal Mobile Authentication (single login/register flow)
+		api.POST("/auth/send-otp", mobileAuthHandler.SendOTP)
+		api.POST("/auth/verify-otp", mobileAuthHandler.VerifyOTP)
 
 		products := api.Group("/products")
 		{
@@ -141,6 +138,10 @@ func main() {
 			protected.PUT("/profile", authHandler.UpdateProfile)
 			protected.GET("/profile/wishlist", authHandler.GetProfileWishlist)
 			protected.GET("/profile/addresses", authHandler.GetProfileAddresses)
+
+			// Mobile user profile endpoints
+			protected.GET("/mobile/profile", mobileAuthHandler.GetProfile)
+			protected.PUT("/mobile/profile", mobileAuthHandler.CompleteProfile)
 
 			// Order endpoints
 			orders := protected.Group("/orders")
