@@ -93,47 +93,50 @@ func (h *MobileAuthHandler) SendOTP(c *gin.Context) {
 	}
 
 	// Send OTP based on delivery method choice
-	var deliveryError error
+	var deliveredVia string
 	
 	if req.DeliveryMethod == "whatsapp" {
-		// Send via WhatsApp first
-		if h.whatsappService != nil {
-			deliveryError = h.sendWhatsAppOTP(formattedMobile, otp)
-		} else {
-			deliveryError = fmt.Errorf("WhatsApp service not available")
-		}
-	} else {
-		// Send via SMS (MSG91)
-		deliveryError = h.msg91.SendOTP(formattedMobile, otp)
-	}
-	
-	// If primary method fails, try the other method as backup
-	if deliveryError != nil {
-		log.Printf("Primary delivery method (%s) failed: %v", req.DeliveryMethod, deliveryError)
+		// User selected WhatsApp - try WhatsApp first, fallback to SMS if it fails
+		log.Printf("User selected WhatsApp - attempting WhatsApp delivery to %s", formattedMobile)
 		
-		if req.DeliveryMethod == "whatsapp" {
-			// Fallback to SMS
-			log.Printf("Falling back to SMS delivery")
-			if err := h.msg91.SendOTP(formattedMobile, otp); err != nil {
-				log.Printf("SMS fallback also failed: %v", err)
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send OTP via both WhatsApp and SMS"})
-				return
-			}
-		} else {
-			// Fallback to WhatsApp
-			log.Printf("Falling back to WhatsApp delivery")
-			if h.whatsappService != nil {
-				if err := h.sendWhatsAppOTP(formattedMobile, otp); err != nil {
-					log.Printf("WhatsApp fallback also failed: %v", err)
-					c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send OTP via both SMS and WhatsApp"})
+		if h.whatsappService != nil {
+			if err := h.sendWhatsAppOTP(formattedMobile, otp); err != nil {
+				log.Printf("WhatsApp delivery failed: %v, falling back to SMS", err)
+				// Fallback to SMS
+				if err := h.msg91.SendOTP(formattedMobile, otp); err != nil {
+					log.Printf("SMS fallback also failed: %v", err)
+					c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send OTP via WhatsApp and SMS"})
 					return
 				}
+				deliveredVia = "SMS (WhatsApp failed)"
 			} else {
+				deliveredVia = "WhatsApp"
+			}
+		} else {
+			log.Printf("WhatsApp service not available, sending via SMS")
+			if err := h.msg91.SendOTP(formattedMobile, otp); err != nil {
+				log.Printf("SMS delivery failed: %v", err)
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send OTP"})
 				return
 			}
+			deliveredVia = "SMS"
 		}
+	} else if req.DeliveryMethod == "sms" {
+		// User selected SMS - send ONLY via SMS, no WhatsApp fallback
+		log.Printf("User selected SMS - sending via SMS ONLY to %s", formattedMobile)
+		
+		if err := h.msg91.SendOTP(formattedMobile, otp); err != nil {
+			log.Printf("SMS delivery failed: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send OTP via SMS"})
+			return
+		}
+		deliveredVia = "SMS"
+	} else {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid delivery method"})
+		return
 	}
+	
+	log.Printf("OTP sent successfully via %s to %s", deliveredVia, formattedMobile)
 
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
