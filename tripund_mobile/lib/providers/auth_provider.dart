@@ -177,4 +177,29 @@ class AuthProvider extends ChangeNotifier {
       }
     }
   }
+
+  // Mobile OTP Authentication
+  Future<void> setAuthData(String token, Map<String, dynamic> userData) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      _token = token;
+      _user = User.fromJson(userData);
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('token', token);
+      await prefs.setString('user', json.encode(userData));
+
+      // Sync token with ApiService
+      ApiService().setAuthToken(token);
+      
+      print('📱 Mobile auth successful: ${_user?.name ?? _user?.email}');
+    } catch (e) {
+      print('Error setting auth data: $e');
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
 }

@@ -7,7 +7,7 @@ import '../providers/cart_provider.dart';
 import '../providers/wishlist_provider.dart';
 import '../utils/navigation_helper.dart';
 import '../utils/theme.dart';
-import 'login_screen.dart';
+import 'mobile_auth_screen.dart';
 import 'orders_screen.dart';
 import 'addresses_screen.dart';
 import 'notifications_settings_screen.dart';
@@ -149,7 +149,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => const LoginScreen(isLogin: true),
+                                  builder: (context) => const MobileAuthScreen(),
                                 ),
                               );
                             },
@@ -179,7 +179,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => const LoginScreen(isLogin: false),
+                                  builder: (context) => const MobileAuthScreen(),
                                 ),
                               );
                             },

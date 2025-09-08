@@ -589,4 +589,102 @@ class ApiService {
       return null;
     }
   }
+  
+  // Mobile OTP Authentication
+  static Future<Map<String, dynamic>> sendMobileOTP({
+    required String mobileNumber,
+    required String countryCode,
+    required String deliveryMethod,
+  }) async {
+    try {
+      final dio = Dio(BaseOptions(
+        baseUrl: Constants.apiUrl,
+        connectTimeout: const Duration(seconds: 10),
+        receiveTimeout: const Duration(seconds: 10),
+      ));
+      
+      final response = await dio.post('/auth/send-otp', data: {
+        'mobile_number': mobileNumber,
+        'country_code': countryCode,
+        'delivery_method': deliveryMethod,
+      });
+      
+      if (response.statusCode == 200) {
+        return response.data;
+      }
+      return {'success': false, 'error': 'Failed to send OTP'};
+    } catch (e) {
+      if (e is DioException && e.response != null) {
+        return e.response!.data ?? {'success': false, 'error': 'Failed to send OTP'};
+      }
+      return {'success': false, 'error': e.toString()};
+    }
+  }
+  
+  static Future<Map<String, dynamic>> verifyMobileOTP({
+    required String mobileNumber,
+    required String otp,
+  }) async {
+    try {
+      final dio = Dio(BaseOptions(
+        baseUrl: Constants.apiUrl,
+        connectTimeout: const Duration(seconds: 10),
+        receiveTimeout: const Duration(seconds: 10),
+      ));
+      
+      final response = await dio.post('/auth/verify-otp', data: {
+        'mobile_number': mobileNumber,
+        'otp': otp,
+      });
+      
+      if (response.statusCode == 200) {
+        return response.data;
+      }
+      return {'success': false, 'error': 'Invalid OTP'};
+    } catch (e) {
+      if (e is DioException && e.response != null) {
+        return e.response!.data ?? {'success': false, 'error': 'Invalid OTP'};
+      }
+      return {'success': false, 'error': e.toString()};
+    }
+  }
+  
+  static Future<Map<String, dynamic>> completeProfile({
+    required String name,
+    String? email,
+  }) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
+      
+      if (token == null) {
+        return {'success': false, 'error': 'Authentication required'};
+      }
+      
+      final dio = Dio(BaseOptions(
+        baseUrl: Constants.apiUrl,
+        connectTimeout: const Duration(seconds: 10),
+        receiveTimeout: const Duration(seconds: 10),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      ));
+      
+      final response = await dio.put('/mobile/profile', data: {
+        'name': name,
+        if (email != null && email.isNotEmpty) 'email': email,
+      });
+      
+      if (response.statusCode == 200) {
+        return response.data;
+      }
+      return {'success': false, 'error': 'Failed to update profile'};
+    } catch (e) {
+      if (e is DioException && e.response != null) {
+        return e.response!.data ?? {'success': false, 'error': 'Failed to update profile'};
+      }
+      return {'success': false, 'error': e.toString()};
+    }
+  }
 }
