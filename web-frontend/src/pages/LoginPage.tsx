@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Smartphone, ArrowRight, Shield, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -115,12 +115,6 @@ export default function LoginPage() {
     }
   };
 
-  const handleResendOTP = () => {
-    setOTP('');
-    setStep('delivery');
-    setOtpExpiry(null);
-  };
-
   const handleCompleteProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -160,6 +154,12 @@ export default function LoginPage() {
     }
   };
 
+  const handleResendOTP = () => {
+    setOTP('');
+    setStep('delivery');
+    setOtpExpiry(null);
+  };
+
   const remainingTime = otpExpiry ? Math.max(0, Math.ceil((otpExpiry - Date.now()) / 1000)) : 0;
   const minutes = Math.floor(remainingTime / 60);
   const seconds = remainingTime % 60;
@@ -183,7 +183,8 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {step === 'mobile' ? (
+        {/* Step 1: Mobile Number Entry */}
+        {step === 'mobile' && (
           <form className="mt-4 space-y-4" onSubmit={handleMobileSubmit}>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -226,6 +227,7 @@ export default function LoginPage() {
           </form>
         )}
 
+        {/* Step 2: Delivery Choice */}
         {step === 'delivery' && (
           <div className="mt-4 space-y-4">
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
@@ -295,6 +297,7 @@ export default function LoginPage() {
           </div>
         )}
 
+        {/* Step 3: OTP Verification */}
         {step === 'otp' && (
           <form className="mt-4 space-y-4" onSubmit={handleVerifyOTP}>
             <div className="text-center mb-4">
@@ -364,6 +367,7 @@ export default function LoginPage() {
           </form>
         )}
 
+        {/* Step 4: Profile Completion (New Users Only) */}
         {step === 'profile' && (
           <form className="mt-4 space-y-4" onSubmit={handleCompleteProfile}>
             <div className="text-center mb-4">
@@ -427,6 +431,7 @@ export default function LoginPage() {
           </form>
         )}
 
+        {/* Footer */}
         <div className="mt-3 text-center">
           <div className="bg-green-50 border border-green-200 rounded-lg p-2">
             <p className="text-xs text-green-700">
