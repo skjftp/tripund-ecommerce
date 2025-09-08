@@ -26,7 +26,7 @@ export default function LoginPage() {
     setLoading(true);
     
     try {
-      const response = await fetch('/api/v1/auth/mobile/send-otp', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://tripund-backend-665685012221.asia-south1.run.app/api/v1'}/auth/mobile/send-otp`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -70,7 +70,7 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const response = await fetch('/api/v1/auth/mobile/verify-otp', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://tripund-backend-665685012221.asia-south1.run.app/api/v1'}/auth/mobile/verify-otp`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
