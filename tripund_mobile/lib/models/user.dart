@@ -38,10 +38,10 @@ class User {
 
     return User(
       id: json['id'] ?? '',
-      name: json['name'] ?? '',
+      name: json['name'] ?? (json['profile'] != null ? '${json['profile']['first_name'] ?? ''} ${json['profile']['last_name'] ?? ''}' : ''),
       email: json['email'] ?? '',
-      phone: json['phone'],
-      avatar: json['avatar'],
+      phone: json['mobile_number'] ?? json['phone'], // Handle both mobile_number (mobile users) and phone (email users)
+      avatar: json['avatar'] ?? json['profile']?['avatar'],
       addresses: addressList,
       cart: json['cart'],
       wishlist: wishlistItems,
