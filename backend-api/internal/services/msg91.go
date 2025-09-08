@@ -76,8 +76,7 @@ func (m *MSG91Service) SendOTP(mobileNumber, otp string) error {
 		"recipients": []map[string]interface{}{
 			{
 				"mobiles": cleanMobile,
-				"var":     otp, // Variable for {#var#} in your template
-				"VAR1":    otp, // Backup variable name
+				"var":     otp, // Variable for {#var#} in your template (CONFIRMED WORKING)
 			},
 		},
 	}

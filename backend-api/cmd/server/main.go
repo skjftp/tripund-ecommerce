@@ -54,7 +54,7 @@ func main() {
 	
 	whatsappHandler := handlers.NewWhatsAppHandler(db, whatsappService)
 	analyticsHandler := handlers.NewAnalyticsHandler(db)
-	mobileAuthHandler := handlers.NewMobileAuthHandler(db, cfg.JWTSecret)
+	mobileAuthHandler := handlers.NewMobileAuthHandler(db, cfg.JWTSecret, cfg)
 
 	api := r.Group("/api/v1")
 	{

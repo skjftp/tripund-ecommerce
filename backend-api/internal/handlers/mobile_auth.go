@@ -21,11 +21,8 @@ type MobileAuthHandler struct {
 	jwtSecret   string
 }
 
-func NewMobileAuthHandler(db *database.Firebase, jwtSecret string) *MobileAuthHandler {
-	msg91Service := services.NewMSG91Service(&config.Config{
-		MSG91SenderID:   "TPNDLS",
-		MSG91TemplateID: "1007865434019534765",
-	})
+func NewMobileAuthHandler(db *database.Firebase, jwtSecret string, cfg *config.Config) *MobileAuthHandler {
+	msg91Service := services.NewMSG91Service(cfg)
 	
 	return &MobileAuthHandler{
 		db:          db,
