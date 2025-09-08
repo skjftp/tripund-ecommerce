@@ -33,6 +33,7 @@ import InvoiceDetailPage from './pages/InvoiceDetailPage';
 import TrackingRedirect from './pages/TrackingRedirect';
 import MobileLoginPage from './pages/MobileLoginPage';
 import MobileRegisterPage from './pages/MobileRegisterPage';
+import AddressesPage from './pages/AddressesPage';
 import AppInitializer from './components/AppInitializer';
 
 function App() {
@@ -63,6 +64,7 @@ function App() {
             <Route path="/mobile-login" element={<MobileLoginPage />} />
             <Route path="/mobile-register" element={<MobileRegisterPage />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/addresses" element={<AddressesPage />} />
             <Route path="/wishlist" element={<WishlistPage />} />
             <Route path="/orders" element={<OrdersPage />} />
             <Route path="/invoices" element={<InvoicesPage />} />
