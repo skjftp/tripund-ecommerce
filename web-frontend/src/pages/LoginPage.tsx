@@ -32,7 +32,7 @@ export default function LoginPage() {
     setStep('delivery');
   };
 
-  const handleSendOTP = async () => {
+  const handleSendOTP = async (method: 'whatsapp' | 'sms') => {
     setLoading(true);
     
     try {
@@ -44,14 +44,14 @@ export default function LoginPage() {
         body: JSON.stringify({
           mobile_number: mobileNumber,
           country_code: '91',
-          delivery_method: deliveryMethod
+          delivery_method: method
         }),
       });
 
       const result = await response.json();
 
       if (response.ok) {
-        const deliveryText = deliveryMethod === 'whatsapp' ? 'WhatsApp' : 'SMS';
+        const deliveryText = method === 'whatsapp' ? 'WhatsApp' : 'SMS';
         toast.success(`OTP sent to your mobile via ${deliveryText}`);
         setStep('otp');
         setOtpExpiry(Date.now() + 5 * 60 * 1000);
@@ -238,8 +238,7 @@ export default function LoginPage() {
               {/* WhatsApp Option (Recommended) */}
               <button
                 onClick={() => {
-                  setDeliveryMethod('whatsapp');
-                  handleSendOTP();
+                  handleSendOTP('whatsapp');
                 }}
                 disabled={loading}
                 className="w-full p-4 border-2 border-green-300 bg-green-50 rounded-lg hover:bg-green-100 transition-colors disabled:bg-gray-100"
@@ -261,8 +260,7 @@ export default function LoginPage() {
               {/* SMS Option */}
               <button
                 onClick={() => {
-                  setDeliveryMethod('sms');
-                  handleSendOTP();
+                  handleSendOTP('sms');
                 }}
                 disabled={loading}
                 className="w-full p-4 border border-gray-300 bg-white rounded-lg hover:bg-gray-50 transition-colors disabled:bg-gray-100"
