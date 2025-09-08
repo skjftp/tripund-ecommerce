@@ -23,6 +23,9 @@ type Config struct {
 	WhatsAppBusinessID    string
 	WhatsAppPhoneNumberID string
 	WhatsAppWebhookSecret string
+	// MSG91 SMS API (API key will be in environment variables)
+	MSG91SenderID         string
+	MSG91TemplateID       string
 }
 
 func Load() *Config {
@@ -46,6 +49,9 @@ func Load() *Config {
 		WhatsAppBusinessID:    getEnv("WHATSAPP_BUSINESS_ID", "657280173978203"),
 		WhatsAppPhoneNumberID: getEnv("WHATSAPP_PHONE_NUMBER_ID", ""),
 		WhatsAppWebhookSecret: getEnv("WHATSAPP_WEBHOOK_SECRET", "tripund-wa-secret"),
+		// MSG91 SMS API
+		MSG91SenderID:         getEnv("MSG91_SENDER_ID", "TPNDLS"),
+		MSG91TemplateID:       getEnv("MSG91_TEMPLATE_ID", "1007865434019534765"),
 	}
 }
 

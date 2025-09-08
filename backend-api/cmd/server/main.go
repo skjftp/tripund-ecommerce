@@ -54,6 +54,7 @@ func main() {
 	
 	whatsappHandler := handlers.NewWhatsAppHandler(db, whatsappService)
 	analyticsHandler := handlers.NewAnalyticsHandler(db)
+	mobileAuthHandler := handlers.NewMobileAuthHandler(db, cfg.JWTSecret)
 
 	api := r.Group("/api/v1")
 	{
@@ -76,6 +77,13 @@ func main() {
 			auth.POST("/login", authHandler.Login)
 			auth.POST("/google", authHandler.GoogleAuth)
 			auth.POST("/refresh", authHandler.RefreshToken)
+		}
+
+		// Mobile OTP Authentication
+		mobileAuth := api.Group("/auth/mobile")
+		{
+			mobileAuth.POST("/send-otp", mobileAuthHandler.SendOTP)
+			mobileAuth.POST("/verify-otp", mobileAuthHandler.VerifyOTP)
 		}
 
 		products := api.Group("/products")
