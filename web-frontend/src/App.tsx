@@ -31,6 +31,8 @@ import ReturnsPage from './pages/ReturnsPage';
 import InvoicesPage from './pages/InvoicesPage';
 import InvoiceDetailPage from './pages/InvoiceDetailPage';
 import TrackingRedirect from './pages/TrackingRedirect';
+import MobileLoginPage from './pages/MobileLoginPage';
+import MobileRegisterPage from './pages/MobileRegisterPage';
 import AppInitializer from './components/AppInitializer';
 
 function App() {
@@ -58,6 +60,8 @@ function App() {
             <Route path="/checkout" element={<CheckoutPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
+            <Route path="/mobile-login" element={<MobileLoginPage />} />
+            <Route path="/mobile-register" element={<MobileRegisterPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/wishlist" element={<WishlistPage />} />
             <Route path="/orders" element={<OrdersPage />} />

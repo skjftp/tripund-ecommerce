@@ -45,6 +45,17 @@ export default function LoginPage() {
           <div className="text-center mb-8">
             <h2 className="text-3xl font-bold text-gray-900">Welcome Back</h2>
             <p className="text-gray-600 mt-2">Sign in to your account</p>
+            
+            {/* Mobile Login Promotion */}
+            <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <p className="text-sm text-blue-800 font-medium">✨ New! Login with Mobile OTP</p>
+              <Link 
+                to="/mobile-login" 
+                className="inline-block mt-2 px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                🚀 Try Mobile Login
+              </Link>
+            </div>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
