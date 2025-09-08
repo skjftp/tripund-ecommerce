@@ -48,6 +48,27 @@ export default function CheckoutPage() {
   const dispatch = useDispatch<AppDispatch>();
   const { items, total } = useSelector((state: RootState) => state.cart);
   const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
+
+  // Require authentication for checkout
+  useEffect(() => {
+    if (!isAuthenticated) {
+      toast.error('Please login to continue checkout');
+      navigate('/login?returnTo=/checkout');
+    }
+  }, [isAuthenticated, navigate]);
+
+  // Don't render checkout if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Redirecting to login...</p>
+        </div>
+      </div>
+    );
+  }
+
   const [loading, setLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -199,10 +220,10 @@ export default function CheckoutPage() {
 
   const initiateRazorpayPayment = async (orderData: any) => {
     try {
-      // Use guest endpoints if not authenticated
-      const orderEndpoint = isAuthenticated ? '/orders' : '/guest/orders';
-      const paymentEndpoint = isAuthenticated ? '/payment/create-order' : '/guest/payment/create-order';
-      const verifyEndpoint = isAuthenticated ? '/payment/verify' : '/guest/payment/verify';
+      // Always use authenticated endpoints (guest checkout removed)
+      const orderEndpoint = '/orders';
+      const paymentEndpoint = '/payment/create-order';
+      const verifyEndpoint = '/payment/verify';
       
       // First create the order in backend
       const orderResponse = await api.post(orderEndpoint, orderData);
@@ -308,7 +329,7 @@ export default function CheckoutPage() {
         await initiateRazorpayPayment(orderData);
       } else {
         // Cash on Delivery - create order directly
-        const orderEndpoint = isAuthenticated ? '/orders' : '/guest/orders';
+        const orderEndpoint = '/orders'; // Only authenticated orders
         const orderResponse = await api.post(orderEndpoint, orderData);
         const createdOrder = orderResponse.data.order;
         

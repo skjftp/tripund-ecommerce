@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { 
   User, Mail, Phone, MapPin, Package, Heart, 
-  Settings, LogOut, Edit2, Save, X, Plus, Trash2 
+  Settings, LogOut, Edit2, Save, X, Plus, Trash2, Navigation
 } from 'lucide-react';
 import { RootState, AppDispatch } from '../store';
 import { logout, fetchProfile } from '../store/slices/authSlice';
@@ -35,6 +35,17 @@ const addressSchema = z.object({
 type ProfileFormData = z.infer<typeof profileSchema>;
 type AddressFormData = z.infer<typeof addressSchema>;
 
+// Indian States for dropdown
+const INDIAN_STATES = [
+  'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Goa', 'Gujarat',
+  'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka', 'Kerala', 'Madhya Pradesh',
+  'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'Odisha', 'Punjab',
+  'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh',
+  'Uttarakhand', 'West Bengal', 'Andaman and Nicobar Islands', 'Chandigarh',
+  'Dadra and Nagar Haveli and Daman and Diu', 'Delhi', 'Jammu and Kashmir', 'Ladakh',
+  'Lakshadweep', 'Puducherry'
+];
+
 export default function ProfilePage() {
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
@@ -43,6 +54,7 @@ export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [editingAddress, setEditingAddress] = useState<string | null>(null);
+  const [gettingLocation, setGettingLocation] = useState(false);
 
   const {
     register: registerProfile,
@@ -145,6 +157,60 @@ export default function ProfilePage() {
     dispatch(logout());
     navigate('/');
     toast.success('Logged out successfully');
+  };
+
+  // Get user's current location and auto-populate address
+  const getCurrentLocation = async () => {
+    if (!navigator.geolocation) {
+      toast.error('Geolocation is not supported by this browser');
+      return;
+    }
+
+    setGettingLocation(true);
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          
+          // Use reverse geocoding to get address details
+          const response = await fetch(
+            `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
+          );
+          
+          if (response.ok) {
+            const locationData = await response.json();
+            
+            // Auto-populate form fields
+            setAddressValue('line1', locationData.locality || '');
+            setAddressValue('line2', locationData.localityInfo?.informative?.[0]?.description || '');
+            setAddressValue('city', locationData.city || '');
+            setAddressValue('state', locationData.principalSubdivision || '');
+            setAddressValue('postal_code', locationData.postcode || '');
+            setAddressValue('country', 'India');
+            
+            toast.success('Location detected and address populated');
+          } else {
+            toast.error('Failed to get address from location');
+          }
+        } catch (error) {
+          console.error('Geocoding error:', error);
+          toast.error('Failed to process location');
+        } finally {
+          setGettingLocation(false);
+        }
+      },
+      (error) => {
+        console.error('Geolocation error:', error);
+        toast.error('Unable to get your location. Please enter address manually.');
+        setGettingLocation(false);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 300000
+      }
+    );
   };
 
   if (!user) {
@@ -733,6 +799,23 @@ export default function ProfilePage() {
                     <h3 className="text-lg font-medium mb-4">
                       {editingAddress ? 'Edit Address' : 'Add New Address'}
                     </h3>
+                    
+                    {/* Location Button */}
+                    <div className="mb-4">
+                      <button
+                        type="button"
+                        onClick={getCurrentLocation}
+                        disabled={gettingLocation}
+                        className="w-full bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-center justify-center space-x-2 text-blue-700 hover:bg-blue-100 disabled:bg-gray-100"
+                      >
+                        <Navigation className={`w-5 h-5 ${gettingLocation ? 'animate-spin' : ''}`} />
+                        <span>{gettingLocation ? 'Getting location...' : '📍 Use My Current Location'}</span>
+                      </button>
+                      <p className="text-xs text-gray-500 mt-1 text-center">
+                        Auto-populate address from your location
+                      </p>
+                    </div>
+
                     <form onSubmit={handleAddressSubmit(onAddressSubmit)} className="space-y-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -787,10 +870,17 @@ export default function ProfilePage() {
                           <label className="block text-sm font-medium text-gray-700 mb-1">
                             State
                           </label>
-                          <input
+                          <select
                             {...registerAddress('state')}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                          />
+                          >
+                            <option value="">Select State</option>
+                            {INDIAN_STATES.map((state) => (
+                              <option key={state} value={state}>
+                                {state}
+                              </option>
+                            ))}
+                          </select>
                           {addressErrors.state && (
                             <p className="text-red-500 text-sm mt-1">{addressErrors.state.message}</p>
                           )}
