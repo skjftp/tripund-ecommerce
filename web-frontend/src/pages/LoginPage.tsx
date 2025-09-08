@@ -4,7 +4,7 @@ import { useDispatch } from 'react-redux';
 import { Smartphone, ArrowRight, Shield, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { AppDispatch } from '../store';
-import { fetchProfile } from '../store/slices/authSlice';
+import { setAuth } from '../store/slices/authSlice';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -105,8 +105,8 @@ export default function LoginPage() {
           setStep('profile');
         } else {
           toast.success('Welcome back!');
-          // Fetch profile to update auth state
-          dispatch(fetchProfile());
+          // Set auth state directly for mobile users
+          dispatch(setAuth({ user: result.user, token: result.token }));
           navigate(returnTo || '/');
         }
       } else {
@@ -148,8 +148,22 @@ export default function LoginPage() {
 
       if (response.ok) {
         toast.success('Profile completed successfully!');
-        // Fetch profile to update auth state
-        dispatch(fetchProfile());
+        // Refresh user profile after completion
+        try {
+          const profileResponse = await fetch(`${import.meta.env.VITE_API_URL || 'https://tripund-backend-665685012221.asia-south1.run.app/api/v1'}/profile`, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+            },
+          });
+          
+          if (profileResponse.ok) {
+            const updatedUser = await profileResponse.json();
+            dispatch(setAuth({ user: updatedUser, token: token }));
+          }
+        } catch (error) {
+          console.error('Failed to fetch updated profile:', error);
+        }
+        
         navigate(returnTo || '/');
       } else {
         toast.error(result.error || 'Failed to update profile');
