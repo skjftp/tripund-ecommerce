@@ -970,9 +970,16 @@ export default function CheckoutPage() {
           setLoading(false); // Reset loading state
           navigate('/products'); // Continue shopping
         }}
-        onRetry={() => {
+        onRetry={async () => {
           setShowFailedModal(false);
-          setLoading(false); // Reset loading state to enable retry on same page
+          setLoading(false);
+          // Retry the payment by re-submitting the form
+          const formData = watch(); // Get current form data
+          try {
+            await onSubmit(formData);
+          } catch (error) {
+            console.error('Payment retry failed:', error);
+          }
         }}
       />
       
@@ -983,9 +990,16 @@ export default function CheckoutPage() {
           setLoading(false); // Reset loading state
           navigate('/products'); // Continue shopping
         }}
-        onRetry={() => {
+        onRetry={async () => {
           setShowCancelledModal(false);
-          setLoading(false); // Reset loading state to enable retry on same page
+          setLoading(false);
+          // Retry the payment by re-submitting the form
+          const formData = watch(); // Get current form data
+          try {
+            await onSubmit(formData);
+          } catch (error) {
+            console.error('Payment retry failed:', error);
+          }
         }}
       />
     </div>
