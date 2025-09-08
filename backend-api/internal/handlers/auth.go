@@ -529,11 +529,24 @@ func (h *AuthHandler) GetProfileWishlist(c *gin.Context) {
 
 // GetProfileAddresses returns user's saved addresses
 func (h *AuthHandler) GetProfileAddresses(c *gin.Context) {
-	// Get user's addresses from addresses collection or user document
-	// For now, return empty array
+	userID := c.GetString("user_id")
+	
+	// Get user's addresses from mobile user document
+	doc, err := h.db.Client.Collection("mobile_users").Doc(userID).Get(h.db.Context)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	var user models.MobileUser
+	if err := doc.DataTo(&user); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to parse user data"})
+		return
+	}
+
 	c.JSON(http.StatusOK, gin.H{
-		"addresses": []interface{}{},
-		"total": 0,
+		"addresses": user.Addresses,
+		"total": len(user.Addresses),
 	})
 }
 
