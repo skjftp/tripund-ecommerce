@@ -67,25 +67,20 @@ func (m *MSG91Service) SendOTP(mobileNumber, otp string) error {
 		cleanMobile = "91" + cleanMobile
 	}
 	
-	// Prepare request payload for MSG91 SMS API (correct format)
+	// Prepare request payload for MSG91 Template SMS API 
+	// Method 1: Try template-based approach
 	payload := map[string]interface{}{
 		"template_id": m.config.MSG91TemplateID,
-		"sender":      m.config.MSG91SenderID,
-		"route":       "4", // Transactional route
-		"country":     "91",
-		"sms": []map[string]interface{}{
+		"recipients": []map[string]interface{}{
 			{
-				"message": []map[string]interface{}{
-					{
-						"to": []string{cleanMobile},
-						"variables": map[string]string{
-							"var": otp, // OTP variable for template {#var#}
-						},
-					},
-				},
+				"mobiles": cleanMobile,
+				"var":     otp, // Variable for {#var#} in template
 			},
 		},
 	}
+	
+	// Log template attempt
+	log.Printf("Attempting MSG91 template API with Template ID: %s", m.config.MSG91TemplateID)
 	
 	jsonData, err := json.Marshal(payload)
 	if err != nil {
@@ -96,8 +91,8 @@ func (m *MSG91Service) SendOTP(mobileNumber, otp string) error {
 	log.Printf("MSG91 API Request: %s", string(jsonData))
 	log.Printf("MSG91 Template ID: %s, Sender: %s", m.config.MSG91TemplateID, m.config.MSG91SenderID)
 	
-	// Create HTTP request - using correct MSG91 SMS endpoint
-	req, err := http.NewRequest("POST", m.baseURL+"/sms/", bytes.NewBuffer(jsonData))
+	// Create HTTP request - using MSG91 template flow endpoint
+	req, err := http.NewRequest("POST", m.baseURL+"/flow/", bytes.NewBuffer(jsonData))
 	if err != nil {
 		return fmt.Errorf("failed to create MSG91 request: %v", err)
 	}
