@@ -161,38 +161,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               elevation: 5,
                             ),
                             child: const Text(
-                              'Sign In',
+                              'Sign In / Sign Up',
                               style: TextStyle(
                                 color: Colors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        SizedBox(
-                          width: double.infinity,
-                          height: 56,
-                          child: OutlinedButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const MobileAuthScreen(),
-                                ),
-                              );
-                            },
-                            style: OutlinedButton.styleFrom(
-                              side: BorderSide(color: AppTheme.primaryColor, width: 2),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(30),
-                              ),
-                            ),
-                            child: Text(
-                              'Create Account',
-                              style: TextStyle(
-                                color: AppTheme.primaryColor,
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
                               ),
