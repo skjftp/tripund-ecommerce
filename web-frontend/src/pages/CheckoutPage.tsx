@@ -85,6 +85,9 @@ export default function CheckoutPage() {
     originalRate?: number;
   } | null>(null);
   const [promoLoading, setPromoLoading] = useState(false);
+  const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState<string>('');
+  const [showNewAddressForm, setShowNewAddressForm] = useState(false);
 
   const {
     register,
@@ -140,9 +143,46 @@ export default function CheckoutPage() {
   }, [items, navigate]);
 
   useEffect(() => {
-    // Fetch dynamic settings on component mount
+    // Fetch dynamic settings and saved addresses on component mount
     getPublicSettings().then(setSettings).catch(console.error);
+    fetchSavedAddresses();
   }, []);
+
+  const fetchSavedAddresses = async () => {
+    try {
+      const response = await api.get('/profile/addresses');
+      const addresses = response.data.addresses || [];
+      setSavedAddresses(addresses);
+      
+      // Auto-select default address
+      const defaultAddress = addresses.find((addr: any) => addr.is_default);
+      if (defaultAddress) {
+        setSelectedAddressId(defaultAddress.id);
+        populateAddressForm(defaultAddress);
+      } else if (addresses.length > 0) {
+        // Select first address if no default
+        setSelectedAddressId(addresses[0].id);
+        populateAddressForm(addresses[0]);
+      } else {
+        // No saved addresses, show new address form
+        setShowNewAddressForm(true);
+      }
+    } catch (error) {
+      console.error('Error fetching addresses:', error);
+      // If addresses fetch fails, show new address form
+      setShowNewAddressForm(true);
+    }
+  };
+
+  const populateAddressForm = (address: any) => {
+    setValue('address.line1', address.line1);
+    setValue('address.line2', address.line2 || '');
+    setValue('address.city', address.city);
+    setValue('address.state', address.state);
+    setValue('address.postalCode', address.postal_code);
+    setValue('address.country', address.country || 'India');
+    setShowNewAddressForm(false);
+  };
 
   useEffect(() => {
     if (user) {
@@ -471,6 +511,83 @@ export default function CheckoutPage() {
                   <MapPin className="mr-2" size={20} />
                   Shipping Address
                 </h2>
+
+                {/* Saved Addresses Selection */}
+                {savedAddresses.length > 0 && (
+                  <div className="mb-6">
+                    <h3 className="text-sm font-medium text-gray-700 mb-3">Choose Address</h3>
+                    <div className="space-y-2">
+                      {savedAddresses.map((address) => (
+                        <div
+                          key={address.id}
+                          className={`border rounded-lg p-3 cursor-pointer transition-colors ${
+                            selectedAddressId === address.id
+                              ? 'border-primary-500 bg-primary-50'
+                              : 'border-gray-200 hover:border-gray-300'
+                          }`}
+                          onClick={() => {
+                            setSelectedAddressId(address.id);
+                            populateAddressForm(address);
+                          }}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2">
+                              <input
+                                type="radio"
+                                name="selectedAddress"
+                                checked={selectedAddressId === address.id}
+                                onChange={() => {}}
+                                className="text-primary-600"
+                              />
+                              <div>
+                                <p className="font-medium text-sm capitalize">
+                                  {address.type} {address.is_default && <span className="text-xs bg-primary-100 text-primary-700 px-2 py-1 rounded-full ml-2">Default</span>}
+                                </p>
+                                <p className="text-xs text-gray-600">
+                                  {address.line1}, {address.city}, {address.state} {address.postal_code}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowNewAddressForm(true);
+                        setSelectedAddressId('');
+                      }}
+                      className="mt-3 text-primary-600 hover:text-primary-700 text-sm font-medium"
+                    >
+                      + Add New Address
+                    </button>
+                  </div>
+                )}
+
+                {/* New Address Form */}
+                {(showNewAddressForm || savedAddresses.length === 0) && (
+                  <div className={savedAddresses.length > 0 ? "border-t pt-4" : ""}>
+                    {savedAddresses.length > 0 && (
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-sm font-medium text-gray-700">New Address</h3>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowNewAddressForm(false);
+                            if (savedAddresses.length > 0) {
+                              setSelectedAddressId(savedAddresses[0].id);
+                              populateAddressForm(savedAddresses[0]);
+                            }
+                          }}
+                          className="text-gray-500 hover:text-gray-700 text-sm"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    )}
+
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -564,6 +681,8 @@ export default function CheckoutPage() {
                     </span>
                   </label>
                 </div>
+                  </div>
+                )}
               </div>
 
               {/* Shipping Method Selection */}
