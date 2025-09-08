@@ -47,12 +47,17 @@ export default function Products() {
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalProducts, setTotalProducts] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const ITEMS_PER_PAGE = 20;
 
-  const fetchProducts = async (category?: string, status?: string) => {
+  const fetchProducts = async (category?: string, status?: string, page: number = 1) => {
     try {
       setLoading(true);
-      // Build query parameters
-      let queryParams = 'limit=50';
+      // Build query parameters with pagination
+      const offset = (page - 1) * ITEMS_PER_PAGE;
+      let queryParams = `limit=${ITEMS_PER_PAGE}&offset=${offset}`;
       
       // Add status filter (default to 'all' for admin)
       if (status && status !== 'all') {
@@ -68,8 +73,13 @@ export default function Products() {
       
       const response = await api.get(`/products?${queryParams}`);
       const fetchedProducts = response.data.products || [];
+      const total = response.data.total || fetchedProducts.length;
+      
       setProducts(fetchedProducts);
-      console.log(`Loaded ${fetchedProducts.length} products with filters - Category: ${category || 'all'}, Status: ${status || 'all'}`);
+      setTotalProducts(total);
+      setTotalPages(Math.ceil(total / ITEMS_PER_PAGE));
+      
+      console.log(`Loaded ${fetchedProducts.length} products (Page ${page}/${Math.ceil(total / ITEMS_PER_PAGE)}) - Total: ${total}`);
     } catch (error) {
       console.error('Error fetching products:', error);
       toast.error('Failed to load products');
@@ -81,13 +91,19 @@ export default function Products() {
 
   // Fetch products when component mounts
   useEffect(() => {
-    fetchProducts(selectedCategory, selectedStatus);
+    fetchProducts(selectedCategory, selectedStatus, currentPage);
   }, []);
 
-  // Fetch products when filters change
+  // Fetch products when filters or page change
   useEffect(() => {
-    fetchProducts(selectedCategory, selectedStatus);
+    setCurrentPage(1); // Reset to page 1 when filters change
+    fetchProducts(selectedCategory, selectedStatus, 1);
   }, [selectedCategory, selectedStatus]);
+
+  // Fetch products when page changes (without resetting page)
+  useEffect(() => {
+    fetchProducts(selectedCategory, selectedStatus, currentPage);
+  }, [currentPage]);
 
   // Client-side filtering only for search (category and status are server-side)
   const filteredProducts = products.filter((product) => {
@@ -180,11 +196,14 @@ export default function Products() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Products</h1>
-          <p className="text-gray-600">Manage your product catalog</p>
+          <p className="text-gray-600">
+            Manage your product catalog • {totalProducts} total products
+            {totalPages > 1 && ` • Page ${currentPage} of ${totalPages}`}
+          </p>
         </div>
         <div className="flex items-center space-x-3">
           <button 
-            onClick={() => fetchProducts(selectedCategory, selectedStatus)}
+            onClick={() => fetchProducts(selectedCategory, selectedStatus, currentPage)}
             disabled={loading}
             className="flex items-center space-x-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
           >
@@ -402,22 +421,45 @@ export default function Products() {
       </div>
 
       {/* Pagination */}
-      <div className="flex items-center justify-between mt-6">
-        <div className="text-sm text-gray-700">
-          Showing 1 to {filteredProducts.length} of {products.length} results
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between mt-6">
+          <div className="text-sm text-gray-700">
+            Showing {((currentPage - 1) * ITEMS_PER_PAGE) + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, totalProducts)} of {totalProducts} results
+          </div>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className="px-3 py-1 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Previous
+            </button>
+            
+            {/* Page numbers */}
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <button
+                key={page}
+                onClick={() => setCurrentPage(page)}
+                className={`px-3 py-1 rounded-md ${
+                  currentPage === page
+                    ? 'bg-primary-600 text-white'
+                    : 'border border-gray-300 hover:bg-gray-50'
+                }`}
+              >
+                {page}
+              </button>
+            ))}
+            
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className="px-3 py-1 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Next
+            </button>
+          </div>
         </div>
-        <div className="flex items-center space-x-2">
-          <button className="px-3 py-1 border border-gray-300 rounded-md hover:bg-gray-50">
-            Previous
-          </button>
-          <button className="px-3 py-1 bg-primary-600 text-white rounded-md">1</button>
-          <button className="px-3 py-1 border border-gray-300 rounded-md hover:bg-gray-50">2</button>
-          <button className="px-3 py-1 border border-gray-300 rounded-md hover:bg-gray-50">3</button>
-          <button className="px-3 py-1 border border-gray-300 rounded-md hover:bg-gray-50">
-            Next
-          </button>
-        </div>
-      </div>
+      )}
 
       {/* Product Form Modal */}
       <ProductForm
