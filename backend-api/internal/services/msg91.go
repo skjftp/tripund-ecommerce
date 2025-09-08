@@ -67,14 +67,17 @@ func (m *MSG91Service) SendOTP(mobileNumber, otp string) error {
 		cleanMobile = "91" + cleanMobile
 	}
 	
-	// Prepare request payload for MSG91 Template SMS API 
-	// Method 1: Try template-based approach
+	// Prepare request payload for MSG91 Template SMS API (based on documentation)
 	payload := map[string]interface{}{
-		"template_id": m.config.MSG91TemplateID,
+		"template_id":       m.config.MSG91TemplateID,
+		"short_url":         "0", // Disable URL shortening
+		"realTimeResponse":  "1", // Get real-time response
+		"country":           "91", // Country code for India
 		"recipients": []map[string]interface{}{
 			{
 				"mobiles": cleanMobile,
-				"var":     otp, // Variable for {#var#} in template
+				"var":     otp, // Variable for {#var#} in your template
+				"VAR1":    otp, // Backup variable name
 			},
 		},
 	}
