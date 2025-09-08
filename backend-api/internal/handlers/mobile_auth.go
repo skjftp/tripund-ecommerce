@@ -351,13 +351,15 @@ func (h *MobileAuthHandler) sendWhatsAppOTP(mobileNumber, otp string) error {
 		return fmt.Errorf("WhatsApp service not available")
 	}
 	
-	// Use the new 'otp' template for authentication
-	return h.whatsappService.SendTemplateMessage(
+	// Use the enhanced SendTemplateMessage that handles button parameters for 'otp' template
+	_, err := h.whatsappService.SendTemplateMessage(
 		mobileNumber,
-		"otp", // Your new OTP template name
+		"otp", // Your new OTP template name  
 		"en_US",
 		[]models.ParameterContent{
-			{Type: "text", Text: otp}, // {{1}} parameter for login code
+			{Type: "text", Text: otp}, // {{1}} parameter for body
+			{Type: "text", Text: otp}, // {{1}} parameter for button URL
 		},
 	)
+	return err
 }

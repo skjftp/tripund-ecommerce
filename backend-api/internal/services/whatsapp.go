@@ -116,11 +116,28 @@ func (w *WhatsAppService) SendTemplateMessage(phoneNumber, templateName, languag
 	}
 	
 	if len(parameters) > 0 {
-		templateContent.Components = []models.ComponentContent{
-			{
-				Type:       "body",
-				Parameters: parameters,
-			},
+		// For 'otp' template, handle both body and button parameters
+		if templateName == "otp" && len(parameters) >= 2 {
+			templateContent.Components = []models.ComponentContent{
+				{
+					Type:       "body",
+					Parameters: parameters[:1], // First parameter for body
+				},
+				{
+					Type:    "button",
+					SubType: "url",
+					Index:   "0",
+					Parameters: parameters[1:2], // Second parameter for button
+				},
+			}
+		} else {
+			// Standard template with only body parameters
+			templateContent.Components = []models.ComponentContent{
+				{
+					Type:       "body",
+					Parameters: parameters,
+				},
+			}
 		}
 	}
 	
