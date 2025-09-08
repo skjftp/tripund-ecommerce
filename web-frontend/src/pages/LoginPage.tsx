@@ -173,8 +173,8 @@ export default function LoginPage() {
   const seconds = remainingTime % 60;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-purple-50 flex items-center justify-center py-4 px-4">
-      <div className="max-w-xs w-full bg-white rounded-2xl shadow-xl border border-primary-100 p-6 space-y-4">
+    <div className="bg-gradient-to-br from-primary-50 via-white to-purple-50 py-8 px-4 min-h-96">
+      <div className="max-w-xs w-full bg-white rounded-2xl shadow-xl border border-primary-100 p-6 space-y-4 mx-auto">
         <div className="text-center">
           <Smartphone className="mx-auto h-8 w-8 text-primary-600" />
           <h2 className="mt-3 text-2xl font-bold text-gray-900">
