@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { Heart, ShoppingCart, Truck, Shield, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Heart, ShoppingCart, Truck, Shield, ChevronLeft, ChevronRight, Bell } from 'lucide-react';
 import { RootState, AppDispatch } from '../store';
 import { fetchProductById } from '../store/slices/productSlice';
 import { addToCartWithSync } from '../store/slices/cartSlice';
@@ -19,8 +19,13 @@ export default function ProductDetailPage() {
   const [selectedVariant, setSelectedVariant] = useState<any>(null);
   const [displayImages, setDisplayImages] = useState<string[]>([]);
   const [showZoomModal, setShowZoomModal] = useState(false);
+  const [showRequestModal, setShowRequestModal] = useState(false);
+  const [requestQuantity, setRequestQuantity] = useState(1);
+  const [requestNotes, setRequestNotes] = useState('');
+  const [submittingRequest, setSubmittingRequest] = useState(false);
 
   const { currentProduct: product, loading } = useSelector((state: RootState) => state.products);
+  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
   const wishlistItems = useSelector((state: RootState) => state.wishlist.items);
   const isInWishlist = Array.isArray(wishlistItems) ? wishlistItems.some((item) => item.id === product?.id) : false;
 
@@ -149,6 +154,49 @@ export default function ProductDetailPage() {
     
     dispatch(addToCartWithSync(cartProduct, quantity));
     toast.success(`Added ${quantity} item(s) to cart!`);
+  };
+
+  const handleStockRequest = async () => {
+    if (!isAuthenticated) {
+      toast.error('Please login to request this product');
+      navigate('/login');
+      return;
+    }
+
+    setSubmittingRequest(true);
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://tripund-backend-665685012221.asia-south1.run.app/api/v1'}/stock-requests`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify({
+          product_id: product?.id,
+          quantity: requestQuantity,
+          variant_color: selectedVariant?.color || '',
+          variant_size: selectedVariant?.size || '',
+          notes: requestNotes,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        toast.success('Stock request submitted! We\'ll notify you when available.');
+        setShowRequestModal(false);
+        setRequestNotes('');
+        setRequestQuantity(1);
+      } else {
+        toast.error(result.error || 'Failed to submit request');
+      }
+    } catch (error) {
+      console.error('Stock request error:', error);
+      toast.error('Failed to submit request. Please try again.');
+    } finally {
+      setSubmittingRequest(false);
+    }
   };
 
   const handleWishlistToggle = () => {
@@ -307,8 +355,8 @@ export default function ProductDetailPage() {
               )}
 
               <div className="mb-6">
-                {product.stock_status === 'in_stock' ? (
-                  <span className="text-green-600 font-medium">✓ In Stock</span>
+                {product.stock_quantity > 0 ? (
+                  <span className="text-green-600 font-medium">✓ In Stock ({product.stock_quantity} available)</span>
                 ) : (
                   <span className="text-red-600 font-medium">Out of Stock</span>
                 )}
@@ -331,14 +379,23 @@ export default function ProductDetailPage() {
                   </button>
                 </div>
 
-                <button
-                  onClick={handleAddToCart}
-                  disabled={product.stock_status !== 'in_stock'}
-                  className="flex-1 bg-primary-600 text-white py-3 px-6 rounded-md hover:bg-primary-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center space-x-2"
-                >
-                  <ShoppingCart size={20} />
-                  <span>Add to Cart</span>
-                </button>
+                {product.stock_quantity > 0 ? (
+                  <button
+                    onClick={handleAddToCart}
+                    className="flex-1 bg-primary-600 text-white py-3 px-6 rounded-md hover:bg-primary-700 transition-colors flex items-center justify-center space-x-2"
+                  >
+                    <ShoppingCart size={20} />
+                    <span>Add to Cart</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => setShowRequestModal(true)}
+                    className="flex-1 bg-orange-500 text-white py-3 px-6 rounded-md hover:bg-orange-600 transition-colors flex items-center justify-center space-x-2"
+                  >
+                    <Bell size={20} />
+                    <span>Request when available</span>
+                  </button>
+                )}
 
                 <button
                   onClick={handleWishlistToggle}
@@ -415,6 +472,90 @@ export default function ProductDetailPage() {
                 </div>
               </>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Stock Request Modal */}
+      {showRequestModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <h3 className="text-xl font-bold text-gray-900 mb-4">Request when available</h3>
+            <p className="text-gray-600 mb-6">
+              We'll notify you when "{product?.name}" is back in stock
+            </p>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Quantity needed
+                </label>
+                <div className="flex items-center space-x-3">
+                  <button
+                    onClick={() => setRequestQuantity(Math.max(1, requestQuantity - 1))}
+                    className="w-10 h-10 border rounded-md flex items-center justify-center hover:bg-gray-50"
+                  >
+                    -
+                  </button>
+                  <span className="text-lg font-medium w-12 text-center">{requestQuantity}</span>
+                  <button
+                    onClick={() => setRequestQuantity(requestQuantity + 1)}
+                    className="w-10 h-10 border rounded-md flex items-center justify-center hover:bg-gray-50"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+
+              {selectedVariant && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Selected variant
+                  </label>
+                  <p className="text-sm text-gray-600">
+                    {selectedVariant.color && `Color: ${selectedVariant.color}`}
+                    {selectedVariant.color && selectedVariant.size && ' • '}
+                    {selectedVariant.size && `Size: ${selectedVariant.size}`}
+                  </p>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Additional notes (optional)
+                </label>
+                <textarea
+                  value={requestNotes}
+                  onChange={(e) => setRequestNotes(e.target.value)}
+                  placeholder="Any specific requirements or preferences..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  rows={3}
+                />
+              </div>
+            </div>
+
+            <div className="flex space-x-3 mt-6">
+              <button
+                onClick={() => setShowRequestModal(false)}
+                className="flex-1 py-2 px-4 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleStockRequest}
+                disabled={submittingRequest}
+                className="flex-1 py-2 px-4 bg-orange-500 text-white rounded-md hover:bg-orange-600 disabled:bg-orange-300 flex items-center justify-center space-x-2"
+              >
+                {submittingRequest ? (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <>
+                    <Bell size={16} />
+                    <span>Submit Request</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}
