@@ -18,6 +18,7 @@ import {
   Receipt,
   Mail,
   MessageCircle,
+  AlertTriangle,
 } from 'lucide-react';
 import { useDispatch } from 'react-redux';
 import { logout } from '../../store/slices/authSlice';
@@ -41,6 +42,7 @@ export default function Sidebar({ isOpen = true, onClose }: SidebarProps) {
     { icon: UserCog, label: 'Admin Users', path: '/users', pageId: 'users' },
     { icon: MessageSquare, label: 'Messages', path: '/contact-messages', pageId: 'contact-messages' },
     { icon: MessageCircle, label: 'WhatsApp', path: '/whatsapp', pageId: 'whatsapp' },
+    { icon: AlertTriangle, label: 'Stock Requests', path: '/stock-requests', pageId: 'stock-requests' },
     { icon: FolderTree, label: 'Categories', path: '/categories', pageId: 'categories' },
     { icon: FileText, label: 'Content', path: '/content', pageId: 'content' },
     { icon: Shield, label: 'Legal', path: '/legal', pageId: 'legal' },

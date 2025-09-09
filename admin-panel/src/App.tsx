@@ -29,6 +29,7 @@ import ContactMessages from './pages/ContactMessages';
 import EmailTemplates from './pages/EmailTemplates';
 import Users from './pages/Users';
 import WhatsApp from './pages/WhatsApp';
+import StockRequests from './pages/StockRequests';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useSelector((state: RootState) => state.auth);
@@ -234,6 +235,16 @@ function App() {
               <PrivateRoute>
                 <AdminLayout>
                   <WhatsApp />
+                </AdminLayout>
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/stock-requests"
+            element={
+              <PrivateRoute>
+                <AdminLayout>
+                  <StockRequests />
                 </AdminLayout>
               </PrivateRoute>
             }
