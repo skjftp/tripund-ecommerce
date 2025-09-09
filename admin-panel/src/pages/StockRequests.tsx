@@ -79,7 +79,7 @@ export default function StockRequests() {
   const fetchStockRequests = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/v1/admin/stock-requests?status=${selectedStatus}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://tripund-backend-665685012221.asia-south1.run.app/api/v1'}/admin/stock-requests?status=${selectedStatus}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
         },
@@ -98,7 +98,7 @@ export default function StockRequests() {
 
   const updateRequestStatus = async (requestId: string, status: string, adminNotes?: string) => {
     try {
-      const response = await fetch(`/api/v1/admin/stock-requests/${requestId}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://tripund-backend-665685012221.asia-south1.run.app/api/v1'}/admin/stock-requests/${requestId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
