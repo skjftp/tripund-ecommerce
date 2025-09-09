@@ -55,6 +55,7 @@ func main() {
 	whatsappHandler := handlers.NewWhatsAppHandler(db, whatsappService)
 	analyticsHandler := handlers.NewAnalyticsHandler(db)
 	mobileAuthHandler := handlers.NewMobileAuthHandler(db, cfg.JWTSecret, cfg, whatsappService)
+	stockRequestHandler := handlers.NewStockRequestHandler(db)
 
 	api := r.Group("/api/v1")
 	{
@@ -145,6 +146,10 @@ func main() {
 			// Mobile user profile endpoints
 			protected.GET("/mobile/profile", mobileAuthHandler.GetProfile)
 			protected.PUT("/mobile/profile", mobileAuthHandler.CompleteProfile)
+
+			// Stock requests (user endpoints)
+			protected.POST("/stock-requests", stockRequestHandler.CreateStockRequest)
+			protected.GET("/stock-requests", stockRequestHandler.GetUserStockRequests)
 
 			// Order endpoints
 			orders := protected.Group("/orders")
@@ -300,6 +305,14 @@ func main() {
 			{
 				analytics.GET("/summary", analyticsHandler.GetAnalyticsSummary)
 				analytics.GET("/instagram", analyticsHandler.GetInstagramAdPerformance)
+			}
+			
+			// Stock requests management (admin only)
+			stockAdmin := admin.Group("/stock-requests")
+			{
+				stockAdmin.GET("", stockRequestHandler.GetAdminStockRequests)
+				stockAdmin.PUT("/:id", stockRequestHandler.UpdateStockRequest)
+				stockAdmin.DELETE("/:id", stockRequestHandler.DeleteStockRequest)
 			}
 		}
 
