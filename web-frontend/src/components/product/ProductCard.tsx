@@ -1,5 +1,6 @@
-import { Link } from 'react-router-dom';
-import { Heart, ShoppingCart, AlertTriangle } from 'lucide-react';
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Heart, ShoppingCart, AlertTriangle, Bell } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Product } from '../../types';
 import { addToCartWithSync } from '../../store/slices/cartSlice';
@@ -16,8 +17,15 @@ interface ProductCardProps {
 
 export default function ProductCard({ product, viewMode = 'grid' }: ProductCardProps) {
   const dispatch = useDispatch<AppDispatch>();
+  const navigate = useNavigate();
   const wishlistItems = useSelector((state: RootState) => state.wishlist.items);
+  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
   const isInWishlist = Array.isArray(wishlistItems) ? wishlistItems.some((item) => item.id === product.id) : false;
+  
+  const [showRequestModal, setShowRequestModal] = useState(false);
+  const [requestQuantity, setRequestQuantity] = useState(1);
+  const [requestNotes, setRequestNotes] = useState('');
+  const [submittingRequest, setSubmittingRequest] = useState(false);
   
   // Check if product is out of stock
   const isOutOfStock = () => {
@@ -46,6 +54,49 @@ export default function ProductCard({ product, viewMode = 'grid' }: ProductCardP
     } else {
       dispatch(addToWishlistWithSync(product));
       toast.success('Added to wishlist!');
+    }
+  };
+
+  const handleStockRequest = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    
+    if (!isAuthenticated) {
+      toast.error('Please login to request this product');
+      navigate('/login');
+      return;
+    }
+
+    setSubmittingRequest(true);
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://tripund-backend-665685012221.asia-south1.run.app/api/v1'}/stock-requests`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify({
+          product_id: product.id,
+          quantity: requestQuantity,
+          notes: requestNotes,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        toast.success('Stock request submitted! We\'ll notify you when available.');
+        setShowRequestModal(false);
+        setRequestNotes('');
+        setRequestQuantity(1);
+      } else {
+        toast.error(result.error || 'Failed to submit request');
+      }
+    } catch (error) {
+      console.error('Stock request error:', error);
+      toast.error('Failed to submit request. Please try again.');
+    } finally {
+      setSubmittingRequest(false);
     }
   };
 
@@ -92,6 +143,7 @@ export default function ProductCard({ product, viewMode = 'grid' }: ProductCardP
   // List view layout
   if (viewMode === 'list') {
     return (
+      <>
       <Link to={`/products/${product.id}`} className="group block">
         <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow flex">
           <div className="relative w-48 h-48 bg-gray-100 flex-shrink-0">
@@ -139,24 +191,94 @@ export default function ProductCard({ product, viewMode = 'grid' }: ProductCardP
                     className={isInWishlist ? 'fill-red-500 text-red-500' : 'text-gray-600'}
                   />
                 </button>
-                <button
-                  onClick={handleAddToCart}
-                  disabled={!isInStock}
-                  className="bg-primary-600 text-white py-2 px-4 rounded-md hover:bg-primary-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
-                >
-                  <ShoppingCart size={18} />
-                  <span>Add to Cart</span>
-                </button>
+                {!outOfStock ? (
+                  <button
+                    onClick={handleAddToCart}
+                    className="bg-primary-600 text-white py-2 px-4 rounded-md hover:bg-primary-700 transition-colors flex items-center space-x-2"
+                  >
+                    <ShoppingCart size={18} />
+                    <span>Add to Cart</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => setShowRequestModal(true)}
+                    className="bg-orange-500 text-white py-2 px-4 rounded-md hover:bg-orange-600 transition-colors flex items-center space-x-2"
+                  >
+                    <Bell size={18} />
+                    <span>Request</span>
+                  </button>
+                )}
               </div>
             </div>
           </div>
         </div>
       </Link>
+      
+      {/* Stock Request Modal for List View */}
+      {showRequestModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg max-w-sm w-full p-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-2">{product.name}</h3>
+            <p className="text-gray-600 mb-4 text-sm">Request when available</p>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Quantity</label>
+                <div className="flex items-center space-x-3">
+                  <button
+                    onClick={() => setRequestQuantity(Math.max(1, requestQuantity - 1))}
+                    className="w-8 h-8 border rounded-md flex items-center justify-center text-sm hover:bg-gray-50"
+                  >-</button>
+                  <span className="text-lg font-medium w-8 text-center">{requestQuantity}</span>
+                  <button
+                    onClick={() => setRequestQuantity(requestQuantity + 1)}
+                    className="w-8 h-8 border rounded-md flex items-center justify-center text-sm hover:bg-gray-50"
+                  >+</button>
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Notes (optional)</label>
+                <textarea
+                  value={requestNotes}
+                  onChange={(e) => setRequestNotes(e.target.value)}
+                  placeholder="Any specific requirements..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
+                  rows={2}
+                />
+              </div>
+            </div>
+
+            <div className="flex space-x-3 mt-6">
+              <button
+                onClick={() => setShowRequestModal(false)}
+                className="flex-1 py-2 px-4 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 text-sm"
+              >Cancel</button>
+              <button
+                onClick={handleStockRequest}
+                disabled={submittingRequest}
+                className="flex-1 py-2 px-4 bg-orange-500 text-white rounded-md hover:bg-orange-600 disabled:bg-orange-300 flex items-center justify-center space-x-2 text-sm"
+              >
+                {submittingRequest ? (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <>
+                    <Bell size={14} />
+                    <span>Submit</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      </>
     );
   }
 
   // Grid view layout (existing code)
   return (
+    <>
     <Link to={`/products/${product.id}`} className="group h-full">
       <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow h-full flex flex-col">
         {/* Fixed aspect ratio container for image */}
@@ -216,24 +338,103 @@ export default function ProductCard({ product, viewMode = 'grid' }: ProductCardP
                   </span>
                 )}
               </div>
-              {isInStock ? (
+              {!outOfStock ? (
                 <span className="text-sm text-green-600">In Stock</span>
               ) : (
                 <span className="text-sm text-red-600">Out of Stock</span>
               )}
             </div>
 
-            <button
-              onClick={handleAddToCart}
-              disabled={!isInStock}
-              className="w-full bg-primary-600 text-white py-2 px-4 rounded-md hover:bg-primary-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center space-x-2"
-            >
-              <ShoppingCart size={18} />
-              <span>Add to Cart</span>
-            </button>
+            {!outOfStock ? (
+              <button
+                onClick={handleAddToCart}
+                className="w-full bg-primary-600 text-white py-2 px-4 rounded-md hover:bg-primary-700 transition-colors flex items-center justify-center space-x-2"
+              >
+                <ShoppingCart size={18} />
+                <span>Add to Cart</span>
+              </button>
+            ) : (
+              <button
+                onClick={() => setShowRequestModal(true)}
+                className="w-full bg-orange-500 text-white py-2 px-4 rounded-md hover:bg-orange-600 transition-colors flex items-center justify-center space-x-2"
+              >
+                <Bell size={18} />
+                <span>Request when available</span>
+              </button>
+            )}
           </div>
         </div>
       </div>
     </Link>
+
+    {/* Stock Request Modal */}
+    {showRequestModal && (
+      <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-lg max-w-sm w-full p-6">
+          <h3 className="text-lg font-bold text-gray-900 mb-2">{product.name}</h3>
+          <p className="text-gray-600 mb-4 text-sm">Request when available</p>
+          
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Quantity
+              </label>
+              <div className="flex items-center space-x-3">
+                <button
+                  onClick={() => setRequestQuantity(Math.max(1, requestQuantity - 1))}
+                  className="w-8 h-8 border rounded-md flex items-center justify-center text-sm hover:bg-gray-50"
+                >
+                  -
+                </button>
+                <span className="text-lg font-medium w-8 text-center">{requestQuantity}</span>
+                <button
+                  onClick={() => setRequestQuantity(requestQuantity + 1)}
+                  className="w-8 h-8 border rounded-md flex items-center justify-center text-sm hover:bg-gray-50"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Notes (optional)
+              </label>
+              <textarea
+                value={requestNotes}
+                onChange={(e) => setRequestNotes(e.target.value)}
+                placeholder="Any specific requirements..."
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
+                rows={2}
+              />
+            </div>
+          </div>
+
+          <div className="flex space-x-3 mt-6">
+            <button
+              onClick={() => setShowRequestModal(false)}
+              className="flex-1 py-2 px-4 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 text-sm"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleStockRequest}
+              disabled={submittingRequest}
+              className="flex-1 py-2 px-4 bg-orange-500 text-white rounded-md hover:bg-orange-600 disabled:bg-orange-300 flex items-center justify-center space-x-2 text-sm"
+            >
+              {submittingRequest ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <>
+                  <Bell size={14} />
+                  <span>Submit</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
 }
