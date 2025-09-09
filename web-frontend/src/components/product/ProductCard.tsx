@@ -201,7 +201,11 @@ export default function ProductCard({ product, viewMode = 'grid' }: ProductCardP
                   </button>
                 ) : (
                   <button
-                    onClick={() => setShowRequestModal(true)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setShowRequestModal(true);
+                    }}
                     className="bg-orange-500 text-white py-2 px-4 rounded-md hover:bg-orange-600 transition-colors flex items-center space-x-2"
                   >
                     <Bell size={18} />
@@ -355,7 +359,11 @@ export default function ProductCard({ product, viewMode = 'grid' }: ProductCardP
               </button>
             ) : (
               <button
-                onClick={() => setShowRequestModal(true)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setShowRequestModal(true);
+                }}
                 className="w-full bg-orange-500 text-white py-2 px-4 rounded-md hover:bg-orange-600 transition-colors flex items-center justify-center space-x-2"
               >
                 <Bell size={18} />
