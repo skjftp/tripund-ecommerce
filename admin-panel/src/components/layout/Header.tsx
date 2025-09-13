@@ -1,4 +1,5 @@
 import { Bell, Search, User, Menu, ShoppingBag, CreditCard, UserPlus, AlertCircle, X } from 'lucide-react';
+import VisitsCounter from '../VisitsCounter';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../store';
 import { useState, useEffect } from 'react';
@@ -152,6 +153,11 @@ export default function Header({ onMenuClick }: HeaderProps) {
         </div>
 
         <div className="flex items-center space-x-4">
+          {/* Visits Counter */}
+          <div className="relative group">
+            <VisitsCounter />
+          </div>
+          
           <div className="relative">
             <button
               onClick={() => setShowNotifications(!showNotifications)}

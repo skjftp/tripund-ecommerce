@@ -134,4 +134,13 @@ export const contentAPI = {
   delete: (type: string) => api.delete(`/admin/content/${type}`),
 };
 
+// Analytics APIs
+export const analyticsAPI = {
+  getSummary: (days?: number) => api.get(`/admin/analytics/summary${days ? `?days=${days}` : ''}`),
+  getVisitsStatistics: (period: 'hourly' | 'daily' = 'daily') => 
+    api.get(`/admin/analytics/visits?period=${period}`),
+  getInstagramPerformance: (days?: number) => 
+    api.get(`/admin/analytics/instagram${days ? `?days=${days}` : ''}`),
+};
+
 export default api;

@@ -228,6 +228,93 @@ func (h *AnalyticsHandler) GetAnalyticsSummary(c *gin.Context) {
 	c.JSON(http.StatusOK, summary)
 }
 
+// Get visits statistics for admin dashboard
+func (h *AnalyticsHandler) GetVisitsStatistics(c *gin.Context) {
+	period := c.DefaultQuery("period", "daily") // hourly, daily
+	
+	var startTime time.Time
+	var groupFormat string
+	
+	switch period {
+	case "hourly":
+		startTime = time.Now().Add(-24 * time.Hour) // Last 24 hours
+		groupFormat = "2006-01-02 15:00"
+	default: // daily
+		startTime = time.Now().AddDate(0, 0, -30) // Last 30 days
+		groupFormat = "2006-01-02"
+	}
+	
+	// Get page visits
+	visitQuery := h.db.Client.Collection("page_visits").
+		Where("timestamp", ">=", startTime).
+		OrderBy("timestamp", firestore.Asc)
+	
+	visitDocs, err := visitQuery.Documents(h.db.Context).GetAll()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch visits"})
+		return
+	}
+
+	// Group visits by time period
+	visitsByPeriod := make(map[string]int)
+	uniqueSessionsByPeriod := make(map[string]map[string]bool)
+	pageBreakdown := make(map[string]int)
+	totalVisits := 0
+	uniqueSessions := make(map[string]bool)
+
+	for _, doc := range visitDocs {
+		var visit models.PageVisit
+		doc.DataTo(&visit)
+		
+		// Group by time period
+		periodKey := visit.Timestamp.Format(groupFormat)
+		visitsByPeriod[periodKey]++
+		
+		// Track unique sessions for this period
+		if uniqueSessionsByPeriod[periodKey] == nil {
+			uniqueSessionsByPeriod[periodKey] = make(map[string]bool)
+		}
+		uniqueSessionsByPeriod[periodKey][visit.SessionID] = true
+		
+		// Overall stats
+		totalVisits++
+		uniqueSessions[visit.SessionID] = true
+		
+		// Page breakdown
+		pageBreakdown[visit.Page]++
+	}
+
+	// Calculate unique visitors per period
+	uniqueVisitorsByPeriod := make(map[string]int)
+	for period, sessions := range uniqueSessionsByPeriod {
+		uniqueVisitorsByPeriod[period] = len(sessions)
+	}
+
+	// Convert page breakdown to sorted array
+	type PageStat struct {
+		Page   string `json:"page"`
+		Visits int    `json:"visits"`
+	}
+	
+	var pages []PageStat
+	for page, count := range pageBreakdown {
+		pages = append(pages, PageStat{Page: page, Visits: count})
+	}
+
+	response := gin.H{
+		"total_visits":                totalVisits,
+		"unique_visitors":             len(uniqueSessions),
+		"visits_by_period":            visitsByPeriod,
+		"unique_visitors_by_period":   uniqueVisitorsByPeriod,
+		"page_breakdown":              pages,
+		"period":                      period,
+		"start_time":                  startTime.Format("2006-01-02 15:04:05"),
+		"end_time":                    time.Now().Format("2006-01-02 15:04:05"),
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
 // Get Instagram ad performance
 func (h *AnalyticsHandler) GetInstagramAdPerformance(c *gin.Context) {
 	days, _ := strconv.Atoi(c.DefaultQuery("days", "7"))

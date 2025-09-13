@@ -304,6 +304,7 @@ func main() {
 			analytics := admin.Group("/analytics")
 			{
 				analytics.GET("/summary", analyticsHandler.GetAnalyticsSummary)
+				analytics.GET("/visits", analyticsHandler.GetVisitsStatistics)
 				analytics.GET("/instagram", analyticsHandler.GetInstagramAdPerformance)
 			}
 			
