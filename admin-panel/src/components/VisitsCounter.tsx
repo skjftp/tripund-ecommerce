@@ -90,17 +90,17 @@ export default function VisitsCounter({ isExpanded = false }: VisitsCounterProps
         >
           <div className="flex items-center space-x-2">
             <Eye size={16} className="text-blue-600" />
-            <span className="text-sm font-medium">{visitsData.total_visits}</span>
+            <span className="text-sm font-medium">{visitsData.total_visits || 0}</span>
           </div>
           <div className="flex items-center space-x-2">
             <Users size={16} className="text-green-600" />
-            <span className="text-sm font-medium">{visitsData.unique_visitors}</span>
+            <span className="text-sm font-medium">{visitsData.unique_visitors || 0}</span>
           </div>
         </button>
         
         {/* Tooltip */}
         <div className="absolute bottom-full right-0 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-          Total Visits: {visitsData.total_visits} | Unique: {visitsData.unique_visitors}
+          Total Visits: {visitsData.total_visits || 0} | Unique: {visitsData.unique_visitors || 0}
         </div>
       </div>
     );
@@ -137,7 +137,7 @@ export default function VisitsCounter({ isExpanded = false }: VisitsCounterProps
               <Eye size={16} className="text-blue-600" />
               <span className="text-xs font-medium text-blue-800">Total Visits</span>
             </div>
-            <p className="text-xl font-bold text-blue-900">{visitsData.total_visits}</p>
+            <p className="text-xl font-bold text-blue-900">{visitsData.total_visits || 0}</p>
           </div>
           
           <div className="bg-green-50 p-3 rounded-lg">
@@ -145,7 +145,7 @@ export default function VisitsCounter({ isExpanded = false }: VisitsCounterProps
               <Users size={16} className="text-green-600" />
               <span className="text-xs font-medium text-green-800">Unique Visitors</span>
             </div>
-            <p className="text-xl font-bold text-green-900">{visitsData.unique_visitors}</p>
+            <p className="text-xl font-bold text-green-900">{visitsData.unique_visitors || 0}</p>
           </div>
         </div>
 
@@ -165,29 +165,35 @@ export default function VisitsCounter({ isExpanded = false }: VisitsCounterProps
             <span className="text-xs font-medium text-gray-700">Top Pages</span>
           </div>
           <div className="space-y-2 max-h-32 overflow-y-auto">
-            {visitsData.page_breakdown
-              .sort((a, b) => b.visits - a.visits)
-              .slice(0, 5)
-              .map((page, index) => (
-                <div key={page.page} className="flex items-center justify-between text-xs">
-                  <span className="text-gray-600 truncate" title={page.page}>
-                    {formatPageName(page.page)}
-                  </span>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-16 bg-gray-200 rounded-full h-1">
-                      <div
-                        className="bg-purple-500 h-1 rounded-full"
-                        style={{
-                          width: `${Math.min(100, (page.visits / visitsData.total_visits) * 100 * 5)}%`
-                        }}
-                      />
-                    </div>
-                    <span className="font-medium text-gray-800 w-8 text-right">
-                      {page.visits}
+            {(visitsData.page_breakdown || []).length === 0 ? (
+              <div className="text-xs text-gray-500 text-center py-2">
+                No page data available
+              </div>
+            ) : (
+              (visitsData.page_breakdown || [])
+                .sort((a, b) => b.visits - a.visits)
+                .slice(0, 5)
+                .map((page, index) => (
+                  <div key={page.page} className="flex items-center justify-between text-xs">
+                    <span className="text-gray-600 truncate" title={page.page}>
+                      {formatPageName(page.page)}
                     </span>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-16 bg-gray-200 rounded-full h-1">
+                        <div
+                          className="bg-purple-500 h-1 rounded-full"
+                          style={{
+                            width: `${Math.min(100, (page.visits / (visitsData.total_visits || 1)) * 100 * 5)}%`
+                          }}
+                        />
+                      </div>
+                      <span className="font-medium text-gray-800 w-8 text-right">
+                        {page.visits}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))
+            )}
           </div>
         </div>
       </div>
