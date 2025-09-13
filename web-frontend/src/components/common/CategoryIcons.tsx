@@ -132,7 +132,7 @@ export default function CategoryIcons() {
     if (!scrollContainer) return;
 
     let scrollPosition = 0;
-    const scrollSpeed = 0.3; // Very slow scroll speed
+    const scrollSpeed = 0.5; // Slow but visible scroll speed
     let animationId: number;
     
     const animate = () => {
@@ -185,11 +185,11 @@ export default function CategoryIcons() {
     };
     
     const handleInteractionEnd = () => {
-      // Resume auto-scroll after 2 seconds of no interaction
+      // Resume auto-scroll after 1 second of no interaction
       const timeout = setTimeout(() => {
         setIsUserScrolling(false);
         scrollPosition = scrollContainer.scrollLeft;
-      }, 2000);
+      }, 1000);
       
       setUserScrollTimeout(timeout);
     };
@@ -200,8 +200,6 @@ export default function CategoryIcons() {
     scrollContainer.addEventListener('touchend', handleInteractionEnd, { passive: true });
     scrollContainer.addEventListener('mousedown', handleInteractionStart);
     scrollContainer.addEventListener('mouseup', handleInteractionEnd);
-    scrollContainer.addEventListener('mouseenter', handleInteractionStart);
-    scrollContainer.addEventListener('mouseleave', handleInteractionEnd);
     
     return () => {
       if (animationId) cancelAnimationFrame(animationId);
@@ -212,8 +210,6 @@ export default function CategoryIcons() {
       scrollContainer.removeEventListener('touchend', handleInteractionEnd);
       scrollContainer.removeEventListener('mousedown', handleInteractionStart);
       scrollContainer.removeEventListener('mouseup', handleInteractionEnd);
-      scrollContainer.removeEventListener('mouseenter', handleInteractionStart);
-      scrollContainer.removeEventListener('mouseleave', handleInteractionEnd);
     };
   }, [isUserScrolling, userScrollTimeout]);
 
