@@ -4,6 +4,7 @@ import { Provider } from 'react-redux';
 import { Toaster } from 'react-hot-toast';
 import { store } from './store';
 import { initializeAuthRefresh } from './services/auth';
+import './services/analytics'; // Initialize analytics tracking
 import Layout from './components/layout/Layout';
 import ScrollToTop from './components/common/ScrollToTop';
 import HomePage from './pages/HomePage';
