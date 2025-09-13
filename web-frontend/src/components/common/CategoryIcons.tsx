@@ -48,6 +48,7 @@ export default function CategoryIcons() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isUserScrolling, setIsUserScrolling] = useState(false);
   const [userScrollTimeout, setUserScrollTimeout] = useState<NodeJS.Timeout | null>(null);
+  const isProgrammaticScroll = useRef(false);
 
   useEffect(() => {
     if (categories.length === 0) {
@@ -137,19 +138,26 @@ export default function CategoryIcons() {
     
     const animate = () => {
       // Only auto-scroll if user is not actively scrolling
-      if (!isUserScrolling) {
+      if (!isUserScrolling && scrollContainer) {
         scrollPosition += scrollSpeed;
         
-        // Reset scroll when reaching halfway (since we duplicated categories)
-        const maxScroll = scrollContainer.scrollWidth / 2;
+        // Get the actual scroll dimensions
+        const maxScroll = scrollContainer.scrollWidth - scrollContainer.clientWidth;
+        
+        // Reset scroll when reaching the end
         if (scrollPosition >= maxScroll) {
           scrollPosition = 0;
         }
         
+        // Apply the scroll (mark as programmatic to avoid triggering scroll event)
+        isProgrammaticScroll.current = true;
         scrollContainer.scrollLeft = scrollPosition;
+        isProgrammaticScroll.current = false;
       } else {
         // Update scroll position to match user's scroll
-        scrollPosition = scrollContainer.scrollLeft;
+        if (scrollContainer) {
+          scrollPosition = scrollContainer.scrollLeft;
+        }
       }
       
       animationId = requestAnimationFrame(animate);
@@ -159,6 +167,11 @@ export default function CategoryIcons() {
     
     // Handle user scroll interactions
     const handleScroll = () => {
+      // Ignore programmatic scroll events
+      if (isProgrammaticScroll.current) {
+        return;
+      }
+      
       setIsUserScrolling(true);
       
       // Clear existing timeout
@@ -221,7 +234,7 @@ export default function CategoryIcons() {
           ref={scrollRef}
           className="flex gap-6 md:gap-8 px-4 overflow-x-auto scrollbar-hide"
           style={{
-            scrollBehavior: 'auto',
+            scrollBehavior: 'unset',
             WebkitOverflowScrolling: 'touch'
           }}
         >
